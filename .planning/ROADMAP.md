@@ -24,16 +24,28 @@ Five phases deliver Milestone 1 end-to-end: จอง → จ่าย → ต�
 **Depends on**: Nothing (first phase)
 **Requirements**: PLAT-01, PLAT-02, PLAT-03, PLAT-04, PLAT-05, PLAT-06, PLAT-07, PLAT-08, PLAT-09, PLAT-10
 **Success Criteria** (what must be TRUE):
-  1. Developer runs `make new-service <name>` and gets a working service (cmd/, internal/{domain,app,adapters}, migrations/, Dockerfile, CLAUDE.md, /healthz + /readyz) wired to shared `pkg/*`
-  2. Developer runs `make up` to start the full stack (Redpanda, Postgres 16, Redis, Kong 3.9.1 DB-less, Grafana Tempo/Loki/Prometheus); `make proto-gen` generates committed Go + TS clients from buf schemas
+  1. Developer runs `make new-service <name>` and gets a working service (cmd/, internal/{domain,app,adapters}, migrations/, CLAUDE.md, /healthz + /readyz; image from the root Dockerfile) wired to shared `pkg/*`
+  2. Developer runs `make up` to start the full stack (Redpanda, Postgres 17, Valkey, Kong 3.9.1 DB-less, Grafana Tempo/Loki/Prometheus); `make proto-gen` generates committed Go + TS clients from buf schemas
   3. A state change written via transactional outbox in one service is applied exactly once in another service (`processed_events`), visible as a single trace spanning HTTP + Kafka in Tempo with structured slog JSON logs carrying `trace_id`
   4. Failed event processing retries 3x with backoff then lands in `<topic>.dlq` with error metadata; consumer offsets commit only after successful apply
   5. Jenkins CI builds every service image and runs unit + integration tests (testcontainers) on every push; Next.js skeleton (i18n TH/EN, mobile-first, Thai-friendly font) calls the backend only through Kong with a verified JWT round-trip (Traefik fallback decided if Kong spike fails)
-**Plans**: TBD
+**Plans**: 13 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 01-01: TBD
+- [ ] 01-01-PLAN.md — Kong edge spike (RS256 JWT round-trip, Traefik fallback) + workspace spine + lint/pre-commit baseline (wave 1)
+- [ ] 01-02-PLAN.md — Proto toolchain: Envelope, BoatUpserted, CatalogService, `make proto-gen` / `proto-check` (wave 2)
+- [ ] 01-03-PLAN.md — `pkg/clock` (Bangkok local date) + `pkg/money` (satang, rounding rule) (wave 2)
+- [ ] 01-04-PLAN.md — Outbox → Redpanda publish slice with traceparent, relay behaviour, testcontainers env (wave 3)
+- [ ] 01-05-PLAN.md — Next.js 16 web skeleton (TH/EN, Thai font, TanStack Query → Kong) — package legitimacy checkpoint (wave 3)
+- [ ] 01-06-PLAN.md — Jenkins controller + SSH agent + Harbor CI stack, Jenkinsfile (wave 3)
+- [ ] 01-07-PLAN.md — Consumer exactly-once (processed_events), retries 1s/5s/25s → DLQ (wave 4)
+- [ ] 01-08-PLAN.md — Observability stack: Collector → Tempo/Loki/Prometheus → Grafana + platform dashboard (wave 4)
+- [ ] 01-09-PLAN.md — Service template runtime (health, readiness, ordered shutdown, OTel/slog) + sample slice (wave 5)
+- [ ] 01-10-PLAN.md — `make new-service` + catalog write side (UpsertBoat → BoatUpserted), template smoke image (wave 6)
+- [ ] 01-11-PLAN.md — schedule consumes BoatUpserted exactly once + gateway BFF re-scaffolded from template (wave 7)
+- [ ] 01-12-PLAN.md — Full stack `make up` + `make proof` (single trace, exactly-once) + developer inner loop (wave 8)
+- [ ] 01-13-PLAN.md — `make ci` = Jenkins pipeline, changed-services scoping, push to Harbor only on main (wave 9)
 
 ### Phase 2: Identity + Catalog
 **Goal**: Customers and staff can authenticate with correct roles/scoping, and pier_admin can manage the catalog data (piers/routes/boats/prices) that customers browse publicly
@@ -96,7 +108,7 @@ Plans:
   2. Provider webhooks are signature-verified, deduplicated by a unique provider-reference constraint, and status is re-fetched from the provider before publishing `PaymentSucceeded`; `BookingExpired` cancels the unpaid payment intent; a late `PaymentSucceeded` arriving after hold expiry re-holds seats when available or auto-refunds otherwise, in one tx — covered by an integration test for this race
   3. On `BookingConfirmed`, ticket-service issues one ticket with a random 32-byte token (hash stored, no PII) and QR image; customer views the ticket page with a large sun-readable QR and save-as-image; `ValidateTicket` is atomic (valid → used); pier_admin views a read-only passenger list per departure
   4. Customer looks up My Bookings via login or booking reference + email; on `TicketIssued`, notification-service emails the ticket (recipient fetched via sync call, never from the event) idempotently via `notification_log`, and the customer can request a resend from the ticket page
-  5. `docker-compose.prod.yml` runs the full stack on one EC2 with production Redpanda settings and a documented Postgres backup step; Jenkins pushes images to ECR and deploys via `docker compose pull && up -d`
+  5. `docker-compose.prod.yml` runs the full stack on one EC2 with production Redpanda settings and a documented Postgres backup step; Jenkins pushes images to Harbor and deploys via `docker compose pull && up -d`
 **Plans**: TBD
 **UI hint**: yes
 
@@ -110,7 +122,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Platform Foundation | 0/? | Not started | - |
+| 1. Platform Foundation | 0/13 | Planned | - |
 | 2. Identity + Catalog | 0/? | Not started | - |
 | 3. Schedule | 0/? | Not started | - |
 | 4. Booking Core | 0/? | Not started | - |

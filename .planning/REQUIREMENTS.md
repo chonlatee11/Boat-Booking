@@ -9,9 +9,9 @@ Milestone 1 = seed Phase 0–4: platform foundation → identity + catalog → s
 
 ### Platform Foundation
 
-- [ ] **PLAT-01**: Developer can scaffold a service with `make new-service <name>` producing `cmd/`, `internal/{domain,app,adapters}`, `migrations/`, `Dockerfile`, `CLAUDE.md`, `/healthz` + `/readyz`, wired to shared `pkg/*`
+- [ ] **PLAT-01**: Developer can scaffold a service with `make new-service <name>` producing `cmd/`, `internal/{domain,app,adapters}`, `migrations/`, `CLAUDE.md`, `/healthz` + `/readyz`, wired to shared `pkg/*`; images build from the single root `Dockerfile` (`ARG SERVICE`, per D-37)
 - [ ] **PLAT-02**: Shared `pkg/{events,kafka,outbox,httpx,auth,pgx}` exist and are the only way services touch Kafka, outbox, auth, and Postgres
-- [ ] **PLAT-03**: Developer can run `make up` to start Redpanda + Postgres 16 (one instance, DB per service via DSN) + Redis/Valkey + Kong 3.9.1 (DB-less) + Grafana Tempo/Loki/Prometheus + all services via Docker Compose
+- [ ] **PLAT-03**: Developer can run `make up` to start Redpanda + Postgres 17 (one instance, DB per service via DSN; D-18) + Valkey + Kong 3.9.1 (DB-less) + Grafana Tempo/Loki/Prometheus + all services via Docker Compose
 - [ ] **PLAT-04**: Developer can run `make proto-gen` (buf) to generate Go + TS from `proto/events/` and `proto/services/` (connect-go); generated code is committed
 - [ ] **PLAT-05**: A state change written in one service reaches another service via transactional outbox relay (ordered per `aggregate_id`, at-least-once) and is applied exactly once via `processed_events` in the same tx — proven with one real end-to-end event in Phase 0
 - [ ] **PLAT-06**: A `trace_id` propagates HTTP → outbox row → Kafka headers → consumer and shows as a single trace in Tempo; logs are structured slog JSON with `trace_id`
@@ -85,7 +85,7 @@ Milestone 1 = seed Phase 0–4: platform foundation → identity + catalog → s
 ### Deployment
 
 - [ ] **DEP-01**: `docker-compose.prod.yml` runs the full stack on one EC2 with production Redpanda settings (no dev fsync flags), retention configured, and a documented Postgres backup step
-- [ ] **DEP-02**: Jenkins pushes images to ECR and deploys to EC2 via `docker compose pull && up -d` at the end of Milestone 1
+- [ ] **DEP-02**: Jenkins pushes images to Harbor (replaces ECR per Phase 1 D-21) and deploys to EC2 via `docker compose pull && up -d` at the end of Milestone 1
 
 ## v2 Requirements
 

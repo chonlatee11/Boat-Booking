@@ -21,7 +21,7 @@ created: "2026-09-26"
 |----------|-------|
 | **Framework** | go test (stdlib) + testcontainers-go v0.44 (`//go:build integration`); web: eslint + tsc + next build |
 | **Config file** | none — Wave 0 installs (go.work, per-module go.mod, apps/web/package.json) |
-| **Quick run command** | `make test` (`go test ./...`, no Docker) |
+| **Quick run command** | `make test` (`go test $(go list -m -f '{{.Path}}/...')`, no Docker — `./...` fails at a go.work root and skips `_template`) |
 | **Full suite command** | `make test-integration && make lint && npm --prefix apps/web run build` |
 | **Estimated runtime** | ~20s quick / ~180s full (container startup dominates) |
 
@@ -42,16 +42,16 @@ Filled by planner/executor per task. Requirement → test anchors from RESEARCH.
 
 | Requirement | Test Type | Automated Command | File Exists | Status |
 |-------------|-----------|-------------------|-------------|--------|
-| PLAT-01 | build | `make new-service name=smoke && go build ./services/smoke/...` | ❌ W0 | ⬜ pending |
-| PLAT-02 | unit | `go test ./pkg/...` | ❌ W0 | ⬜ pending |
-| PLAT-03 | smoke | `make up && docker compose -f deploy/docker-compose.yml ps` (all healthy) | ❌ W0 | ⬜ pending |
-| PLAT-04 | CI gate | `make proto-gen && git diff --exit-code gen/` | ❌ W0 | ⬜ pending |
-| PLAT-05 | integration | `go test -tags=integration ./services/schedule/... -run TestBoatUpsertedAppliedOnce` | ❌ W0 | ⬜ pending |
-| PLAT-06 | integration + manual | `go test -tags=integration ./pkg/outbox/... -run TestTraceparentSurvivesRelay` | ❌ W0 | ⬜ pending |
-| PLAT-07 | integration | `go test -tags=integration ./pkg/kafka/... -run TestFailedHandlerLandsInDLQAfter3Retries` | ❌ W0 | ⬜ pending |
-| PLAT-08 | manual + CI self-test | Jenkinsfile changed-paths push test | ❌ W0 | ⬜ pending |
-| PLAT-09 | build gate + manual | `npm --prefix apps/web run lint && npm --prefix apps/web run typecheck && npm --prefix apps/web run build` | ❌ W0 | ⬜ pending |
-| PLAT-10 | script | `make kong-roundtrip` (dev-token → curl Kong → BFF → stub) | ❌ W0 | ⬜ pending |
+| PLAT-01 | build + smoke | `make template-smoke` (01-10) and `go test -tags=integration 'github.com/chonlatee11/boat-booking/services/__NAME__/...'` (01-09) | ❌ W0 | ⬜ pending |
+| PLAT-02 | unit + integration | `make test && make test-integration` (pkg/* tests from 01-01, 01-03, 01-04, 01-07, 01-09) | ❌ W0 | ⬜ pending |
+| PLAT-03 | smoke | `make up && make proof` (01-12); `deploy/postgres/isolation-check.sh` | ❌ W0 | ⬜ pending |
+| PLAT-04 | CI gate | `make proto-gen && make proto-check` (01-02) | ❌ W0 | ⬜ pending |
+| PLAT-05 | integration + e2e | `go test -tags=integration -run TestBoatUpsertedAppliedOnce github.com/chonlatee11/boat-booking/services/schedule/...` (01-11); `make proof` PASS exactly-once (01-12) | ❌ W0 | ⬜ pending |
+| PLAT-06 | integration + e2e + manual | `go test -tags=integration -run TestTraceparentSurvivesRelay github.com/chonlatee11/boat-booking/pkg/outbox/...` (01-04); `make proof` PASS single-trace / logs-correlated (01-12) | ❌ W0 | ⬜ pending |
+| PLAT-07 | integration | `go test -tags=integration -run 'TestFailedHandlerLandsInDLQAfter3Retries|TestUncommittedRecordIsRedelivered' github.com/chonlatee11/boat-booking/pkg/kafka/...` (01-07) | ❌ W0 | ⬜ pending |
+| PLAT-08 | CI self-test + manual | `make ci` (01-13); `make ci-up && deploy/ci/smoke.sh` (01-06, 01-13) | ❌ W0 | ⬜ pending |
+| PLAT-09 | build gate + manual | `npm --prefix apps/web run lint && npm --prefix apps/web run typecheck && npm --prefix apps/web run build` (01-05) | ❌ W0 | ⬜ pending |
+| PLAT-10 | script | `make up && make kong-roundtrip` (01-01, extended in 01-12) | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
