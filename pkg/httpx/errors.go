@@ -34,8 +34,11 @@ func WriteError(w http.ResponseWriter, err error) {
 		status = http.StatusServiceUnavailable
 	}
 
+	// Hide the message whenever the status is the generic 500 — not just for
+	// CodeInternal/CodeUnknown — so an unmapped connect code (WR-02) can
+	// never leak error detail behind a status that implies it's hidden.
 	message := "internal error"
-	if code != connect.CodeInternal && code != connect.CodeUnknown {
+	if status != http.StatusInternalServerError {
 		var connErr *connect.Error
 		if errors.As(err, &connErr) {
 			message = connErr.Message()
