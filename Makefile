@@ -3,7 +3,7 @@ SHELL := bash
 export
 
 M := github.com/chonlatee11/boat-booking
-COMPOSE := docker compose --env-file .env -f deploy/docker-compose.yml
+COMPOSE := docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.services.yml
 COMPOSE_CI := docker compose --env-file .env -f deploy/ci/docker-compose.yml
 
 # Every service directory that has been scaffolded with `make new-service`
@@ -12,7 +12,11 @@ COMPOSE_CI := docker compose --env-file .env -f deploy/ci/docker-compose.yml
 SERVICES ?= $(shell for d in services/*/; do n=$$(basename "$$d"); [ -f "$${d}cmd/main.go" ] && echo "$$n"; done)
 TAG ?= $(shell git rev-parse --short HEAD)
 
-.PHONY: dev-keys dev-token up up-infra obs-check down kong-roundtrip test test-integration dev-tools lint hooks proto-gen proto-check sqlc-gen ci-keys ci-up ci-down images new-service template-smoke
+PORT ?= 8080
+CATALOG_PORT ?= 8090
+topic ?= catalog.events
+
+.PHONY: dev-keys dev-token up up-infra obs-check down kong-roundtrip proof compose-gen test test-integration dev-tools lint hooks proto-gen proto-check sqlc-gen ci-keys ci-up ci-down images new-service template-smoke migrate-% run-% dlq-list
 
 dev-keys:
 	go run $(M)/pkg/auth/cmd/devtoken keys
@@ -23,20 +27,94 @@ deploy/kong/kong.yml: deploy/kong/kong.yml.tmpl .env
 dev-token:
 	go run $(M)/pkg/auth/cmd/devtoken token $(ARGS)
 
-up: dev-keys deploy/kong/kong.yml
-	$(COMPOSE) --profile app --profile web up -d --build --wait
+# compose-gen renders deploy/docker-compose.services.yml (git-ignored) from
+# deploy/services.txt + deploy/compose/service.yml.tmpl — one migrate-<svc> +
+# <svc> block per listed service (D-24, D-26).
+deploy/docker-compose.services.yml: deploy/services.txt deploy/compose/service.yml.tmpl
+	@echo "services:" > $@
+	@for svc in $$(grep -v '^[[:space:]]*#' deploy/services.txt | grep -v '^[[:space:]]*$$'); do \
+		sed "s/__NAME__/$$svc/g" deploy/compose/service.yml.tmpl >> $@; \
+	done
 
-up-infra: dev-keys
-	$(COMPOSE) up -d --wait
+compose-gen: deploy/docker-compose.services.yml
+
+# `docker compose up --wait` only accepts "running|healthy" as done, so a
+# by-design one-shot container that exits 0 (postgres-init, redpanda-init,
+# migrate-<svc>, D-26) makes --wait itself fail even though everything
+# actually succeeded. wait_ready polls `ps -a` instead: exited-with-0 is
+# treated as done, exited-nonzero or unhealthy fails fast, anything still
+# starting is retried until WAIT_TIMEOUT (default 180s).
+define wait_ready
+	@deadline=$$(( $$(date +%s) + $${WAIT_TIMEOUT:-180} )); \
+	while :; do \
+		bad=""; unready=""; \
+		while IFS= read -r row; do \
+			[ -z "$$row" ] && continue; \
+			state=$$(echo "$$row" | jq -r .State); \
+			health=$$(echo "$$row" | jq -r .Health); \
+			exitcode=$$(echo "$$row" | jq -r .ExitCode); \
+			svc=$$(echo "$$row" | jq -r .Service); \
+			if [ "$$state" = "running" ]; then \
+				case "$$health" in ""|healthy) ;; *) unready="$$unready $$svc" ;; esac; \
+			elif [ "$$state" = "exited" ]; then \
+				[ "$$exitcode" != "0" ] && bad="$$bad $$svc(exit $$exitcode)"; \
+			else \
+				unready="$$unready $$svc($$state)"; \
+			fi; \
+		done < <($(COMPOSE) ps -a --format json); \
+		if [ -n "$$bad" ]; then echo "wait_ready: failed:$$bad" >&2; $(COMPOSE) ps -a; exit 1; fi; \
+		if [ -z "$$unready" ]; then echo "wait_ready: all services running/healthy or completed successfully"; break; fi; \
+		if [ "$$(date +%s)" -ge "$$deadline" ]; then echo "wait_ready: timed out waiting for:$$unready" >&2; $(COMPOSE) ps -a; exit 1; fi; \
+		sleep 2; \
+	done
+endef
+
+up: dev-keys deploy/kong/kong.yml compose-gen
+	$(COMPOSE) --profile app --profile web up -d --build
+	$(call wait_ready)
+
+up-infra: dev-keys compose-gen
+	$(COMPOSE) up -d
+	$(call wait_ready)
 
 obs-check:
 	deploy/observability/check.sh all
 
-down:
+down: compose-gen
 	$(COMPOSE) --profile app --profile web --profile tools down
 
 kong-roundtrip:
 	deploy/kong/roundtrip.sh
+
+proof:
+	deploy/proof.sh
+
+# run-% runs a service from the host (go run) against the up-infra stack,
+# with hosts overridden to localhost (D-17, D-19). Services listed in
+# deploy/services.txt are DB/Kafka-backed; every other service (gateway) has
+# neither and instead needs CATALOG_URL. The Collector is not host-exposed
+# (D-38), so OTEL_EXPORTER_OTLP_ENDPOINT is deliberately left unset.
+run-%:
+	@if grep -qx "$*" deploy/services.txt 2>/dev/null; then \
+		DATABASE_URL="postgres://$*:$(SERVICE_DB_PASSWORD)@localhost:5432/$*?sslmode=disable" \
+		KAFKA_BROKERS="localhost:19092" \
+		LOG_FORMAT=text HTTP_ADDR=":$(PORT)" \
+		go run $(M)/services/$*/cmd; \
+	else \
+		CATALOG_URL="http://localhost:$(CATALOG_PORT)" \
+		LOG_FORMAT=text HTTP_ADDR=":$(PORT)" \
+		go run $(M)/services/$*/cmd; \
+	fi
+
+# migrate-% runs that service's migrations manually against the compose
+# infra (D-26) — the service binary never auto-migrates.
+migrate-%: compose-gen
+	$(COMPOSE) --profile app run --rm migrate-$*
+
+# dlq-list prints (and exits after) whatever is on <topic>.dlq, including the
+# error/consumer_group/attempts headers a failed handler attaches (D-12).
+dlq-list:
+	$(COMPOSE) exec -T redpanda rpk topic consume $(topic).dlq --offset :end
 
 test:
 	go test $$(go list -m -f '{{.Path}}/...')
@@ -78,6 +156,7 @@ new-service:
 	go work use ./services/$(name)
 	mkdir -p deploy
 	echo "$(name)" >> deploy/services.txt
+	$(MAKE) compose-gen
 	@echo "new-service: services/$(name) is ready — cd services/$(name) and replace the sample slice (see CLAUDE.md)"
 
 # template-smoke proves a freshly scaffolded service builds into a container

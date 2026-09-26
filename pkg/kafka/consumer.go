@@ -148,7 +148,7 @@ func (c *Consumer) Run(ctx context.Context) error {
 		// real fetch failure, so it's not logged as one.
 		if !ctxDone {
 			for _, fe := range fetches.Errors() {
-				c.log.Error("kafka: fetch error", "topic", fe.Topic, "partition", fe.Partition, "error", fe.Err)
+				c.log.ErrorContext(ctx, "kafka: fetch error", "topic", fe.Topic, "partition", fe.Partition, "error", fe.Err)
 			}
 		}
 
@@ -174,7 +174,7 @@ func (c *Consumer) Run(ctx context.Context) error {
 		if len(toCommit) > 0 {
 			commitCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 			if err := cl.CommitRecords(commitCtx, toCommit...); err != nil {
-				c.log.Error("kafka: commit records failed", "error", err)
+				c.log.ErrorContext(ctx, "kafka: commit records failed", "error", err)
 			}
 			cancel()
 		}
@@ -201,7 +201,7 @@ func (c *Consumer) processRecord(runCtx context.Context, rec *kgo.Record) bool {
 		// ponytail: our own producer never emits malformed envelopes; a
 		// corrupt record here can't be fixed by retrying. Log and commit
 		// past it rather than wedge the partition forever.
-		c.log.Error("kafka: unmarshal envelope failed, skipping",
+		c.log.ErrorContext(spanCtx, "kafka: unmarshal envelope failed, skipping",
 			"topic", rec.Topic, "partition", rec.Partition, "offset", rec.Offset, "error", err)
 		return true
 	}
@@ -216,7 +216,7 @@ func (c *Consumer) processRecord(runCtx context.Context, rec *kgo.Record) bool {
 
 	fn, ok := c.handlers[env.EventType]
 	if !ok {
-		c.log.Info("kafka: no handler registered, skipping",
+		c.log.InfoContext(detachedCtx, "kafka: no handler registered, skipping",
 			"event_id", env.EventId, "event_type", env.EventType, "aggregate_id", env.AggregateId, "result", "skipped")
 		c.processed.Add(detachedCtx, 1, metric.WithAttributes(
 			attribute.String("event_type", env.EventType), attribute.String("result", "skipped")))
@@ -228,7 +228,7 @@ func (c *Consumer) processRecord(runCtx context.Context, rec *kgo.Record) bool {
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		result, applyErr := c.apply(detachedCtx, fn, env)
 		if applyErr == nil {
-			c.log.Info("kafka: event processed",
+			c.log.InfoContext(detachedCtx, "kafka: event processed",
 				"event_id", env.EventId, "event_type", env.EventType, "aggregate_id", env.AggregateId, "result", result)
 			c.processed.Add(detachedCtx, 1, metric.WithAttributes(
 				attribute.String("event_type", env.EventType), attribute.String("result", result)))
@@ -239,13 +239,13 @@ func (c *Consumer) processRecord(runCtx context.Context, rec *kgo.Record) bool {
 			break
 		}
 
-		c.log.Warn("kafka: handler failed, retrying",
+		c.log.WarnContext(detachedCtx, "kafka: handler failed, retrying",
 			"event_id", env.EventId, "event_type", env.EventType, "aggregate_id", env.AggregateId,
 			"attempt", attempt, "error", applyErr)
 		select {
 		case <-time.After(c.Backoff[attempt-1]):
 		case <-runCtx.Done():
-			c.log.Warn("kafka: abandoning record uncommitted, shutting down mid-backoff",
+			c.log.WarnContext(detachedCtx, "kafka: abandoning record uncommitted, shutting down mid-backoff",
 				"event_id", env.EventId, "event_type", env.EventType, "aggregate_id", env.AggregateId, "attempt", attempt)
 			return false
 		}
@@ -309,7 +309,7 @@ func (c *Consumer) sendToDLQ(runCtx, spanCtx context.Context, rec *kgo.Record, e
 
 	for i := 0; ; i++ {
 		if produceErr := c.dlq.produceRecord(context.WithoutCancel(runCtx), dlqRec); produceErr != nil {
-			c.log.Warn("kafka: dlq produce failed, retrying",
+			c.log.WarnContext(spanCtx, "kafka: dlq produce failed, retrying",
 				"event_id", env.EventId, "event_type", env.EventType, "dlq_topic", dlqTopic, "error", produceErr)
 			select {
 			case <-time.After(c.dlqRetryDelay(i)):
@@ -321,7 +321,7 @@ func (c *Consumer) sendToDLQ(runCtx, spanCtx context.Context, rec *kgo.Record, e
 		break
 	}
 
-	c.log.Error("kafka: event sent to dlq",
+	c.log.ErrorContext(spanCtx, "kafka: event sent to dlq",
 		"event_id", env.EventId, "event_type", env.EventType, "aggregate_id", env.AggregateId,
 		"attempts", attempts, "error", cause, "dlq_topic", dlqTopic)
 	c.dlqCount.Add(context.WithoutCancel(runCtx), 1, metric.WithAttributes(

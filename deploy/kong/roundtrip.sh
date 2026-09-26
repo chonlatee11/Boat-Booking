@@ -68,7 +68,19 @@ else
 	check "ratelimit-header" 0
 fi
 
-# (h) LAST: send up to 130 authorized requests, PASS when a 429 appears
+# (i) public boats without a token -> 200 (the "-> stub service" hop of
+# PLAT-10 is now catalog).
+status=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/v1/public/boats")
+[ "$status" = "200" ] && check "public-boats-200" 1 || check "public-boats-200" 0
+
+# (j) POST /api/v1/boats with a valid token -> 201.
+status=$(curl -s -o /dev/null -w '%{http_code}' --cookie "access_token=$tok" \
+	-X POST -H 'Content-Type: application/json' \
+	-d '{"name":"Roundtrip Boat","defaultCapacity":10,"status":"BOAT_STATUS_ACTIVE"}' \
+	"$BASE/api/v1/boats")
+[ "$status" = "201" ] && check "upsert-boat-201" 1 || check "upsert-boat-201" 0
+
+# (k) LAST: send up to 130 authorized requests, PASS when a 429 appears
 got429=0
 for i in $(seq 1 130); do
 	status=$(curl -s -o /dev/null -w '%{http_code}' --cookie "access_token=$tok" "$BASE/api/v1/whoami")

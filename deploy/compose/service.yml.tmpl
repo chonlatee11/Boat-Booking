@@ -1,0 +1,44 @@
+  migrate-__NAME__:
+    profiles: [app]
+    build:
+      context: ..
+      dockerfile: deploy/migrate/Dockerfile
+    volumes:
+      - ../services/__NAME__/migrations:/migrations:ro
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: postgres://__NAME__:${SERVICE_DB_PASSWORD}@postgres:5432/__NAME__?sslmode=disable
+      GOOSE_MIGRATION_DIR: /migrations
+    command: ["goose", "up"]
+    depends_on:
+      postgres-init:
+        condition: service_completed_successfully
+
+  __NAME__:
+    profiles: [app]
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        SERVICE: __NAME__
+    environment:
+      DATABASE_URL: postgres://__NAME__:${SERVICE_DB_PASSWORD}@postgres:5432/__NAME__?sslmode=disable
+      KAFKA_BROKERS: redpanda:9092
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      ENV: ${ENV}
+      LOG_LEVEL: ${LOG_LEVEL}
+      LOG_FORMAT: json
+      HTTP_ADDR: ":8080"
+    healthcheck:
+      test: ["CMD", "/service", "-healthcheck"]
+      interval: 5s
+      retries: 12
+    stop_grace_period: 20s
+    depends_on:
+      migrate-__NAME__:
+        condition: service_completed_successfully
+      redpanda-init:
+        condition: service_completed_successfully
+      otel-collector:
+        condition: service_started
