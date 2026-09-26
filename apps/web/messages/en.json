@@ -13,5 +13,23 @@
   },
   "locale": {
     "switch": "Switch language"
+  },
+  "auth": {
+    "title": "Sign in",
+    "destinationLabel": "Email or phone number",
+    "send": "Send OTP code",
+    "codeSentTo": "Code sent to {destination}",
+    "verify": "Confirm code",
+    "resendIn": "Resend available in {n}s",
+    "resend": "Resend OTP code",
+    "signIn": "Sign in",
+    "signedIn": "Signed in",
+    "signOut": "Sign out",
+    "errors": {
+      "wrongCode": "Incorrect code ({n} attempts left)",
+      "expired": "Code expired or locked — request a new one",
+      "rateLimited": "Max 5 requests per hour — try again later",
+      "generic": "Something went wrong — try again"
+    }
   }
 }
