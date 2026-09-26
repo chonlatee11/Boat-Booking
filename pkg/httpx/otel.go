@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
@@ -21,6 +23,17 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
+
+// NewHTTPClient returns an *http.Client whose Transport is wrapped with
+// otelhttp, so the global trace propagator injects traceparent into every
+// outbound request (D-50) — used by the gateway's admin/public proxies so a
+// proxied hop stays in the same trace as the inbound request.
+func NewHTTPClient(timeout time.Duration) *http.Client {
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
+	}
+}
 
 // SetupOTel always installs the global TraceContext+Baggage propagator, so
 // trace context keeps flowing across HTTP and Kafka hops regardless of

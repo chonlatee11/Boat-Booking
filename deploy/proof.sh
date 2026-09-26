@@ -32,19 +32,19 @@ NAME="Proof Boat $(date +%s)"
 BODY=$(printf '{"name":"%s","defaultCapacity":42,"status":"BOAT_STATUS_ACTIVE"}' "$NAME")
 
 http_code=$(curl -s -o /tmp/proof-upsert.json -w '%{http_code}' \
-	-X POST "$BASE/api/v1/boats" \
+	-X POST "$BASE/api/v1/admin/boatbooking.catalog.v1.CatalogService/UpsertBoat" \
 	--cookie "access_token=$TOKEN" \
 	-H 'Content-Type: application/json' \
 	-d "$BODY")
 
-if [ "$http_code" != "201" ]; then
-	echo "FAIL upsert-201 (got $http_code): $(cat /tmp/proof-upsert.json)"
+if [ "$http_code" != "200" ]; then
+	echo "FAIL upsert-200 (got $http_code): $(cat /tmp/proof-upsert.json)"
 	exit 1
 fi
 
 BOAT_ID=$(jq -r '.boat.boatId // empty' /tmp/proof-upsert.json)
 if [ -z "$BOAT_ID" ]; then
-	echo "FAIL upsert-201: no boat.boatId in response: $(cat /tmp/proof-upsert.json)"
+	echo "FAIL upsert-200: no boat.boatId in response: $(cat /tmp/proof-upsert.json)"
 	exit 1
 fi
 echo "proof.sh: boat id = $BOAT_ID"

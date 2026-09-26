@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -136,15 +137,27 @@ func run(ctx context.Context) error {
 	}
 	verifier := auth.NewVerifier(pub, jwtIssuer)
 
+	catalogURLStr := httpx.EnvOr("CATALOG_URL", "http://catalog:8080")
+	identityURLStr := httpx.EnvOr("IDENTITY_URL", "http://identity:8080")
+	catalogURL, err := url.Parse(catalogURLStr)
+	if err != nil {
+		return fmt.Errorf("%s: parse CATALOG_URL: %w", serviceName, err)
+	}
+	identityURL, err := url.Parse(identityURLStr)
+	if err != nil {
+		return fmt.Errorf("%s: parse IDENTITY_URL: %w", serviceName, err)
+	}
+
+	// One client shared by the typed catalog client and the admin/public
+	// proxies, so every proxied hop carries the traceparent the otelhttp
+	// transport injects (D-50).
+	proxyClient := httpx.NewHTTPClient(10 * time.Second)
+
 	catalogOtelOpt, err := httpx.ConnectOtel()
 	if err != nil {
 		return fmt.Errorf("%s: catalog client otel option: %w", serviceName, err)
 	}
-	catalogClient := catalogv1connect.NewCatalogServiceClient(
-		&http.Client{Timeout: 5 * time.Second},
-		httpx.EnvOr("CATALOG_URL", "http://catalog:8080"),
-		catalogOtelOpt,
-	)
+	catalogClient := catalogv1connect.NewCatalogServiceClient(proxyClient, catalogURLStr, catalogOtelOpt)
 
 	r := chi.NewRouter()
 	r.Get("/healthz", httpx.Healthz)
@@ -152,7 +165,7 @@ func run(ctx context.Context) error {
 	// Mounted directly — NOT behind httpx.RequireInternal. The gateway is
 	// where the internal-token trust boundary originates (D-29, D-30), not a
 	// consumer of it: its callers are Kong and browsers.
-	httpadapter.Routes(r, verifier, catalogClient, token)
+	httpadapter.Routes(r, verifier, catalogClient, catalogURL, identityURL, proxyClient.Transport, token)
 
 	srv := &http.Server{
 		Addr:              addr,

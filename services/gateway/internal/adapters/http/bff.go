@@ -5,8 +5,8 @@ package http
 import (
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"connectrpc.com/connect"
@@ -20,18 +20,24 @@ import (
 	"github.com/chonlatee11/boat-booking/pkg/httpx"
 )
 
-// maxUpsertBoatBodyBytes bounds POST /api/v1/boats request bodies (T-11-03).
-const maxUpsertBoatBodyBytes = 16 * 1024
+// identityServiceName is the connect full name of identity's future
+// UserService (implemented in 02-07) — allow-listed here so the admin proxy
+// starts routing to it the moment it exists, with no gateway change.
+const identityServiceName = "boatbooking.identity.v1.UserService"
 
 // Routes registers the gateway's BFF routes on r, verifying the access
-// cookie (or bearer token) with v and calling catalog over connect-go with
-// the internal token + verified claims it forwards (D-29, D-30). Mounted
-// directly on the router — NOT behind httpx.RequireInternal — because the
-// gateway is where that trust boundary originates, not a consumer of it.
-func Routes(r chi.Router, v *auth.Verifier, catalog catalogv1connect.CatalogServiceClient, internalToken string) {
+// cookie (or bearer token) with v (D-29, D-30). Mounted directly on the
+// router — NOT behind httpx.RequireInternal — because the gateway is where
+// that trust boundary originates, not a consumer of it.
+func Routes(r chi.Router, v *auth.Verifier, catalog catalogv1connect.CatalogServiceClient, catalogURL, identityURL *url.URL, transport http.RoundTripper, internalToken string) {
 	r.Get("/api/v1/whoami", whoamiHandler(v))
 	r.Get("/api/v1/public/boats", publicBoatsHandler(catalog, internalToken))
-	r.Post("/api/v1/boats", upsertBoatHandler(v, catalog, internalToken))
+
+	upstreams := map[string]*url.URL{
+		catalogv1connect.CatalogServiceName: catalogURL,
+		identityServiceName:                 identityURL,
+	}
+	r.Post("/api/v1/admin/{service}/{method}", adminProxy(v, upstreams, transport, internalToken))
 }
 
 func whoamiHandler(v *auth.Verifier) http.HandlerFunc {
@@ -72,60 +78,6 @@ func publicBoatsHandler(catalog catalogv1connect.CatalogServiceClient, internalT
 			return
 		}
 		writeProtoJSON(w, http.StatusOK, resp.Msg)
-	}
-}
-
-// upsertBoatHandler verifies the access cookie, decodes the request body
-// into UpsertBoatRequest (rejecting unknown fields, T-11-03), forwards
-// verified claims + the internal token — deleting any client-supplied
-// trust-boundary headers first (ForwardClaims, T-11-01) — and calls
-// catalog.UpsertBoat over connect-go.
-func upsertBoatHandler(v *auth.Verifier, catalog catalogv1connect.CatalogServiceClient, internalToken string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		tok := tokenFromRequest(r)
-		if tok == "" {
-			httpx.WriteError(w, unauthenticated("missing access token"))
-			return
-		}
-		claims, err := v.Verify(tok, auth.KindAccess)
-		if err != nil {
-			httpx.WriteError(w, unauthenticated("invalid access token"))
-			return
-		}
-		// TODO(WR-01): no claims.Role check here — Phase 1 has exactly one
-		// role (pier_admin, see 01-RESEARCH.md "V4 Access Control": "no
-		// business-level roles exist yet"). Phase 2 introduces customer/staff
-		// roles (SKELETON.md); add a role check on this write path (and on
-		// catalog's UpsertBoat, services/catalog/internal/adapters/http/routes.go)
-		// before a second role can reach this handler.
-
-		r.Body = http.MaxBytesReader(w, r.Body, maxUpsertBoatBodyBytes)
-		data, err := io.ReadAll(r.Body)
-		if err != nil {
-			httpx.WriteError(w, connect.NewError(connect.CodeInvalidArgument, errors.New("request body too large or unreadable")))
-			return
-		}
-
-		var msg catalogv1.UpsertBoatRequest
-		if err := protojson.Unmarshal(data, &msg); err != nil {
-			httpx.WriteError(w, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request body")))
-			return
-		}
-
-		req := connect.NewRequest(&msg)
-		httpx.ForwardClaims(req.Header(), httpx.Claims{
-			UserID:     claims.UserID,
-			OperatorID: claims.OperatorID,
-			Role:       claims.Role,
-			PierIDs:    claims.PierIDs,
-		}, internalToken)
-
-		resp, err := catalog.UpsertBoat(r.Context(), req)
-		if err != nil {
-			httpx.WriteError(w, err)
-			return
-		}
-		writeProtoJSON(w, http.StatusCreated, resp.Msg)
 	}
 }
 

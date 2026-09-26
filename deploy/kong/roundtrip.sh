@@ -73,12 +73,13 @@ fi
 status=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/v1/public/boats")
 [ "$status" = "200" ] && check "public-boats-200" 1 || check "public-boats-200" 0
 
-# (j) POST /api/v1/boats with a valid token -> 201.
+# (j) POST /api/v1/admin/boatbooking.catalog.v1.CatalogService/UpsertBoat with
+# a valid (pier_admin) token -> 200 (connect success is always 200; D-18).
 status=$(curl -s -o /dev/null -w '%{http_code}' --cookie "access_token=$tok" \
 	-X POST -H 'Content-Type: application/json' \
 	-d '{"name":"Roundtrip Boat","defaultCapacity":10,"status":"BOAT_STATUS_ACTIVE"}' \
-	"$BASE/api/v1/boats")
-[ "$status" = "201" ] && check "upsert-boat-201" 1 || check "upsert-boat-201" 0
+	"$BASE/api/v1/admin/boatbooking.catalog.v1.CatalogService/UpsertBoat")
+[ "$status" = "200" ] && check "admin-proxy-upsert-boat-200" 1 || check "admin-proxy-upsert-boat-200" 0
 
 # (k) whoami returns pier_ids for a devtoken minted with -pier-ids (D-06).
 pier_tok=$($DEVTOKEN -pier-ids 00000000-0000-0000-0000-0000000000b1,00000000-0000-0000-0000-0000000000b2)
@@ -89,7 +90,15 @@ else
 	check "whoami-pier-ids" 0
 fi
 
-# (l) LAST: send up to 130 authorized requests, PASS when a 429 appears
+# (l) admin proxy rejects a customer-role token -> 403 (T-02-04-02).
+cust_tok=$($DEVTOKEN -role customer)
+status=$(curl -s -o /dev/null -w '%{http_code}' --cookie "access_token=$cust_tok" \
+	-X POST -H 'Content-Type: application/json' \
+	-d '{"name":"x","defaultCapacity":1,"status":"BOAT_STATUS_ACTIVE"}' \
+	"$BASE/api/v1/admin/boatbooking.catalog.v1.CatalogService/UpsertBoat")
+[ "$status" = "403" ] && check "admin-proxy-customer-403" 1 || check "admin-proxy-customer-403" 0
+
+# (m) LAST: send up to 130 authorized requests, PASS when a 429 appears
 got429=0
 for i in $(seq 1 130); do
 	status=$(curl -s -o /dev/null -w '%{http_code}' --cookie "access_token=$tok" "$BASE/api/v1/whoami")
