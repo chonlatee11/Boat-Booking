@@ -67,6 +67,16 @@ func newAdminProxyServer(t *testing.T, v *auth.Verifier, upstreams map[string]*u
 	return srv
 }
 
+// newPublicProxyServer mounts publicHandler alone on a fresh chi router.
+func newPublicProxyServer(t *testing.T, catalogURL *url.URL) *httptest.Server {
+	t.Helper()
+	r := chi.NewRouter()
+	r.Get("/api/v1/public/{resource}", publicHandler(http.DefaultClient, catalogURL, testInternalToken))
+	srv := httptest.NewServer(r)
+	t.Cleanup(srv.Close)
+	return srv
+}
+
 func TestAdminProxyForwardsVerifiedClaimsAndStripsSpoofed(t *testing.T) {
 	issuer, verifier := newTestAuth(t)
 	rec := &recordedRequest{}
@@ -339,5 +349,108 @@ func TestAdminProxyRoutesUserServiceToIdentity(t *testing.T) {
 	}
 	if identityRec.path != "/"+identityServiceName+"/ListUsers" {
 		t.Errorf("identity upstream path = %q, want the rewritten connect path", identityRec.path)
+	}
+}
+
+func TestPublicProxyIsClaimLess(t *testing.T) {
+	rec := &recordedRequest{}
+	upstream := newFakeUpstream(t, rec, http.StatusOK, `{"piers":[{"pierId":"p1"}]}`)
+	srv := newPublicProxyServer(t, mustParseURL(t, upstream.URL))
+
+	req, err := http.NewRequest(http.MethodGet, srv.URL+"/api/v1/public/piers", nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	req.Header.Set(httpx.HeaderUserID, "attacker")
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: "spoofed"})
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("do request: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
+	data, _ := io.ReadAll(resp.Body)
+
+	if !rec.called {
+		t.Fatal("upstream was never called")
+	}
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200, body=%s", resp.StatusCode, data)
+	}
+	if rec.method != http.MethodPost {
+		t.Errorf("upstream method = %q, want POST", rec.method)
+	}
+	if rec.path != "/"+catalogv1connect.CatalogServiceName+"/ListPiers" {
+		t.Errorf("upstream path = %q, want the rewritten connect path", rec.path)
+	}
+	if string(rec.body) != "{}" {
+		t.Errorf("upstream body = %q, want {}", rec.body)
+	}
+	if got := rec.headers.Get("Content-Type"); got != "application/json" {
+		t.Errorf("upstream Content-Type = %q, want application/json", got)
+	}
+	if got := rec.headers.Get(httpx.HeaderInternalToken); got != testInternalToken {
+		t.Errorf("upstream saw X-Internal-Token = %q, want %q", got, testInternalToken)
+	}
+	if got := rec.headers.Get(httpx.HeaderUserID); got != "" {
+		t.Errorf("upstream saw X-User-Id = %q, want empty (never any claim header)", got)
+	}
+	if got := rec.headers.Get("Cookie"); got != "" {
+		t.Errorf("upstream saw Cookie = %q, want empty", got)
+	}
+	if string(data) != `{"piers":[{"pierId":"p1"}]}` {
+		t.Errorf("response body = %q, want the upstream body passed through byte-for-byte", data)
+	}
+}
+
+func TestPublicProxyUnknownResource404(t *testing.T) {
+	rec := &recordedRequest{}
+	upstream := newFakeUpstream(t, rec, http.StatusOK, "{}")
+	srv := newPublicProxyServer(t, mustParseURL(t, upstream.URL))
+
+	resp, err := http.Get(srv.URL + "/api/v1/public/users")
+	if err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("status = %d, want 404", resp.StatusCode)
+	}
+	if rec.called {
+		t.Error("upstream was called, want no call for an unknown resource")
+	}
+}
+
+func TestPublicProxyPassthrough(t *testing.T) {
+	cases := []struct {
+		resource string
+		method   string
+	}{
+		{"boats", "ListBoats"},
+		{"piers", "ListPiers"},
+		{"routes", "ListRoutes"},
+	}
+	for _, c := range cases {
+		t.Run(c.resource, func(t *testing.T) {
+			rec := &recordedRequest{}
+			upstream := newFakeUpstream(t, rec, http.StatusOK, "{}")
+			srv := newPublicProxyServer(t, mustParseURL(t, upstream.URL))
+
+			resp, err := http.Get(srv.URL + "/api/v1/public/" + c.resource)
+			if err != nil {
+				t.Fatalf("get: %v", err)
+			}
+			defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
+			data, _ := io.ReadAll(resp.Body)
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("status = %d, want 200, body=%s", resp.StatusCode, data)
+			}
+			if string(data) != "{}" {
+				t.Errorf("response body = %q, want {} (empty list rendered by connect JSON, passed through unchanged)", data)
+			}
+			if rec.path != "/"+catalogv1connect.CatalogServiceName+"/"+c.method {
+				t.Errorf("upstream path = %q, want /%s/%s", rec.path, catalogv1connect.CatalogServiceName, c.method)
+			}
+		})
 	}
 }

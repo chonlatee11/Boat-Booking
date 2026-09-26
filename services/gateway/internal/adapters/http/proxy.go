@@ -9,10 +9,12 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/go-chi/chi/v5"
 
+	"github.com/chonlatee11/boat-booking/gen/go/catalog/v1/catalogv1connect"
 	"github.com/chonlatee11/boat-booking/pkg/auth"
 	"github.com/chonlatee11/boat-booking/pkg/httpx"
 )
@@ -105,5 +107,50 @@ func adminProxy(v *auth.Verifier, upstreams map[string]*url.URL, transport http.
 			},
 		}
 		proxy.ServeHTTP(w, r)
+	}
+}
+
+// publicResourceMethods maps GET /api/v1/public/{resource} to the
+// CatalogService RPC that serves it claim-less (D-21, CAT-06).
+var publicResourceMethods = map[string]string{
+	"boats":  "ListBoats",
+	"piers":  "ListPiers",
+	"routes": "ListRoutes",
+}
+
+// publicHandler serves GET /api/v1/public/{resource} by calling the mapped
+// CatalogService RPC on a brand-new outbound request built from scratch —
+// never copied from the inbound one — carrying only X-Internal-Token, never
+// any claim header or cookie (T-02-04-05).
+func publicHandler(client *http.Client, catalogURL *url.URL, internalToken string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		resource := chi.URLParam(r, "resource")
+		method, ok := publicResourceMethods[resource]
+		if !ok {
+			httpx.WriteError(w, connect.NewError(connect.CodeNotFound, errors.New("unknown resource")))
+			return
+		}
+
+		target := *catalogURL
+		target.Path = "/" + catalogv1connect.CatalogServiceName + "/" + method
+
+		req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, target.String(), strings.NewReader("{}"))
+		if err != nil {
+			httpx.WriteError(w, connect.NewError(connect.CodeInternal, err))
+			return
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set(httpx.HeaderInternalToken, internalToken)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			httpx.WriteError(w, connect.NewError(connect.CodeUnavailable, err))
+			return
+		}
+		defer resp.Body.Close() //nolint:errcheck // response body close, nothing actionable
+
+		w.Header().Set("Content-Type", resp.Header.Get("Content-Type"))
+		w.WriteHeader(resp.StatusCode)
+		_, _ = io.Copy(w, resp.Body)
 	}
 }

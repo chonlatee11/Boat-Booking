@@ -22,11 +22,21 @@ Kafka consumer are disabled by env (D-04, D-29).
 
 - `GET /api/v1/whoami` — verified claims only (reads the `access_token`
   cookie itself; not a proxy call).
-- `GET /api/v1/public/boats` — proxies `CatalogService.ListBoats` with only
-  the internal token, no claims (a public catalog-wide read).
-- `POST /api/v1/boats` — verifies the `access_token` cookie, then proxies
-  `CatalogService.UpsertBoat` over connect-go with verified claims + the
-  internal token forwarded (D-29, D-30).
+- `POST /api/v1/admin/{service}/{method}` — generic allow-listed reverse
+  proxy (D-18) for every catalog/identity admin RPC: `service` must be
+  `boatbooking.catalog.v1.CatalogService` (-> `CATALOG_URL`) or
+  `boatbooking.identity.v1.UserService` (-> `IDENTITY_URL`), `method` must
+  match `^[A-Z][A-Za-z0-9]{0,63}$`, everything else is 404. Requires a valid
+  access token with role `staff`, `pier_admin` or `super_admin` (customer ->
+  403), `Content-Type: application/json`, and a body up to 64 KiB. Every
+  client-supplied `X-User-Id`/`X-Operator-Id`/`X-Role`/`X-Pier-Ids`/
+  `X-Internal-Token`, `Cookie` and `Authorization` is deleted before
+  `httpx.ForwardClaims` sets verified values (Anti-Pattern 2).
+- `GET /api/v1/public/{resource}` — claim-less reverse proxy (D-21, CAT-06)
+  for `boats` -> `ListBoats`, `piers` -> `ListPiers`, `routes` -> `ListRoutes`
+  (anything else 404). Builds a brand-new outbound request carrying only
+  `X-Internal-Token` — never any inbound header or cookie — so a public list
+  can never leak claims.
 
 ## Trust Rules (D-27, D-29, D-30)
 
@@ -56,8 +66,9 @@ Kafka consumer are disabled by env (D-04, D-29).
 - `cmd/main.go` — the one binary: HTTP (chi), the outbox relay and Kafka
   consumer goroutines (both always disabled here — no `DATABASE_URL`), and
   ordered shutdown, identical in shape to every other service.
-- `internal/adapters/http/bff.go` — `Routes` and the claim-verifying handlers
-  (calls `httpx.ForwardClaims`, which now lives in `pkg/httpx`).
+- `internal/adapters/http/bff.go` — `Routes` and `whoamiHandler`.
+- `internal/adapters/http/proxy.go` — `adminProxy` and `publicHandler` (calls
+  `httpx.ForwardClaims`, which lives in `pkg/httpx`).
 - `internal/adapters/kafka/handlers.go` — empty `Register` (template
   parity; gateway consumes nothing).
 

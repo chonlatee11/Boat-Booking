@@ -1,7 +1,6 @@
 package http
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
@@ -11,42 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"connectrpc.com/connect"
 	"github.com/go-chi/chi/v5"
 
-	catalogv1 "github.com/chonlatee11/boat-booking/gen/go/catalog/v1"
-	"github.com/chonlatee11/boat-booking/gen/go/catalog/v1/catalogv1connect"
 	"github.com/chonlatee11/boat-booking/pkg/auth"
-	"github.com/chonlatee11/boat-booking/pkg/httpx"
 )
 
 const testInternalToken = "test-internal-token"
-
-// fakeCatalog is a minimal catalogv1connect.CatalogServiceHandler recording
-// the last request's headers so tests can assert on the trust-boundary
-// headers the gateway forwards (D-29, D-30).
-type fakeCatalog struct {
-	catalogv1connect.UnimplementedCatalogServiceHandler
-	lastHeaders http.Header
-}
-
-func (f *fakeCatalog) ListBoats(_ context.Context, req *connect.Request[catalogv1.ListBoatsRequest]) (*connect.Response[catalogv1.ListBoatsResponse], error) {
-	f.lastHeaders = req.Header()
-	return connect.NewResponse(&catalogv1.ListBoatsResponse{Boats: nil}), nil
-}
-
-// newFakeCatalogServer hosts fc behind httpx.RequireInternal(testInternalToken)
-// — exactly the trust boundary the real catalog service enforces — and
-// returns a connect client pointed at it.
-func newFakeCatalogServer(t *testing.T, fc *fakeCatalog) catalogv1connect.CatalogServiceClient {
-	t.Helper()
-	path, handler := catalogv1connect.NewCatalogServiceHandler(fc)
-	mux := http.NewServeMux()
-	mux.Handle(path, httpx.RequireInternal(testInternalToken)(handler))
-	srv := httptest.NewServer(mux)
-	t.Cleanup(srv.Close)
-	return catalogv1connect.NewCatalogServiceClient(srv.Client(), srv.URL)
-}
 
 func newTestAuth(t *testing.T) (*auth.Issuer, *auth.Verifier) {
 	t.Helper()
@@ -57,66 +26,26 @@ func newTestAuth(t *testing.T) (*auth.Issuer, *auth.Verifier) {
 	return auth.NewIssuer(priv, "test-issuer"), auth.NewVerifier(&priv.PublicKey, "test-issuer")
 }
 
-// unusedUpstreamURL satisfies Routes' admin-proxy upstream parameters for
-// tests in this file that never call the admin proxy (see proxy_test.go for
-// those) — any well-formed *url.URL works, nothing ever dials it.
+// unusedUpstreamURL satisfies Routes' admin/public-proxy upstream parameters
+// for tests in this file that never reach either proxy (see proxy_test.go
+// for those) — any well-formed *url.URL works, nothing ever dials it.
 var unusedUpstreamURL = &url.URL{Scheme: "http", Host: "unused.invalid"}
 
 // newGatewayServer wires Routes onto a fresh chi router behind an httptest
 // server, mirroring how cmd/main.go mounts them (no RequireInternal — the
 // gateway is the origin of trust, not a consumer of it, D-29).
-func newGatewayServer(t *testing.T, v *auth.Verifier, catalog catalogv1connect.CatalogServiceClient) *httptest.Server {
+func newGatewayServer(t *testing.T, v *auth.Verifier) *httptest.Server {
 	t.Helper()
 	r := chi.NewRouter()
-	Routes(r, v, catalog, unusedUpstreamURL, unusedUpstreamURL, http.DefaultTransport, testInternalToken)
+	Routes(r, v, http.DefaultClient, unusedUpstreamURL, unusedUpstreamURL, testInternalToken)
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)
 	return srv
 }
 
-func TestPublicBoatsListNoAuthRequired(t *testing.T) {
-	_, verifier := newTestAuth(t)
-	fc := &fakeCatalog{}
-	catalog := newFakeCatalogServer(t, fc)
-	srv := newGatewayServer(t, verifier, catalog)
-
-	resp, err := http.Get(srv.URL + "/api/v1/public/boats")
-	if err != nil {
-		t.Fatalf("get: %v", err)
-	}
-	defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("status = %d, want 200", resp.StatusCode)
-	}
-
-	var body map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-	boats, ok := body["boats"].([]any)
-	if !ok {
-		t.Fatalf(`body["boats"] = %#v (type %T), want a JSON array (empty list rendered as [], not null)`, body["boats"], body["boats"])
-	}
-	if len(boats) != 0 {
-		t.Errorf("boats = %v, want empty", boats)
-	}
-
-	if fc.lastHeaders == nil {
-		t.Fatal("fake catalog was never called")
-	}
-	if got := fc.lastHeaders.Get(httpx.HeaderInternalToken); got != testInternalToken {
-		t.Errorf("catalog saw X-Internal-Token = %q, want %q", got, testInternalToken)
-	}
-	if got := fc.lastHeaders.Get(httpx.HeaderUserID); got != "" {
-		t.Errorf("catalog saw X-User-Id = %q, want empty (no claims for a public route)", got)
-	}
-}
-
 func TestWhoamiUnchanged(t *testing.T) {
 	issuer, verifier := newTestAuth(t)
-	fc := &fakeCatalog{}
-	catalog := newFakeCatalogServer(t, fc)
-	srv := newGatewayServer(t, verifier, catalog)
+	srv := newGatewayServer(t, verifier)
 
 	tok, err := issuer.Issue(auth.Claims{UserID: "u1", OperatorID: "op1", Role: "pier_admin", Kind: auth.KindAccess}, time.Now())
 	if err != nil {
@@ -154,9 +83,7 @@ func TestWhoamiUnchanged(t *testing.T) {
 
 func TestWhoamiReturnsPierIDs(t *testing.T) {
 	issuer, verifier := newTestAuth(t)
-	fc := &fakeCatalog{}
-	catalog := newFakeCatalogServer(t, fc)
-	srv := newGatewayServer(t, verifier, catalog)
+	srv := newGatewayServer(t, verifier)
 
 	tok, err := issuer.Issue(auth.Claims{
 		UserID: "u1", OperatorID: "op1", Role: "pier_admin",
@@ -196,9 +123,7 @@ func TestWhoamiReturnsPierIDs(t *testing.T) {
 
 func TestWhoamiReturnsEmptyPierIDsArray(t *testing.T) {
 	issuer, verifier := newTestAuth(t)
-	fc := &fakeCatalog{}
-	catalog := newFakeCatalogServer(t, fc)
-	srv := newGatewayServer(t, verifier, catalog)
+	srv := newGatewayServer(t, verifier)
 
 	tok, err := issuer.Issue(auth.Claims{UserID: "u1", OperatorID: "op1", Role: "customer", Kind: auth.KindAccess}, time.Now())
 	if err != nil {
@@ -233,5 +158,6 @@ func TestWhoamiReturnsEmptyPierIDsArray(t *testing.T) {
 // ForwardClaims itself now lives in pkg/httpx (moved, D-06) — its unit tests
 // (TestForwardClaimsSetsVerifiedValues, TestForwardClaimsOverwritesSpoofedHeaders,
 // TestForwardClaimsEmptyPierIDsSetsNoHeader) live in pkg/httpx/claims_test.go.
-// The legacy POST /api/v1/boats route and its tests are gone (D-18): admin
-// writes now go through the generic adminProxy tested in proxy_test.go.
+// The legacy POST /api/v1/boats route and the typed public-boats handler are
+// both gone (D-18, D-21): every catalog RPC now goes through the generic
+// adminProxy/publicHandler tested in proxy_test.go.

@@ -11,10 +11,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/go-chi/chi/v5"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 
-	catalogv1 "github.com/chonlatee11/boat-booking/gen/go/catalog/v1"
 	"github.com/chonlatee11/boat-booking/gen/go/catalog/v1/catalogv1connect"
 	"github.com/chonlatee11/boat-booking/pkg/auth"
 	"github.com/chonlatee11/boat-booking/pkg/httpx"
@@ -29,15 +26,15 @@ const identityServiceName = "boatbooking.identity.v1.UserService"
 // cookie (or bearer token) with v (D-29, D-30). Mounted directly on the
 // router — NOT behind httpx.RequireInternal — because the gateway is where
 // that trust boundary originates, not a consumer of it.
-func Routes(r chi.Router, v *auth.Verifier, catalog catalogv1connect.CatalogServiceClient, catalogURL, identityURL *url.URL, transport http.RoundTripper, internalToken string) {
+func Routes(r chi.Router, v *auth.Verifier, client *http.Client, catalogURL, identityURL *url.URL, internalToken string) {
 	r.Get("/api/v1/whoami", whoamiHandler(v))
-	r.Get("/api/v1/public/boats", publicBoatsHandler(catalog, internalToken))
+	r.Get("/api/v1/public/{resource}", publicHandler(client, catalogURL, internalToken))
 
 	upstreams := map[string]*url.URL{
 		catalogv1connect.CatalogServiceName: catalogURL,
 		identityServiceName:                 identityURL,
 	}
-	r.Post("/api/v1/admin/{service}/{method}", adminProxy(v, upstreams, transport, internalToken))
+	r.Post("/api/v1/admin/{service}/{method}", adminProxy(v, upstreams, client.Transport, internalToken))
 }
 
 func whoamiHandler(v *auth.Verifier) http.HandlerFunc {
@@ -65,22 +62,6 @@ func whoamiHandler(v *auth.Verifier) http.HandlerFunc {
 	}
 }
 
-// publicBoatsHandler proxies ListBoats with only the internal token — a
-// catalog-wide read needing no verified claims (D-29).
-func publicBoatsHandler(catalog catalogv1connect.CatalogServiceClient, internalToken string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		req := connect.NewRequest(&catalogv1.ListBoatsRequest{})
-		req.Header().Set(httpx.HeaderInternalToken, internalToken)
-
-		resp, err := catalog.ListBoats(r.Context(), req)
-		if err != nil {
-			httpx.WriteError(w, err)
-			return
-		}
-		writeProtoJSON(w, http.StatusOK, resp.Msg)
-	}
-}
-
 func tokenFromRequest(r *http.Request) string {
 	if c, err := r.Cookie(auth.AccessCookie); err == nil && c.Value != "" {
 		return c.Value
@@ -99,18 +80,4 @@ func writeJSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(body)
-}
-
-// writeProtoJSON renders msg as protojson, emitting unpopulated fields so an
-// empty repeated field serializes as [] rather than being omitted (and read
-// back as null).
-func writeProtoJSON(w http.ResponseWriter, status int, msg proto.Message) {
-	data, err := protojson.MarshalOptions{EmitUnpopulated: true}.Marshal(msg)
-	if err != nil {
-		httpx.WriteError(w, connect.NewError(connect.CodeInternal, err))
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_, _ = w.Write(data)
 }
