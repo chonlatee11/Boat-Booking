@@ -2,10 +2,10 @@
 phase: "1"
 slug: "platform-foundation"
 # status lifecycle: draft (seeded by plan-phase) → validated (set by validate-phase §6)
-# audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: false) (#2117)
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+# audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: true) (#2117)
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-09-26"
 ---
 
@@ -42,16 +42,16 @@ Filled by planner/executor per task. Requirement → test anchors from RESEARCH.
 
 | Requirement | Test Type | Automated Command | File Exists | Status |
 |-------------|-----------|-------------------|-------------|--------|
-| PLAT-01 | build + smoke | `make template-smoke` (01-10) and `go test -tags=integration 'github.com/chonlatee11/boat-booking/services/__NAME__/...'` (01-09) | ❌ W0 | ⬜ pending |
-| PLAT-02 | unit + integration | `make test && make test-integration` (pkg/* tests from 01-01, 01-03, 01-04, 01-07, 01-09) | ❌ W0 | ⬜ pending |
-| PLAT-03 | smoke | `make up && make proof` (01-12); `deploy/postgres/isolation-check.sh` | ❌ W0 | ⬜ pending |
-| PLAT-04 | CI gate | `make proto-gen && make proto-check` (01-02) | ❌ W0 | ⬜ pending |
-| PLAT-05 | integration + e2e | `go test -tags=integration -run TestBoatUpsertedAppliedOnce github.com/chonlatee11/boat-booking/services/schedule/...` (01-11); `make proof` PASS exactly-once (01-12) | ❌ W0 | ⬜ pending |
-| PLAT-06 | integration + e2e + manual | `go test -tags=integration -run TestTraceparentSurvivesRelay github.com/chonlatee11/boat-booking/pkg/outbox/...` (01-04); `make proof` PASS single-trace / logs-correlated (01-12) | ❌ W0 | ⬜ pending |
-| PLAT-07 | integration | `go test -tags=integration -run 'TestFailedHandlerLandsInDLQAfter3Retries|TestUncommittedRecordIsRedelivered' github.com/chonlatee11/boat-booking/pkg/kafka/...` (01-07) | ❌ W0 | ⬜ pending |
-| PLAT-08 | CI self-test + manual | `make ci` (01-13); `make ci-up && deploy/ci/smoke.sh` (01-06, 01-13) | ❌ W0 | ⬜ pending |
-| PLAT-09 | build gate + manual | `npm --prefix apps/web run lint && npm --prefix apps/web run typecheck && npm --prefix apps/web run build` (01-05) | ❌ W0 | ⬜ pending |
-| PLAT-10 | script | `make up && make kong-roundtrip` (01-01, extended in 01-12) | ❌ W0 | ⬜ pending |
+| PLAT-01 | build + smoke | `make template-smoke` (01-10) and `go test -tags=integration 'github.com/chonlatee11/boat-booking/services/__NAME__/...'` (01-09) | ✅ | ✅ green |
+| PLAT-02 | unit + integration | `make test && make test-integration` (pkg/* tests from 01-01, 01-03, 01-04, 01-07, 01-09) | ✅ | ✅ green |
+| PLAT-03 | smoke | `make up && make proof` (01-12); `deploy/postgres/isolation-check.sh` | ✅ | ✅ green |
+| PLAT-04 | CI gate | `make proto-gen && make proto-check` (01-02) | ✅ | ✅ green |
+| PLAT-05 | integration + e2e | `go test -tags=integration -run TestBoatUpsertedAppliedOnce github.com/chonlatee11/boat-booking/services/schedule/...` (01-11); `make proof` PASS exactly-once (01-12) | ✅ | ✅ green |
+| PLAT-06 | integration + e2e + manual | `go test -tags=integration -run TestTraceparentSurvivesRelay github.com/chonlatee11/boat-booking/pkg/outbox/...` (01-04); `make proof` PASS single-trace / logs-correlated (01-12) | ✅ | ✅ green |
+| PLAT-07 | integration | `go test -tags=integration -run 'TestFailedHandlerLandsInDLQAfter3Retries|TestUncommittedRecordIsRedelivered' github.com/chonlatee11/boat-booking/pkg/kafka/...` (01-07) | ✅ | ✅ green |
+| PLAT-08 | CI self-test + manual | `make ci` (01-13); `make ci-up && deploy/ci/smoke.sh` (01-06, 01-13) | ✅ | ✅ green |
+| PLAT-09 | build gate + manual | `npm --prefix apps/web run lint && npm --prefix apps/web run typecheck && npm --prefix apps/web run build` (01-05) | ✅ | ✅ green |
+| PLAT-10 | script | `make up && make kong-roundtrip` (01-01, extended in 01-12) | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -59,14 +59,14 @@ Filled by planner/executor per task. Requirement → test anchors from RESEARCH.
 
 ## Wave 0 Requirements
 
-- [ ] `go.work` + `pkg/*` modules — shared packages
-- [ ] `services/_template/**` — template service
-- [ ] `proto/**` + `buf.gen.yaml` — proto-gen inputs
-- [ ] `deploy/docker-compose.yml` + init scripts — `make up`
-- [ ] `Jenkinsfile` + `deploy/ci/docker-compose.yml` — CI
-- [ ] `apps/web` — Next.js skeleton
-- [ ] `deploy/kong/kong.yml` + dev-token target — Kong spike
-- [ ] Integration tests `TestBoatUpsertedAppliedOnce`, `TestFailedHandlerLandsInDLQAfter3Retries`, `TestTraceparentSurvivesRelay`
+- [x] `go.work` + `pkg/*` modules — shared packages
+- [x] `services/_template/**` — template service
+- [x] `proto/**` + `buf.gen.yaml` — proto-gen inputs
+- [x] `deploy/docker-compose.yml` + init scripts — `make up`
+- [x] `Jenkinsfile` + `deploy/ci/docker-compose.yml` — CI
+- [x] `apps/web` — Next.js skeleton
+- [x] `deploy/kong/kong.yml` + dev-token target — Kong spike
+- [x] Integration tests `TestBoatUpsertedAppliedOnce`, `TestFailedHandlerLandsInDLQAfter3Retries`, `TestTraceparentSurvivesRelay`
 
 ---
 
@@ -82,11 +82,28 @@ Filled by planner/executor per task. Requirement → test anchors from RESEARCH.
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 180s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 180s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-09-26
+
+---
+
+## Validation Audit 2026-09-26
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+All 10 requirements COVERED; every command run green on commit `23b1a58`:
+`make test`, `make test-integration` (12 pkgs ok), `make proto-check`, `make template-smoke`,
+`make kong-roundtrip` (4 PASS), `deploy/postgres/isolation-check.sh` (4 PASS), `make proof` (5 PASS),
+`make web-check`, and remaining `make ci` steps (`changed-services_test.sh`, `lint`, `migrate-validate`, `images`).
+Manual-only rows unchanged (Jenkins scoping confirmed in UAT test 8; `make proof` single-trace automates most of the Tempo check).
+Note: `buf` lives in `$HOME/go/bin` — must be on PATH for `make proto-check`.
