@@ -23,6 +23,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/chonlatee11/boat-booking/gen/go/identity/v1/identityv1connect"
 	"github.com/chonlatee11/boat-booking/pkg/auth"
 	"github.com/chonlatee11/boat-booking/pkg/httpx"
 	"github.com/chonlatee11/boat-booking/pkg/kafka"
@@ -151,6 +152,12 @@ func run(ctx context.Context) error {
 	// the traceparent the otelhttp transport injects (D-50).
 	proxyClient := httpx.NewHTTPClient(10 * time.Second)
 
+	otelOpt, err := httpx.ConnectOtel()
+	if err != nil {
+		return fmt.Errorf("%s: %w", serviceName, err)
+	}
+	authClient := identityv1connect.NewAuthServiceClient(httpx.NewHTTPClient(5*time.Second), identityURL.String(), otelOpt)
+
 	r := chi.NewRouter()
 	r.Get("/healthz", httpx.Healthz)
 	r.Get("/readyz", ready.Handler)
@@ -158,6 +165,7 @@ func run(ctx context.Context) error {
 	// where the internal-token trust boundary originates (D-29, D-30), not a
 	// consumer of it: its callers are Kong and browsers.
 	httpadapter.Routes(r, verifier, proxyClient, catalogURL, identityURL, token)
+	httpadapter.AuthRoutes(r, authClient, token)
 
 	srv := &http.Server{
 		Addr:              addr,

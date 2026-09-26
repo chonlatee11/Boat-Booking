@@ -32,6 +32,10 @@ func WriteError(w http.ResponseWriter, err error) {
 		status = http.StatusConflict
 	case connect.CodeUnavailable:
 		status = http.StatusServiceUnavailable
+	case connect.CodeResourceExhausted:
+		status = http.StatusTooManyRequests
+	case connect.CodeFailedPrecondition:
+		status = http.StatusBadRequest
 	}
 
 	// Hide the message whenever the status is the generic 500 — not just for
