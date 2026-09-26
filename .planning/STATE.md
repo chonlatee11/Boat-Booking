@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Platform Foundation
 status: executing
-stopped_at: Completed 01-08-PLAN.md
-last_updated: "2026-09-26T05:26:27.866Z"
+stopped_at: Completed 01-09-PLAN.md
+last_updated: "2026-09-26T05:50:47.535Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 01 execution started
-state_head: 48fb79584c54d3efc597237d53ab09b51564f7eb
+state_head: 4a3f8c0c99103173fb490936d5624f27f1cf13a6
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 13
-  completed_plans: 8
+  completed_plans: 9
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 01 (Platform Foundation) — EXECUTING
-Plan: 9 of 13
+Plan: 10 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 01 execution started
 
@@ -66,6 +66,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P05 | 55min | 3 tasks | 21 files |
 | Phase 01 P07 | 24min | 2 tasks | 5 files |
 | Phase 01 P08 | 32min | 2 tasks | 11 files |
+| Phase 01 P09 | 45min | 2 tasks | 28 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,8 @@ Recent decisions affecting current work:
 - [Phase 01]: kgo BlockRebalanceOnPoll requires AllowRebalance() on every PollFetches iteration, including the ctx-cancelled fake-fetch path — Skipping AllowRebalance on early ctx-done return left the poller count non-zero, deadlocking Client.Close()'s graceful group-leave forever - found and fixed before the first commit
 - [Phase 01]: Loki compactor.delete_request_store must be set whenever limits_config.retention_period is non-zero, even though the plan text didn't call it out — added delete_request_store: filesystem
 - [Phase 01]: Grafana's Loki derived field keeps the literal double-dollar '$${__value.raw}' — Grafana's provisioning-file env-var expansion would otherwise consume a single $ before Loki's own derived-field macro sees it
+- [Phase 01]: [Phase 01] golang.org/x/sync pinned to v0.22.0 (not the plan's v0.23.0) — v0.23.0 requires go1.26, breaking the repo's go1.25.x toolchain pin
+- [Phase 01]: [Phase 01] sqlc's pgx/v5 codegen maps postgres uuid columns to pgtype.UUID; internal/app owns small toPgUUID/fromPgUUID converters so pgx-specific types never leak into domain/app signatures
 
 ### Pending Todos
 
@@ -108,6 +111,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T05:26:27.820Z
-Stopped at: Completed 01-08-PLAN.md
+Last session: 2026-09-26T05:50:47.488Z
+Stopped at: Completed 01-09-PLAN.md
 Resume file: None
