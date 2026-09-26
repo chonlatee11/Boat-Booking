@@ -4,4 +4,5 @@ use (
 	./gen/go
 	./pkg
 	./services/gateway
+	./services/_template
 )
