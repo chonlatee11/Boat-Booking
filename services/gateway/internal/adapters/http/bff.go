@@ -87,6 +87,12 @@ func upsertBoatHandler(v *auth.Verifier, catalog catalogv1connect.CatalogService
 			httpx.WriteError(w, unauthenticated("invalid access token"))
 			return
 		}
+		// TODO(WR-01): no claims.Role check here — Phase 1 has exactly one
+		// role (pier_admin, see 01-RESEARCH.md "V4 Access Control": "no
+		// business-level roles exist yet"). Phase 2 introduces customer/staff
+		// roles (SKELETON.md); add a role check on this write path (and on
+		// catalog's UpsertBoat, services/catalog/internal/adapters/http/routes.go)
+		// before a second role can reach this handler.
 
 		r.Body = http.MaxBytesReader(w, r.Body, maxUpsertBoatBodyBytes)
 		data, err := io.ReadAll(r.Body)

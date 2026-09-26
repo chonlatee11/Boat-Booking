@@ -54,6 +54,12 @@ func (s *server) UpsertBoat(ctx context.Context, req *connect.Request[catalogv1.
 	if err != nil {
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("invalid operator id in claims"))
 	}
+	// TODO(WR-01): no claims.Role check here — Phase 1 has exactly one role
+	// (pier_admin, see 01-RESEARCH.md "V4 Access Control": "no business-level
+	// roles exist yet"). Phase 2 introduces customer/staff roles
+	// (SKELETON.md); add a role check on this write path (and on the
+	// gateway's upsertBoatHandler, services/gateway/internal/adapters/http/bff.go)
+	// before a second role can reach this handler.
 
 	status, err := statusFromProto(req.Msg.Status)
 	if err != nil {
