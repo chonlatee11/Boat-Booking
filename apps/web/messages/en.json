@@ -1,0 +1,17 @@
+{
+  "home": {
+    "title": "Boat Ferry Booking",
+    "subtitle": "Search departures, book ahead, pay, and get your QR ticket without queueing at the pier"
+  },
+  "boats": {
+    "heading": "Available Boats",
+    "loading": "Loading boats...",
+    "empty": "No boats available right now",
+    "error": "Failed to load boats (status {status})",
+    "retry": "Retry",
+    "capacity": "{count} seats left"
+  },
+  "locale": {
+    "switch": "Switch language"
+  }
+}
