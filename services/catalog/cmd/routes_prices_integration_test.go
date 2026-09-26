@@ -5,13 +5,16 @@ package main
 import (
 	"context"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
 
 	catalogv1 "github.com/chonlatee11/boat-booking/gen/go/catalog/v1"
 	"github.com/chonlatee11/boat-booking/gen/go/catalog/v1/catalogv1connect"
 	"github.com/chonlatee11/boat-booking/pkg/auth"
+	"github.com/chonlatee11/boat-booking/pkg/clock"
 	"github.com/chonlatee11/boat-booking/pkg/httpx"
+	bbpgx "github.com/chonlatee11/boat-booking/pkg/pgx"
 	"github.com/chonlatee11/boat-booking/services/catalog/internal/app"
 )
 
@@ -143,4 +146,172 @@ func TestRoutesScopingAndSharedPierTo(t *testing.T) {
 	if found.PierFromId != a1 || found.PierToId != b1 || found.DurationMinutes != 60 {
 		t.Errorf("public route = %+v, want pier_from=%s pier_to=%s duration=60", found, a1, b1)
 	}
+}
+
+// archiveRouteDirectly sets archived_at on routeID via a direct DB write —
+// used to exercise AddRoutePrice's archived-route rejection ahead of
+// ArchiveRoute existing as an RPC (Task 3).
+func archiveRouteDirectly(t *testing.T, dsn, routeID string) {
+	t.Helper()
+	ctx := context.Background()
+	pool, err := bbpgx.NewPool(ctx, dsn)
+	if err != nil {
+		t.Fatalf("archiveRouteDirectly: new pool: %v", err)
+	}
+	defer pool.Close()
+	if _, err := pool.Exec(ctx, `update routes set archived_at = now() where id = $1::uuid`, routeID); err != nil {
+		t.Fatalf("archiveRouteDirectly: update: %v", err)
+	}
+}
+
+// TestRoutePricesEffectiveDating proves D-14: the price in effect on a date
+// is the row with the latest effective_from <= that date (inclusive
+// boundary); re-adding the same (route, ticket_type, effective_from)
+// replaces the amount in one row; ListRoutePrices orders effective_from
+// desc then ticket_type; a route with no prices has no current_prices and
+// an empty ListRoutePrices; and the route-scope/role rules from AddRoutePrice
+// mirror UpsertRoute's.
+func TestRoutePricesEffectiveDating(t *testing.T) {
+	addr, dsn := setCatalogEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+	ctx := context.Background()
+
+	superAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RoleSuperAdmin, ""))
+
+	opA := mustCreateOperator(t, ctx, superAdmin, "Operator Prices A")
+	opB := mustCreateOperator(t, ctx, superAdmin, "Operator Prices B")
+	a1 := mustCreatePier(t, ctx, superAdmin, opA, "ท่า PA1", "Pier PA1", 7.5, 98.1)
+	b1 := mustCreatePier(t, ctx, superAdmin, opB, "ท่า PB1", "Pier PB1", 7.6, 98.2)
+	b2 := mustCreatePier(t, ctx, superAdmin, opB, "ท่า PB2", "Pier PB2", 7.7, 98.3)
+
+	pierAdminA1 := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, opA, a1))
+	route := mustCreateRoute(t, ctx, pierAdminA1, a1, b1, 30)
+
+	today := clock.LocalDate(clock.Now())
+	todayStr := today.Format("2006-01-02")
+	plus10 := today.AddDate(0, 0, 10)
+	plus10Str := plus10.Format("2006-01-02")
+
+	mustAddPrice := func(client catalogv1connect.CatalogServiceClient, routeID string, ticketType catalogv1.TicketType, amount int64, effectiveFrom string) *catalogv1.RoutePrice {
+		t.Helper()
+		resp, err := client.AddRoutePrice(ctx, connect.NewRequest(&catalogv1.AddRoutePriceRequest{
+			RouteId: routeID, TicketType: ticketType, AmountSatang: amount, EffectiveFrom: effectiveFrom,
+		}))
+		if err != nil {
+			t.Fatalf("AddRoutePrice route=%s ticket=%v amount=%d effective=%s: %v", routeID, ticketType, amount, effectiveFrom, err)
+		}
+		return resp.Msg.Price
+	}
+
+	mustAddPrice(pierAdminA1, route.RouteId, catalogv1.TicketType_TICKET_TYPE_ADULT, 15000, todayStr)
+	mustAddPrice(pierAdminA1, route.RouteId, catalogv1.TicketType_TICKET_TYPE_ADULT, 20000, plus10Str)
+	mustAddPrice(pierAdminA1, route.RouteId, catalogv1.TicketType_TICKET_TYPE_CHILD, 8000, todayStr)
+
+	public := newAuthedCatalogClient(baseURL, map[string]string{httpx.HeaderInternalToken: "test-token"})
+	assertCurrentPrices := func(wantAdult, wantChild int64) {
+		t.Helper()
+		resp, err := public.ListRoutes(ctx, connect.NewRequest(&catalogv1.ListRoutesRequest{}))
+		if err != nil {
+			t.Fatalf("public ListRoutes: %v", err)
+		}
+		var found *catalogv1.Route
+		for _, r := range resp.Msg.Routes {
+			if r.RouteId == route.RouteId {
+				found = r
+			}
+		}
+		if found == nil {
+			t.Fatalf("route %s not found in public ListRoutes", route.RouteId)
+		}
+		got := map[catalogv1.TicketType]int64{}
+		for _, p := range found.CurrentPrices {
+			got[p.TicketType] = p.AmountSatang
+		}
+		if got[catalogv1.TicketType_TICKET_TYPE_ADULT] != wantAdult {
+			t.Errorf("current adult price = %d, want %d", got[catalogv1.TicketType_TICKET_TYPE_ADULT], wantAdult)
+		}
+		if got[catalogv1.TicketType_TICKET_TYPE_CHILD] != wantChild {
+			t.Errorf("current child price = %d, want %d", got[catalogv1.TicketType_TICKET_TYPE_CHILD], wantChild)
+		}
+	}
+	assertCurrentPrices(15000, 8000)
+
+	// Override clock.Now to a moment on the plus10 local date — the
+	// service runs in-process, so this affects its own clock.LocalDate
+	// calls directly (inclusive boundary: a row effective exactly on D
+	// applies on D).
+	origNow := clock.Now
+	clock.Now = func() time.Time { return plus10.Add(12 * time.Hour) }
+	assertCurrentPrices(20000, 8000)
+	clock.Now = origNow
+
+	// Re-adding the same (route, adult, today) replaces the amount in
+	// place — still one row, now 16000.
+	mustAddPrice(pierAdminA1, route.RouteId, catalogv1.TicketType_TICKET_TYPE_ADULT, 16000, todayStr)
+	assertCurrentPrices(16000, 8000)
+
+	if n := countOutboxEvents(t, dsn, app.EventPriceChanged, route.RouteId); n != 4 {
+		t.Fatalf("PriceChanged outbox rows = %d, want 4 (3 adds + 1 replace)", n)
+	}
+
+	listResp, err := pierAdminA1.ListRoutePrices(ctx, connect.NewRequest(&catalogv1.ListRoutePricesRequest{RouteId: route.RouteId}))
+	if err != nil {
+		t.Fatalf("ListRoutePrices: %v", err)
+	}
+	if len(listResp.Msg.Prices) != 3 {
+		t.Fatalf("ListRoutePrices len = %d, want 3", len(listResp.Msg.Prices))
+	}
+	if p := listResp.Msg.Prices[0]; p.EffectiveFrom != plus10Str || p.TicketType != catalogv1.TicketType_TICKET_TYPE_ADULT {
+		t.Errorf("Prices[0] = %+v, want effective_from=%s ticket=ADULT", p, plus10Str)
+	}
+	if p := listResp.Msg.Prices[1]; p.EffectiveFrom != todayStr || p.TicketType != catalogv1.TicketType_TICKET_TYPE_ADULT {
+		t.Errorf("Prices[1] = %+v, want effective_from=%s ticket=ADULT", p, todayStr)
+	}
+	if p := listResp.Msg.Prices[2]; p.EffectiveFrom != todayStr || p.TicketType != catalogv1.TicketType_TICKET_TYPE_CHILD {
+		t.Errorf("Prices[2] = %+v, want effective_from=%s ticket=CHILD", p, todayStr)
+	}
+
+	// A route with no prices has no current_prices entries and an empty
+	// ListRoutePrices.
+	routeNoPrices := mustCreateRoute(t, ctx, pierAdminA1, a1, b2, 20)
+	emptyResp, err := pierAdminA1.ListRoutePrices(ctx, connect.NewRequest(&catalogv1.ListRoutePricesRequest{RouteId: routeNoPrices.RouteId}))
+	if err != nil {
+		t.Fatalf("ListRoutePrices (no prices): %v", err)
+	}
+	if len(emptyResp.Msg.Prices) != 0 {
+		t.Fatalf("ListRoutePrices (no prices) = %+v, want empty", emptyResp.Msg.Prices)
+	}
+	publicResp2, err := public.ListRoutes(ctx, connect.NewRequest(&catalogv1.ListRoutesRequest{}))
+	if err != nil {
+		t.Fatalf("public ListRoutes (no-prices route): %v", err)
+	}
+	for _, r := range publicResp2.Msg.Routes {
+		if r.RouteId == routeNoPrices.RouteId && len(r.CurrentPrices) != 0 {
+			t.Errorf("route without prices has current_prices = %+v, want empty (absent, never zero)", r.CurrentPrices)
+		}
+	}
+
+	// pier_admin of another operator -> NotFound (route not in their scope).
+	pierAdminB1 := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, opB, b1))
+	_, err = pierAdminB1.AddRoutePrice(ctx, connect.NewRequest(&catalogv1.AddRoutePriceRequest{
+		RouteId: route.RouteId, TicketType: catalogv1.TicketType_TICKET_TYPE_ADULT, AmountSatang: 1, EffectiveFrom: todayStr,
+	}))
+	assertConnectCode(t, err, connect.CodeNotFound, "pier_admin(B) AddRoutePrice on A's route")
+
+	// staff -> PermissionDenied (read-only).
+	staffA1 := newAuthedCatalogClient(baseURL, claimHeaders(auth.RoleStaff, opA, a1))
+	_, err = staffA1.AddRoutePrice(ctx, connect.NewRequest(&catalogv1.AddRoutePriceRequest{
+		RouteId: route.RouteId, TicketType: catalogv1.TicketType_TICKET_TYPE_ADULT, AmountSatang: 1, EffectiveFrom: todayStr,
+	}))
+	assertConnectCode(t, err, connect.CodePermissionDenied, "staff AddRoutePrice")
+
+	// archived route -> FailedPrecondition (archived directly since
+	// ArchiveRoute is Task 3's RPC).
+	archiveRouteDirectly(t, dsn, routeNoPrices.RouteId)
+	_, err = pierAdminA1.AddRoutePrice(ctx, connect.NewRequest(&catalogv1.AddRoutePriceRequest{
+		RouteId: routeNoPrices.RouteId, TicketType: catalogv1.TicketType_TICKET_TYPE_ADULT, AmountSatang: 1, EffectiveFrom: todayStr,
+	}))
+	assertConnectCode(t, err, connect.CodeFailedPrecondition, "AddRoutePrice on archived route")
 }

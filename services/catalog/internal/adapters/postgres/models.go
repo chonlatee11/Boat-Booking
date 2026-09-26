@@ -70,3 +70,12 @@ type Route struct {
 	CreatedAt          pgtype.Timestamptz
 	UpdatedAt          pgtype.Timestamptz
 }
+
+type RoutePrice struct {
+	RouteID       pgtype.UUID
+	TicketType    string
+	AmountSatang  int64
+	EffectiveFrom pgtype.Date
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+}

@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	catalogv1 "github.com/chonlatee11/boat-booking/gen/go/catalog/v1"
+	"github.com/chonlatee11/boat-booking/pkg/clock"
 	"github.com/chonlatee11/boat-booking/pkg/events"
 	"github.com/chonlatee11/boat-booking/pkg/outbox"
 	"github.com/chonlatee11/boat-booking/services/catalog/internal/adapters/postgres"
@@ -159,35 +160,44 @@ func updateRoute(ctx context.Context, tx pgx.Tx, q *postgres.Queries, scope Scop
 }
 
 // ListRoutes returns routes ordered by pier_from name_th, pier_to name_th,
-// then id. public=true (CAT-06, no claims) always returns the non-archived
+// then id, each with CurrentPrices attached for today's Asia/Bangkok date
+// (D-14). public=true (CAT-06, no claims) always returns the non-archived
 // public projection (both endpoints non-archived), regardless of scope.
 // Otherwise super_admin sees every route (optionally filtered by
 // filterOperatorID), pier_admin/staff see only routes in
 // (OperatorID, PierIDs) (AUTH-05).
 func ListRoutes(ctx context.Context, q *postgres.Queries, scope Scope, public bool, filterOperatorID *uuid.UUID) ([]domain.Route, error) {
+	var (
+		routes []domain.Route
+		err    error
+	)
 	if public {
-		rows, err := q.ListRoutesPublic(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("app: list public routes: %w", err)
+		rows, listErr := q.ListRoutesPublic(ctx)
+		if listErr != nil {
+			return nil, fmt.Errorf("app: list public routes: %w", listErr)
 		}
-		return routesFromRows(rows)
-	}
+		routes, err = routesFromRows(rows)
+	} else {
+		var filter pgtype.UUID
+		if scope.All() && filterOperatorID != nil {
+			filter = pgtype.UUID{Bytes: *filterOperatorID, Valid: true}
+		}
 
-	var filter pgtype.UUID
-	if scope.All() && filterOperatorID != nil {
-		filter = pgtype.UUID{Bytes: *filterOperatorID, Valid: true}
+		rows, listErr := q.ListRoutesAdmin(ctx, postgres.ListRoutesAdminParams{
+			AllScope:         scope.All(),
+			FilterOperatorID: filter,
+			OperatorID:       toPgUUID(scope.OperatorID),
+			PierIds:          toPgUUIDs(scope.PierIDArray()),
+		})
+		if listErr != nil {
+			return nil, fmt.Errorf("app: list routes: %w", listErr)
+		}
+		routes, err = routesFromRows(rows)
 	}
-
-	rows, err := q.ListRoutesAdmin(ctx, postgres.ListRoutesAdminParams{
-		AllScope:         scope.All(),
-		FilterOperatorID: filter,
-		OperatorID:       toPgUUID(scope.OperatorID),
-		PierIds:          toPgUUIDs(scope.PierIDArray()),
-	})
 	if err != nil {
-		return nil, fmt.Errorf("app: list routes: %w", err)
+		return nil, err
 	}
-	return routesFromRows(rows)
+	return attachCurrentPrices(ctx, q, routes, clock.LocalDate(clock.Now()))
 }
 
 func publishRouteUpserted(ctx context.Context, tx pgx.Tx, r domain.Route) (domain.Route, error) {

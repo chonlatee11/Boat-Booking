@@ -93,6 +93,10 @@ func (s *server) ListRoutes(ctx context.Context, req *connect.Request[catalogv1.
 }
 
 func toProtoRoute(r domain.Route) *catalogv1.Route {
+	prices := make([]*catalogv1.RoutePrice, len(r.CurrentPrices))
+	for i, p := range r.CurrentPrices {
+		prices[i] = toProtoRoutePrice(p)
+	}
 	return &catalogv1.Route{
 		RouteId:            r.ID.String(),
 		OperatorId:         r.OperatorID.String(),
@@ -101,6 +105,7 @@ func toProtoRoute(r domain.Route) *catalogv1.Route {
 		DurationMinutes:    r.DurationMinutes,
 		CancellationPolicy: cancellationPolicyToProto(r.CancellationPolicy),
 		Archived:           r.Archived,
+		CurrentPrices:      prices,
 	}
 }
 

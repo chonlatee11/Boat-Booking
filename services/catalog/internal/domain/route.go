@@ -55,6 +55,10 @@ func ValidateCancellationPolicy(tiers []CancellationTier) error {
 
 // Route is a one-way departure/arrival pair (D-11). Route display name is
 // derived from PierFromID/PierToID's own names, never stored (D-17).
+// CurrentPrices holds each ticket type's price in effect for today's
+// Asia/Bangkok date (D-14); populated only for display (ListRoutes), never
+// persisted on the route itself. A route with no prices set has an empty
+// CurrentPrices, never a zero-amount entry.
 type Route struct {
 	ID                 uuid.UUID
 	OperatorID         uuid.UUID
@@ -63,6 +67,7 @@ type Route struct {
 	DurationMinutes    int32
 	CancellationPolicy []CancellationTier
 	Archived           bool
+	CurrentPrices      []RoutePrice
 }
 
 // Validate enforces the route's field invariants (also enforced by the
