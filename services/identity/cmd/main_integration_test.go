@@ -3,14 +3,18 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -18,12 +22,16 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 
 	identityv1 "github.com/chonlatee11/boat-booking/gen/go/identity/v1"
 	"github.com/chonlatee11/boat-booking/gen/go/identity/v1/identityv1connect"
@@ -439,5 +447,260 @@ func TestRejectsMissingInternalToken(t *testing.T) {
 	}
 	if connect.CodeOf(err) != connect.CodeUnauthenticated {
 		t.Fatalf("RequestOtp without internal token: code = %s, want %s", connect.CodeOf(err), connect.CodeUnauthenticated)
+	}
+}
+
+// testDestHash recomputes app.hashDestination's HMAC (unexported, different
+// package) so tests can reach directly into Valkey by key — the same
+// OTP_HASH_SECRET every setIdentityEnv test sets.
+func testDestHash(dest string) string {
+	mac := hmac.New(sha256.New, []byte(strings.Repeat("p", 32)))
+	mac.Write([]byte("dest:" + dest))
+	return hex.EncodeToString(mac.Sum(nil))
+}
+
+func assertConnectCode(t *testing.T, err error, want connect.Code, context string) {
+	t.Helper()
+	if err == nil {
+		t.Fatalf("%s: err = nil, want %s", context, want)
+	}
+	if got := connect.CodeOf(err); got != want {
+		t.Fatalf("%s: code = %s, want %s (err: %v)", context, got, want, err)
+	}
+}
+
+// TestOtpCooldownAndHourlyLimit proves the D-03 send-rate rules: a resend
+// within 60s is rejected, and a destination cannot receive more than 5 codes
+// per hour. The 60s cooldown is unblocked by deleting the Valkey cooldown
+// key directly rather than sleeping in the test.
+func TestOtpCooldownAndHourlyLimit(t *testing.T) {
+	addr, _, _ := setIdentityEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+
+	rdb := redis.NewClient(&redis.Options{Addr: valkeyAddr})
+	defer rdb.Close() //nolint:errcheck // test helper, nothing actionable
+
+	dest := "cooldown@example.com"
+	cooldownKey := "otp:cooldown:" + testDestHash(dest)
+
+	ctx := context.Background()
+	client := newAuthClient(baseURL, map[string]string{"X-Internal-Token": "test-token"})
+
+	if _, err := client.RequestOtp(ctx, connect.NewRequest(&identityv1.RequestOtpRequest{Destination: dest})); err != nil {
+		t.Fatalf("send 1: %v", err)
+	}
+
+	_, err := client.RequestOtp(ctx, connect.NewRequest(&identityv1.RequestOtpRequest{Destination: dest}))
+	assertConnectCode(t, err, connect.CodeResourceExhausted, "immediate resend")
+
+	for i := 2; i <= 6; i++ {
+		if err := rdb.Del(ctx, cooldownKey).Err(); err != nil {
+			t.Fatalf("delete cooldown key: %v", err)
+		}
+		_, err := client.RequestOtp(ctx, connect.NewRequest(&identityv1.RequestOtpRequest{Destination: dest}))
+		if i < 6 {
+			if err != nil {
+				t.Fatalf("send %d: %v", i, err)
+			}
+			continue
+		}
+		assertConnectCode(t, err, connect.CodeResourceExhausted, "6th send in the hour")
+	}
+}
+
+// TestOtpAttemptsLockout proves the D-03 lockout rule: 4 wrong codes report
+// a decreasing Attempts-Left header, the 5th locks the code out entirely,
+// and even the correct code is rejected afterwards.
+func TestOtpAttemptsLockout(t *testing.T) {
+	addr, _, _ := setIdentityEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+
+	ctx := context.Background()
+	client := newAuthClient(baseURL, map[string]string{"X-Internal-Token": "test-token"})
+	dest := "lockout@example.com"
+
+	if _, err := client.RequestOtp(ctx, connect.NewRequest(&identityv1.RequestOtpRequest{Destination: dest})); err != nil {
+		t.Fatalf("RequestOtp: %v", err)
+	}
+	code := pollMailpitCode(t, mailpitAPIURL, dest)
+	wrongCode := "000000"
+	if wrongCode == code {
+		wrongCode = "111111"
+	}
+
+	for attempt := 1; attempt <= 4; attempt++ {
+		_, err := client.VerifyOtp(ctx, connect.NewRequest(&identityv1.VerifyOtpRequest{Destination: dest, Code: wrongCode}))
+		assertConnectCode(t, err, connect.CodeInvalidArgument, fmt.Sprintf("wrong code attempt %d", attempt))
+		var connErr *connect.Error
+		if !errors.As(err, &connErr) {
+			t.Fatalf("wrong code attempt %d: not a connect.Error: %v", attempt, err)
+		}
+		want := strconv.Itoa(5 - attempt)
+		if got := connErr.Meta().Get("Attempts-Left"); got != want {
+			t.Errorf("wrong code attempt %d: Attempts-Left = %q, want %q", attempt, got, want)
+		}
+	}
+
+	_, err := client.VerifyOtp(ctx, connect.NewRequest(&identityv1.VerifyOtpRequest{Destination: dest, Code: wrongCode}))
+	assertConnectCode(t, err, connect.CodeFailedPrecondition, "5th wrong code")
+
+	_, err = client.VerifyOtp(ctx, connect.NewRequest(&identityv1.VerifyOtpRequest{Destination: dest, Code: code}))
+	assertConnectCode(t, err, connect.CodeFailedPrecondition, "correct code after lockout")
+}
+
+// TestOtpSingleUseConcurrent proves the atomic-DEL single-use rule holds
+// under concurrency: exactly one of many simultaneous VerifyOtp calls with
+// the same correct code succeeds, and exactly one customer row is created.
+func TestOtpSingleUseConcurrent(t *testing.T) {
+	addr, _, dsn := setIdentityEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+
+	ctx := context.Background()
+	client := newAuthClient(baseURL, map[string]string{"X-Internal-Token": "test-token"})
+	dest := "concurrent@example.com"
+
+	if _, err := client.RequestOtp(ctx, connect.NewRequest(&identityv1.RequestOtpRequest{Destination: dest})); err != nil {
+		t.Fatalf("RequestOtp: %v", err)
+	}
+	code := pollMailpitCode(t, mailpitAPIURL, dest)
+
+	const n = 10
+	var wg sync.WaitGroup
+	var successCount, failedPreconditionCount int64
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, err := client.VerifyOtp(ctx, connect.NewRequest(&identityv1.VerifyOtpRequest{Destination: dest, Code: code}))
+			switch {
+			case err == nil:
+				atomic.AddInt64(&successCount, 1)
+			case connect.CodeOf(err) == connect.CodeFailedPrecondition:
+				atomic.AddInt64(&failedPreconditionCount, 1)
+			default:
+				t.Errorf("unexpected error: %v", err)
+			}
+		}()
+	}
+	wg.Wait()
+
+	if successCount != 1 {
+		t.Errorf("successCount = %d, want 1", successCount)
+	}
+	if failedPreconditionCount != n-1 {
+		t.Errorf("failedPreconditionCount = %d, want %d", failedPreconditionCount, n-1)
+	}
+
+	pool, err := bbpgx.NewPool(ctx, dsn)
+	if err != nil {
+		t.Fatalf("new verification pool: %v", err)
+	}
+	defer pool.Close()
+	var count int
+	if err := pool.QueryRow(ctx, `select count(*) from users where email = $1`, dest).Scan(&count); err != nil {
+		t.Fatalf("count users: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("users count = %d, want 1", count)
+	}
+}
+
+// TestPhoneOtpViaDevSms proves the dev SMS channel: a local Thai phone
+// number is normalised to E.164, its code is delivered to Mailpit as
+// <digits>@sms.local, and VerifyOtp creates a customer with that phone.
+func TestPhoneOtpViaDevSms(t *testing.T) {
+	addr, verifier, dsn := setIdentityEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+
+	ctx := context.Background()
+	client := newAuthClient(baseURL, map[string]string{"X-Internal-Token": "test-token"})
+
+	if _, err := client.RequestOtp(ctx, connect.NewRequest(&identityv1.RequestOtpRequest{Destination: "0812345678"})); err != nil {
+		t.Fatalf("RequestOtp: %v", err)
+	}
+	code := pollMailpitCode(t, mailpitAPIURL, "66812345678@sms.local")
+
+	resp, err := client.VerifyOtp(ctx, connect.NewRequest(&identityv1.VerifyOtpRequest{Destination: "0812345678", Code: code}))
+	if err != nil {
+		t.Fatalf("VerifyOtp: %v", err)
+	}
+	if _, err := verifier.Verify(resp.Msg.AccessToken, auth.KindAccess); err != nil {
+		t.Fatalf("verify access token: %v", err)
+	}
+
+	pool, err := bbpgx.NewPool(ctx, dsn)
+	if err != nil {
+		t.Fatalf("new verification pool: %v", err)
+	}
+	defer pool.Close()
+	var count int
+	if err := pool.QueryRow(ctx, `select count(*) from users where phone = $1`, "+66812345678").Scan(&count); err != nil {
+		t.Fatalf("count users by phone: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("users count for +66812345678 = %d, want 1", count)
+	}
+}
+
+// TestOtpNeverLogged proves no OTP code ever reaches stdout, including on
+// the wrong-code mismatch path. httpx.NewLogger builds its own *slog.Logger
+// writing JSON/text to os.Stdout rather than routing through
+// slog.SetDefault, so this test captures process stdout directly instead of
+// installing a slog.Handler (recorded per plan Task 2 action item 6).
+func TestOtpNeverLogged(t *testing.T) {
+	addr, _, _ := setIdentityEnv(t)
+	baseURL := "http://" + addr
+
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("os.Pipe: %v", err)
+	}
+	origStdout := os.Stdout
+	os.Stdout = w
+
+	var buf bytes.Buffer
+	copyDone := make(chan struct{})
+	go func() {
+		_, _ = io.Copy(&buf, r)
+		close(copyDone)
+	}()
+
+	runService(t)
+	waitForFullyReady(t, baseURL)
+
+	ctx := context.Background()
+	client := newAuthClient(baseURL, map[string]string{"X-Internal-Token": "test-token"})
+	dest := "logcheck@example.com"
+
+	if _, err := client.RequestOtp(ctx, connect.NewRequest(&identityv1.RequestOtpRequest{Destination: dest})); err != nil {
+		os.Stdout = origStdout
+		t.Fatalf("RequestOtp: %v", err)
+	}
+	code := pollMailpitCode(t, mailpitAPIURL, dest)
+	wrongCode := "000000"
+	if wrongCode == code {
+		wrongCode = "111111"
+	}
+
+	_, _ = client.VerifyOtp(ctx, connect.NewRequest(&identityv1.VerifyOtpRequest{Destination: dest, Code: wrongCode}))
+	if _, err := client.VerifyOtp(ctx, connect.NewRequest(&identityv1.VerifyOtpRequest{Destination: dest, Code: code})); err != nil {
+		os.Stdout = origStdout
+		t.Fatalf("VerifyOtp: %v", err)
+	}
+
+	os.Stdout = origStdout
+	_ = w.Close()
+	<-copyDone
+
+	if strings.Contains(buf.String(), code) {
+		t.Errorf("captured stdout contains the issued OTP code")
 	}
 }
