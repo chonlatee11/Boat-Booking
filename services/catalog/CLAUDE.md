@@ -1,29 +1,33 @@
-# Service Template — Agent Guide
+# catalog — Agent Guide
 
-Every real service starts life as `cp -r services/_template services/<name>` +
-`sed` replacing `catalog` (`make new-service name=<name>`, D-03). This file is
-copied verbatim into the new service directory — edit the copy in place once
-the sample slice below is replaced with real business logic.
+Scaffolded from `services/_template` by `make new-service name=catalog`
+(D-03) — see `services/_template/CLAUDE.md` for the shared template rules
+and layout this service still follows.
 
 ## Owns
 
-_(fill in: this service's own Postgres tables — database-per-service, no
-service reads another service's database)_
+- `boats` (Phase 1). Operators, piers, routes, and prices arrive in Phase 2.
 
 ## Publishes
 
-_(fill in: `<service>.<EventName>` events on the `<service>.events` topic, or
-"Nothing yet")_
+- `catalog.BoatUpserted` on the `catalog.events` topic, keyed by `boat_id` —
+  emitted whenever `CatalogService.UpsertBoat` creates or updates a boat
+  (D-01).
 
 ## Consumes
 
-_(fill in: event types this service's Kafka consumer handles via
-`kafka.Consumer.Handle`, or "Nothing yet")_
+- Nothing yet.
 
 ## Sync API
 
-_(fill in: connect-go RPCs this service exposes, and whether each requires
-only the internal token or verified claims too)_
+- `CatalogService.UpsertBoat` — requires verified claims; `operator_id`
+  always comes from the claims, never the request body (D-30). An empty
+  `boat_id` creates a new boat; a non-empty `boat_id` updates one, but only
+  when it belongs to the calling operator (cross-operator reuse of an
+  existing `boat_id` returns `NotFound`, and the stored row is left
+  unchanged).
+- `CatalogService.ListBoats` — needs only the internal token, no claims.
+  Returns every boat ordered by `name`, then `id`.
 
 ## Rules
 
@@ -44,38 +48,27 @@ only the internal token or verified claims too)_
 
 ## Layout
 
-- `cmd/` — the one binary: HTTP (chi + connect handlers), outbox relay, and
-  Kafka consumer running as `errgroup` goroutines with ordered shutdown.
-- `internal/domain/` — types and validation rules only, no persistence or
-  transport concerns.
-- `internal/app/` — use-case functions taking `pgx.Tx` directly. No
-  repository interfaces, no mocks; tested against real Postgres under the
-  `integration` build tag.
-- `internal/adapters/{postgres,http,kafka}/` — sqlc-generated Postgres code,
-  HTTP/connect route wiring, and Kafka consumer handler registration.
-- `migrations/` — goose SQL migrations. `00001_platform.sql` (outbox +
-  processed_events) is copied verbatim from the template and never edited.
-
-## Replace the Sample
-
-The scaffolded service starts with a `pings` sample slice proving the full
-HTTP -> tx -> outbox -> Kafka -> consumer loop end to end. Delete it before
-adding real business logic:
-
-1. `rm internal/domain/ping.go internal/app/ping.go internal/adapters/postgres/queries/pings.sql internal/adapters/postgres/pings.sql.go migrations/00002_pings.sql`
-2. Remove the `POST /v1/pings` route from `internal/adapters/http/routes.go`.
-3. Remove the `PingRecorded` handler registration from
-   `internal/adapters/kafka/handlers.go`.
-4. Remove `TestPingRoundTrip` from `cmd/main_integration_test.go` — keep
-   `TestTemplateReadyAndGracefulShutdown` (renamed by `sed` to this service).
-5. Run `make sqlc-gen` to drop the generated `pings` code from
-   `internal/adapters/postgres/{db,models}.go`.
+- `cmd/` — the one binary: HTTP (chi + the CatalogService connect handler),
+  outbox relay, and Kafka consumer running as `errgroup` goroutines with
+  ordered shutdown.
+- `internal/domain/boat.go` — `Boat`, `Status`, and `Validate()` — types and
+  validation rules only, no persistence or transport concerns.
+- `internal/app/boat.go` — `UpsertBoat`/`ListBoats` use-case functions taking
+  `pgx.Tx`/`*postgres.Queries` directly. No repository interfaces, no mocks.
+- `internal/adapters/http/routes.go` — the `CatalogService` connect handler,
+  mounted behind the internal-token trust boundary set up in `cmd/main.go`.
+- `internal/adapters/postgres/` — sqlc-generated code from
+  `queries/boats.sql`.
+- `internal/adapters/kafka/handlers.go` — `Register` (empty; catalog
+  consumes nothing yet).
+- `migrations/` — `00001_platform.sql` (outbox + processed_events, copied
+  verbatim from the template) and `00002_boats.sql` (the `boats` table).
 
 ## Commands
 
-- `make run-<svc>` — run this service locally against the infra stack
+- `make run-catalog` — run this service locally against the infra stack
   (`go run ./cmd`, DB/Kafka hosts overridden to localhost).
-- `make migrate-<svc>` — run this service's goose migrations.
+- `make migrate-catalog` — run this service's goose migrations.
 - `make sqlc-gen` — regenerate every service's `internal/adapters/postgres/*.go`
   from `queries/*.sql`.
 - `make test-integration` — run every module's `//go:build integration`
@@ -83,5 +76,5 @@ adding real business logic:
 
 ## Commit Scope
 
-Commits touching only this service use `<service>` as the conventional-commit
+Commits touching only this service use `catalog` as the conventional-commit
 scope (D-49), e.g. `feat(catalog): add boat search filter`.

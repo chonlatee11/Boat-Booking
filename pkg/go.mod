@@ -4,6 +4,7 @@ go 1.25.7
 
 require (
 	connectrpc.com/connect v1.20.0
+	connectrpc.com/otelconnect v0.10.0
 	github.com/chonlatee11/boat-booking/gen/go v0.0.0-00010101000000-000000000000
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
@@ -19,7 +20,6 @@ require (
 )
 
 require (
-	connectrpc.com/otelconnect v0.10.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.30.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.46.0 // indirect
