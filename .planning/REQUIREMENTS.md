@@ -30,7 +30,7 @@ Milestone 1 = seed Phase 0–4: platform foundation → identity + catalog → s
 
 ### Catalog
 
-- [ ] **CAT-01**: super_admin can create and edit operators
+- [x] **CAT-01**: super_admin can create and edit operators
 - [ ] **CAT-02**: pier_admin can create/edit/archive piers (name, coordinates via map picker, address, photo, open hours)
 - [ ] **CAT-03**: pier_admin can create/edit/archive routes (pier_from → pier_to, travel duration, tiered cancellation policy defaulting to >24h 100% / 2–24h 50% / <2h 0%)
 - [ ] **CAT-04**: pier_admin can create/edit boats (name, default capacity, status active/maintenance)
@@ -159,7 +159,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-03 | Phase 2 | Complete |
 | AUTH-04 | Phase 2 | Pending |
 | AUTH-05 | Phase 2 | Complete |
-| CAT-01 | Phase 2 | Pending |
+| CAT-01 | Phase 2 | Complete |
 | CAT-02 | Phase 2 | Pending |
 | CAT-03 | Phase 2 | Pending |
 | CAT-04 | Phase 2 | Pending |
