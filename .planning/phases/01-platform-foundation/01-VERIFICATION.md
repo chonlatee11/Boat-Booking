@@ -41,7 +41,7 @@ covered_files:
   - "deploy/observability/grafana/provisioning/datasources/datasources.yaml"
   - "pkg/outbox/outbox.go"
 
-covered_digest: "v1:sha256:4584de7d9a6ca0105213c09388e1ac296c490772da12fefc7c163b7f2a1016be"
+covered_digest: "v1:sha256:995aa75a1a7a5be413909fb49b95dc7cad51a536f5bfc58274a87218eff5627f"
 behavior_unverified: 1
 overrides_applied: 0
 re_verification:
