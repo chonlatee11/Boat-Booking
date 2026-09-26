@@ -58,3 +58,15 @@ type ProcessedEvent struct {
 	EventType   string
 	ProcessedAt pgtype.Timestamptz
 }
+
+type Route struct {
+	ID                 pgtype.UUID
+	OperatorID         pgtype.UUID
+	PierFromID         pgtype.UUID
+	PierToID           pgtype.UUID
+	DurationMinutes    int32
+	CancellationPolicy []byte
+	ArchivedAt         pgtype.Timestamptz
+	CreatedAt          pgtype.Timestamptz
+	UpdatedAt          pgtype.Timestamptz
+}

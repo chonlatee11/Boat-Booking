@@ -3,6 +3,7 @@ syntax = "proto3";
 package boatbooking.catalog.v1;
 
 import "events/catalog/v1/boat.proto";
+import "events/catalog/v1/price.proto";
 
 option go_package = "github.com/chonlatee11/boat-booking/gen/go/catalog/v1;catalogv1";
 
@@ -23,6 +24,19 @@ service CatalogService {
   // returns the public projection (CAT-06).
   rpc UpsertPier(UpsertPierRequest) returns (UpsertPierResponse);
   rpc ListPiers(ListPiersRequest) returns (ListPiersResponse);
+
+  // Routes are one-way (D-11); pier_from must be in the caller's scope,
+  // pier_to may be any non-archived pier of any operator (D-12). ListRoutes
+  // with no claims returns the public projection (CAT-06).
+  rpc UpsertRoute(UpsertRouteRequest) returns (UpsertRouteResponse);
+  rpc ListRoutes(ListRoutesRequest) returns (ListRoutesResponse);
+  rpc ArchiveRoute(ArchiveRouteRequest) returns (ArchiveRouteResponse);
+  rpc ArchivePier(ArchivePierRequest) returns (ArchivePierResponse);
+
+  // Prices are effective-dated (D-14); AddRoutePrice requires the route be
+  // in the caller's scope.
+  rpc AddRoutePrice(AddRoutePriceRequest) returns (AddRoutePriceResponse);
+  rpc ListRoutePrices(ListRoutePricesRequest) returns (ListRoutePricesResponse);
 }
 
 message Boat {
@@ -125,4 +139,97 @@ message ListPiersRequest {
 
 message ListPiersResponse {
   repeated Pier piers = 1;
+}
+
+// CancellationTier is one row of a route's refund schedule (D-13):
+// cancelling >= min_hours_before departure refunds refund_percent.
+message CancellationTier {
+  int32 min_hours_before = 1;
+  int32 refund_percent = 2;
+}
+
+// RoutePrice is one effective-dated fare row (D-14): the price in effect on
+// date D is the row with the latest effective_from <= D.
+message RoutePrice {
+  boatbooking.catalog.events.v1.TicketType ticket_type = 1;
+  int64 amount_satang = 2;
+  string effective_from = 3; // YYYY-MM-DD, Asia/Bangkok local date
+}
+
+// Route is one-way (D-11): pier_from -> pier_to. Route display name is
+// derived from its piers, never stored (D-17). current_prices holds each
+// ticket type's price in effect for today's Asia/Bangkok date (D-14) — a
+// route with no prices set omits the entry entirely (never a zero amount).
+message Route {
+  string route_id = 1;
+  string operator_id = 2;
+  string pier_from_id = 3;
+  string pier_to_id = 4;
+  int32 duration_minutes = 5;
+  repeated CancellationTier cancellation_policy = 6;
+  bool archived = 7;
+  repeated RoutePrice current_prices = 8;
+}
+
+// An empty route_id means create; a non-empty route_id means update. An
+// empty cancellation_policy on create uses the default schedule (D-13).
+// operator_id is always derived from pier_from_id, never taken from the
+// request (D-30).
+message UpsertRouteRequest {
+  string route_id = 1;
+  string pier_from_id = 2;
+  string pier_to_id = 3;
+  int32 duration_minutes = 4;
+  repeated CancellationTier cancellation_policy = 5;
+}
+
+message UpsertRouteResponse {
+  Route route = 1;
+}
+
+// operator_id is honoured only for super_admin callers; it is ignored for
+// scoped roles and for the public (no-claims) call (CAT-06).
+message ListRoutesRequest {
+  string operator_id = 1;
+}
+
+message ListRoutesResponse {
+  repeated Route routes = 1;
+}
+
+message ArchiveRouteRequest {
+  string route_id = 1;
+}
+
+message ArchiveRouteResponse {
+  Route route = 1;
+}
+
+message ArchivePierRequest {
+  string pier_id = 1;
+}
+
+message ArchivePierResponse {
+  Pier pier = 1;
+}
+
+// Re-adding the same (route, ticket_type, effective_from) replaces the
+// amount in place (one row, D-14).
+message AddRoutePriceRequest {
+  string route_id = 1;
+  boatbooking.catalog.events.v1.TicketType ticket_type = 2;
+  int64 amount_satang = 3;
+  string effective_from = 4; // YYYY-MM-DD, Asia/Bangkok local date
+}
+
+message AddRoutePriceResponse {
+  RoutePrice price = 1;
+}
+
+message ListRoutePricesRequest {
+  string route_id = 1;
+}
+
+message ListRoutePricesResponse {
+  repeated RoutePrice prices = 1;
 }

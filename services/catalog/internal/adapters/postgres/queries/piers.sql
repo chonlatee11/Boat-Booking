@@ -32,3 +32,14 @@ order by name_th, id;
 select * from piers
 where archived_at is null
 order by name_th, id;
+
+-- name: GetPierForShareScoped :one
+select * from piers
+where id = $1
+  and (sqlc.arg(all_scope)::bool or (operator_id = sqlc.arg(operator_id) and id = any(sqlc.arg(pier_ids)::uuid[])))
+for share;
+
+-- name: GetPierForShare :one
+select * from piers
+where id = $1
+for share;

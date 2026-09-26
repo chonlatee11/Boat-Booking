@@ -11,6 +11,71 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getPierForShare = `-- name: GetPierForShare :one
+select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at from piers
+where id = $1
+for share
+`
+
+func (q *Queries) GetPierForShare(ctx context.Context, id pgtype.UUID) (Pier, error) {
+	row := q.db.QueryRow(ctx, getPierForShare, id)
+	var i Pier
+	err := row.Scan(
+		&i.ID,
+		&i.OperatorID,
+		&i.NameTh,
+		&i.NameEn,
+		&i.Lat,
+		&i.Lng,
+		&i.Address,
+		&i.OpensAt,
+		&i.ClosesAt,
+		&i.ArchivedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getPierForShareScoped = `-- name: GetPierForShareScoped :one
+select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at from piers
+where id = $1
+  and ($2::bool or (operator_id = $3 and id = any($4::uuid[])))
+for share
+`
+
+type GetPierForShareScopedParams struct {
+	ID         pgtype.UUID
+	AllScope   bool
+	OperatorID pgtype.UUID
+	PierIds    []pgtype.UUID
+}
+
+func (q *Queries) GetPierForShareScoped(ctx context.Context, arg GetPierForShareScopedParams) (Pier, error) {
+	row := q.db.QueryRow(ctx, getPierForShareScoped,
+		arg.ID,
+		arg.AllScope,
+		arg.OperatorID,
+		arg.PierIds,
+	)
+	var i Pier
+	err := row.Scan(
+		&i.ID,
+		&i.OperatorID,
+		&i.NameTh,
+		&i.NameEn,
+		&i.Lat,
+		&i.Lng,
+		&i.Address,
+		&i.OpensAt,
+		&i.ClosesAt,
+		&i.ArchivedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getPierForUpdateScoped = `-- name: GetPierForUpdateScoped :one
 select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at from piers
 where id = $1

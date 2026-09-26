@@ -5,12 +5,14 @@ package domain
 
 import "errors"
 
-// ErrInvalidArgument, ErrNotFound, ErrPermissionDenied and
-// ErrFailedPrecondition are the sentinel errors app/adapters code wraps and
-// callers match with errors.Is (D-44) — no custom error hierarchy.
+// ErrInvalidArgument, ErrNotFound, ErrPermissionDenied,
+// ErrFailedPrecondition and ErrAlreadyExists are the sentinel errors
+// app/adapters code wraps and callers match with errors.Is (D-44) — no
+// custom error hierarchy.
 var (
 	ErrInvalidArgument    = errors.New("invalid argument")
 	ErrNotFound           = errors.New("not found")
 	ErrPermissionDenied   = errors.New("permission denied")
 	ErrFailedPrecondition = errors.New("failed precondition")
+	ErrAlreadyExists      = errors.New("already exists")
 )

@@ -61,6 +61,8 @@ func toConnectErr(err error) error {
 		return connect.NewError(connect.CodePermissionDenied, err)
 	case errors.Is(err, domain.ErrFailedPrecondition):
 		return connect.NewError(connect.CodeFailedPrecondition, err)
+	case errors.Is(err, domain.ErrAlreadyExists):
+		return connect.NewError(connect.CodeAlreadyExists, err)
 	default:
 		return connect.NewError(connect.CodeInternal, err)
 	}

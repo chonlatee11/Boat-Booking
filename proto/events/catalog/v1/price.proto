@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package boatbooking.catalog.events.v1;
+
+option go_package = "github.com/chonlatee11/boat-booking/gen/go/catalog/v1;catalogv1";
+
+// TicketType is defined once here and imported by the catalog sync API
+// (proto/services/catalog/v1/catalog.proto) — both protos share the Go
+// package catalogv1, so this enum must not be redeclared there.
+enum TicketType {
+  TICKET_TYPE_UNSPECIFIED = 0;
+  TICKET_TYPE_ADULT = 1;
+  TICKET_TYPE_CHILD = 2;
+}
+
+// PriceChanged is a past-tense fact: a route's effective-dated ticket price
+// was added or replaced (D-14). Money is always int64 satang, never a
+// float (Pitfall 7). No personal data (D-45).
+message PriceChanged {
+  string route_id = 1;
+  string operator_id = 2;
+  TicketType ticket_type = 3;
+  int64 amount_satang = 4;
+  string effective_from = 5; // YYYY-MM-DD, Asia/Bangkok local date
+}

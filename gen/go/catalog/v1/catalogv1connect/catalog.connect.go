@@ -54,6 +54,24 @@ const (
 	// CatalogServiceListPiersProcedure is the fully-qualified name of the CatalogService's ListPiers
 	// RPC.
 	CatalogServiceListPiersProcedure = "/boatbooking.catalog.v1.CatalogService/ListPiers"
+	// CatalogServiceUpsertRouteProcedure is the fully-qualified name of the CatalogService's
+	// UpsertRoute RPC.
+	CatalogServiceUpsertRouteProcedure = "/boatbooking.catalog.v1.CatalogService/UpsertRoute"
+	// CatalogServiceListRoutesProcedure is the fully-qualified name of the CatalogService's ListRoutes
+	// RPC.
+	CatalogServiceListRoutesProcedure = "/boatbooking.catalog.v1.CatalogService/ListRoutes"
+	// CatalogServiceArchiveRouteProcedure is the fully-qualified name of the CatalogService's
+	// ArchiveRoute RPC.
+	CatalogServiceArchiveRouteProcedure = "/boatbooking.catalog.v1.CatalogService/ArchiveRoute"
+	// CatalogServiceArchivePierProcedure is the fully-qualified name of the CatalogService's
+	// ArchivePier RPC.
+	CatalogServiceArchivePierProcedure = "/boatbooking.catalog.v1.CatalogService/ArchivePier"
+	// CatalogServiceAddRoutePriceProcedure is the fully-qualified name of the CatalogService's
+	// AddRoutePrice RPC.
+	CatalogServiceAddRoutePriceProcedure = "/boatbooking.catalog.v1.CatalogService/AddRoutePrice"
+	// CatalogServiceListRoutePricesProcedure is the fully-qualified name of the CatalogService's
+	// ListRoutePrices RPC.
+	CatalogServiceListRoutePricesProcedure = "/boatbooking.catalog.v1.CatalogService/ListRoutePrices"
 )
 
 // CatalogServiceClient is a client for the boatbooking.catalog.v1.CatalogService service.
@@ -69,6 +87,17 @@ type CatalogServiceClient interface {
 	// returns the public projection (CAT-06).
 	UpsertPier(context.Context, *connect.Request[v1.UpsertPierRequest]) (*connect.Response[v1.UpsertPierResponse], error)
 	ListPiers(context.Context, *connect.Request[v1.ListPiersRequest]) (*connect.Response[v1.ListPiersResponse], error)
+	// Routes are one-way (D-11); pier_from must be in the caller's scope,
+	// pier_to may be any non-archived pier of any operator (D-12). ListRoutes
+	// with no claims returns the public projection (CAT-06).
+	UpsertRoute(context.Context, *connect.Request[v1.UpsertRouteRequest]) (*connect.Response[v1.UpsertRouteResponse], error)
+	ListRoutes(context.Context, *connect.Request[v1.ListRoutesRequest]) (*connect.Response[v1.ListRoutesResponse], error)
+	ArchiveRoute(context.Context, *connect.Request[v1.ArchiveRouteRequest]) (*connect.Response[v1.ArchiveRouteResponse], error)
+	ArchivePier(context.Context, *connect.Request[v1.ArchivePierRequest]) (*connect.Response[v1.ArchivePierResponse], error)
+	// Prices are effective-dated (D-14); AddRoutePrice requires the route be
+	// in the caller's scope.
+	AddRoutePrice(context.Context, *connect.Request[v1.AddRoutePriceRequest]) (*connect.Response[v1.AddRoutePriceResponse], error)
+	ListRoutePrices(context.Context, *connect.Request[v1.ListRoutePricesRequest]) (*connect.Response[v1.ListRoutePricesResponse], error)
 }
 
 // NewCatalogServiceClient constructs a client for the boatbooking.catalog.v1.CatalogService
@@ -124,6 +153,42 @@ func NewCatalogServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(catalogServiceMethods.ByName("ListPiers")),
 			connect.WithClientOptions(opts...),
 		),
+		upsertRoute: connect.NewClient[v1.UpsertRouteRequest, v1.UpsertRouteResponse](
+			httpClient,
+			baseURL+CatalogServiceUpsertRouteProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("UpsertRoute")),
+			connect.WithClientOptions(opts...),
+		),
+		listRoutes: connect.NewClient[v1.ListRoutesRequest, v1.ListRoutesResponse](
+			httpClient,
+			baseURL+CatalogServiceListRoutesProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("ListRoutes")),
+			connect.WithClientOptions(opts...),
+		),
+		archiveRoute: connect.NewClient[v1.ArchiveRouteRequest, v1.ArchiveRouteResponse](
+			httpClient,
+			baseURL+CatalogServiceArchiveRouteProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("ArchiveRoute")),
+			connect.WithClientOptions(opts...),
+		),
+		archivePier: connect.NewClient[v1.ArchivePierRequest, v1.ArchivePierResponse](
+			httpClient,
+			baseURL+CatalogServiceArchivePierProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("ArchivePier")),
+			connect.WithClientOptions(opts...),
+		),
+		addRoutePrice: connect.NewClient[v1.AddRoutePriceRequest, v1.AddRoutePriceResponse](
+			httpClient,
+			baseURL+CatalogServiceAddRoutePriceProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("AddRoutePrice")),
+			connect.WithClientOptions(opts...),
+		),
+		listRoutePrices: connect.NewClient[v1.ListRoutePricesRequest, v1.ListRoutePricesResponse](
+			httpClient,
+			baseURL+CatalogServiceListRoutePricesProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("ListRoutePrices")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -136,6 +201,12 @@ type catalogServiceClient struct {
 	archiveOperator *connect.Client[v1.ArchiveOperatorRequest, v1.ArchiveOperatorResponse]
 	upsertPier      *connect.Client[v1.UpsertPierRequest, v1.UpsertPierResponse]
 	listPiers       *connect.Client[v1.ListPiersRequest, v1.ListPiersResponse]
+	upsertRoute     *connect.Client[v1.UpsertRouteRequest, v1.UpsertRouteResponse]
+	listRoutes      *connect.Client[v1.ListRoutesRequest, v1.ListRoutesResponse]
+	archiveRoute    *connect.Client[v1.ArchiveRouteRequest, v1.ArchiveRouteResponse]
+	archivePier     *connect.Client[v1.ArchivePierRequest, v1.ArchivePierResponse]
+	addRoutePrice   *connect.Client[v1.AddRoutePriceRequest, v1.AddRoutePriceResponse]
+	listRoutePrices *connect.Client[v1.ListRoutePricesRequest, v1.ListRoutePricesResponse]
 }
 
 // UpsertBoat calls boatbooking.catalog.v1.CatalogService.UpsertBoat.
@@ -173,6 +244,36 @@ func (c *catalogServiceClient) ListPiers(ctx context.Context, req *connect.Reque
 	return c.listPiers.CallUnary(ctx, req)
 }
 
+// UpsertRoute calls boatbooking.catalog.v1.CatalogService.UpsertRoute.
+func (c *catalogServiceClient) UpsertRoute(ctx context.Context, req *connect.Request[v1.UpsertRouteRequest]) (*connect.Response[v1.UpsertRouteResponse], error) {
+	return c.upsertRoute.CallUnary(ctx, req)
+}
+
+// ListRoutes calls boatbooking.catalog.v1.CatalogService.ListRoutes.
+func (c *catalogServiceClient) ListRoutes(ctx context.Context, req *connect.Request[v1.ListRoutesRequest]) (*connect.Response[v1.ListRoutesResponse], error) {
+	return c.listRoutes.CallUnary(ctx, req)
+}
+
+// ArchiveRoute calls boatbooking.catalog.v1.CatalogService.ArchiveRoute.
+func (c *catalogServiceClient) ArchiveRoute(ctx context.Context, req *connect.Request[v1.ArchiveRouteRequest]) (*connect.Response[v1.ArchiveRouteResponse], error) {
+	return c.archiveRoute.CallUnary(ctx, req)
+}
+
+// ArchivePier calls boatbooking.catalog.v1.CatalogService.ArchivePier.
+func (c *catalogServiceClient) ArchivePier(ctx context.Context, req *connect.Request[v1.ArchivePierRequest]) (*connect.Response[v1.ArchivePierResponse], error) {
+	return c.archivePier.CallUnary(ctx, req)
+}
+
+// AddRoutePrice calls boatbooking.catalog.v1.CatalogService.AddRoutePrice.
+func (c *catalogServiceClient) AddRoutePrice(ctx context.Context, req *connect.Request[v1.AddRoutePriceRequest]) (*connect.Response[v1.AddRoutePriceResponse], error) {
+	return c.addRoutePrice.CallUnary(ctx, req)
+}
+
+// ListRoutePrices calls boatbooking.catalog.v1.CatalogService.ListRoutePrices.
+func (c *catalogServiceClient) ListRoutePrices(ctx context.Context, req *connect.Request[v1.ListRoutePricesRequest]) (*connect.Response[v1.ListRoutePricesResponse], error) {
+	return c.listRoutePrices.CallUnary(ctx, req)
+}
+
 // CatalogServiceHandler is an implementation of the boatbooking.catalog.v1.CatalogService service.
 type CatalogServiceHandler interface {
 	UpsertBoat(context.Context, *connect.Request[v1.UpsertBoatRequest]) (*connect.Response[v1.UpsertBoatResponse], error)
@@ -186,6 +287,17 @@ type CatalogServiceHandler interface {
 	// returns the public projection (CAT-06).
 	UpsertPier(context.Context, *connect.Request[v1.UpsertPierRequest]) (*connect.Response[v1.UpsertPierResponse], error)
 	ListPiers(context.Context, *connect.Request[v1.ListPiersRequest]) (*connect.Response[v1.ListPiersResponse], error)
+	// Routes are one-way (D-11); pier_from must be in the caller's scope,
+	// pier_to may be any non-archived pier of any operator (D-12). ListRoutes
+	// with no claims returns the public projection (CAT-06).
+	UpsertRoute(context.Context, *connect.Request[v1.UpsertRouteRequest]) (*connect.Response[v1.UpsertRouteResponse], error)
+	ListRoutes(context.Context, *connect.Request[v1.ListRoutesRequest]) (*connect.Response[v1.ListRoutesResponse], error)
+	ArchiveRoute(context.Context, *connect.Request[v1.ArchiveRouteRequest]) (*connect.Response[v1.ArchiveRouteResponse], error)
+	ArchivePier(context.Context, *connect.Request[v1.ArchivePierRequest]) (*connect.Response[v1.ArchivePierResponse], error)
+	// Prices are effective-dated (D-14); AddRoutePrice requires the route be
+	// in the caller's scope.
+	AddRoutePrice(context.Context, *connect.Request[v1.AddRoutePriceRequest]) (*connect.Response[v1.AddRoutePriceResponse], error)
+	ListRoutePrices(context.Context, *connect.Request[v1.ListRoutePricesRequest]) (*connect.Response[v1.ListRoutePricesResponse], error)
 }
 
 // NewCatalogServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -237,6 +349,42 @@ func NewCatalogServiceHandler(svc CatalogServiceHandler, opts ...connect.Handler
 		connect.WithSchema(catalogServiceMethods.ByName("ListPiers")),
 		connect.WithHandlerOptions(opts...),
 	)
+	catalogServiceUpsertRouteHandler := connect.NewUnaryHandler(
+		CatalogServiceUpsertRouteProcedure,
+		svc.UpsertRoute,
+		connect.WithSchema(catalogServiceMethods.ByName("UpsertRoute")),
+		connect.WithHandlerOptions(opts...),
+	)
+	catalogServiceListRoutesHandler := connect.NewUnaryHandler(
+		CatalogServiceListRoutesProcedure,
+		svc.ListRoutes,
+		connect.WithSchema(catalogServiceMethods.ByName("ListRoutes")),
+		connect.WithHandlerOptions(opts...),
+	)
+	catalogServiceArchiveRouteHandler := connect.NewUnaryHandler(
+		CatalogServiceArchiveRouteProcedure,
+		svc.ArchiveRoute,
+		connect.WithSchema(catalogServiceMethods.ByName("ArchiveRoute")),
+		connect.WithHandlerOptions(opts...),
+	)
+	catalogServiceArchivePierHandler := connect.NewUnaryHandler(
+		CatalogServiceArchivePierProcedure,
+		svc.ArchivePier,
+		connect.WithSchema(catalogServiceMethods.ByName("ArchivePier")),
+		connect.WithHandlerOptions(opts...),
+	)
+	catalogServiceAddRoutePriceHandler := connect.NewUnaryHandler(
+		CatalogServiceAddRoutePriceProcedure,
+		svc.AddRoutePrice,
+		connect.WithSchema(catalogServiceMethods.ByName("AddRoutePrice")),
+		connect.WithHandlerOptions(opts...),
+	)
+	catalogServiceListRoutePricesHandler := connect.NewUnaryHandler(
+		CatalogServiceListRoutePricesProcedure,
+		svc.ListRoutePrices,
+		connect.WithSchema(catalogServiceMethods.ByName("ListRoutePrices")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/boatbooking.catalog.v1.CatalogService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case CatalogServiceUpsertBoatProcedure:
@@ -253,6 +401,18 @@ func NewCatalogServiceHandler(svc CatalogServiceHandler, opts ...connect.Handler
 			catalogServiceUpsertPierHandler.ServeHTTP(w, r)
 		case CatalogServiceListPiersProcedure:
 			catalogServiceListPiersHandler.ServeHTTP(w, r)
+		case CatalogServiceUpsertRouteProcedure:
+			catalogServiceUpsertRouteHandler.ServeHTTP(w, r)
+		case CatalogServiceListRoutesProcedure:
+			catalogServiceListRoutesHandler.ServeHTTP(w, r)
+		case CatalogServiceArchiveRouteProcedure:
+			catalogServiceArchiveRouteHandler.ServeHTTP(w, r)
+		case CatalogServiceArchivePierProcedure:
+			catalogServiceArchivePierHandler.ServeHTTP(w, r)
+		case CatalogServiceAddRoutePriceProcedure:
+			catalogServiceAddRoutePriceHandler.ServeHTTP(w, r)
+		case CatalogServiceListRoutePricesProcedure:
+			catalogServiceListRoutePricesHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -288,4 +448,28 @@ func (UnimplementedCatalogServiceHandler) UpsertPier(context.Context, *connect.R
 
 func (UnimplementedCatalogServiceHandler) ListPiers(context.Context, *connect.Request[v1.ListPiersRequest]) (*connect.Response[v1.ListPiersResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ListPiers is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) UpsertRoute(context.Context, *connect.Request[v1.UpsertRouteRequest]) (*connect.Response[v1.UpsertRouteResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.UpsertRoute is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) ListRoutes(context.Context, *connect.Request[v1.ListRoutesRequest]) (*connect.Response[v1.ListRoutesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ListRoutes is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) ArchiveRoute(context.Context, *connect.Request[v1.ArchiveRouteRequest]) (*connect.Response[v1.ArchiveRouteResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ArchiveRoute is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) ArchivePier(context.Context, *connect.Request[v1.ArchivePierRequest]) (*connect.Response[v1.ArchivePierResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ArchivePier is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) AddRoutePrice(context.Context, *connect.Request[v1.AddRoutePriceRequest]) (*connect.Response[v1.AddRoutePriceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.AddRoutePrice is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) ListRoutePrices(context.Context, *connect.Request[v1.ListRoutePricesRequest]) (*connect.Response[v1.ListRoutePricesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ListRoutePrices is not implemented"))
 }

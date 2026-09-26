@@ -6,13 +6,15 @@ import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegen
 import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { BoatStatus, BoatStatusJson } from "../../../events/catalog/v1/boat_pb";
 import { file_events_catalog_v1_boat } from "../../../events/catalog/v1/boat_pb";
+import type { TicketType, TicketTypeJson } from "../../../events/catalog/v1/price_pb";
+import { file_events_catalog_v1_price } from "../../../events/catalog/v1/price_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file services/catalog/v1/catalog.proto.
  */
 export const file_services_catalog_v1_catalog: GenFile = /*@__PURE__*/
-  fileDesc("CiFzZXJ2aWNlcy9jYXRhbG9nL3YxL2NhdGFsb2cucHJvdG8SFmJvYXRib29raW5nLmNhdGFsb2cudjEijwEKBEJvYXQSDwoHYm9hdF9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYBCABKAUSOQoGc3RhdHVzGAUgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyKHAQoRVXBzZXJ0Qm9hdFJlcXVlc3QSDwoHYm9hdF9pZBgBIAEoCRIMCgRuYW1lGAIgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYAyABKAUSOQoGc3RhdHVzGAQgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyJAChJVcHNlcnRCb2F0UmVzcG9uc2USKgoEYm9hdBgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuQm9hdCISChBMaXN0Qm9hdHNSZXF1ZXN0IkAKEUxpc3RCb2F0c1Jlc3BvbnNlEisKBWJvYXRzGAEgAygLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0Ij8KCE9wZXJhdG9yEhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkSEAoIYXJjaGl2ZWQYAyABKAgiOgoVVXBzZXJ0T3BlcmF0b3JSZXF1ZXN0EhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkiTAoWVXBzZXJ0T3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiFgoUTGlzdE9wZXJhdG9yc1JlcXVlc3QiTAoVTGlzdE9wZXJhdG9yc1Jlc3BvbnNlEjMKCW9wZXJhdG9ycxgBIAMoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiLQoWQXJjaGl2ZU9wZXJhdG9yUmVxdWVzdBITCgtvcGVyYXRvcl9pZBgBIAEoCSJNChdBcmNoaXZlT3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IisAEKBFBpZXISDwoHcGllcl9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIPCgduYW1lX3RoGAMgASgJEg8KB25hbWVfZW4YBCABKAkSCwoDbGF0GAUgASgBEgsKA2xuZxgGIAEoARIPCgdhZGRyZXNzGAcgASgJEhAKCG9wZW5zX2F0GAggASgJEhEKCWNsb3Nlc19hdBgJIAEoCRIQCghhcmNoaXZlZBgKIAEoCCKrAQoRVXBzZXJ0UGllclJlcXVlc3QSDwoHcGllcl9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIPCgduYW1lX3RoGAMgASgJEg8KB25hbWVfZW4YBCABKAkSCwoDbGF0GAUgASgBEgsKA2xuZxgGIAEoARIPCgdhZGRyZXNzGAcgASgJEhAKCG9wZW5zX2F0GAggASgJEhEKCWNsb3Nlc19hdBgJIAEoCSJAChJVcHNlcnRQaWVyUmVzcG9uc2USKgoEcGllchgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuUGllciInChBMaXN0UGllcnNSZXF1ZXN0EhMKC29wZXJhdG9yX2lkGAEgASgJIkAKEUxpc3RQaWVyc1Jlc3BvbnNlEisKBXBpZXJzGAEgAygLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5QaWVyMvEFCg5DYXRhbG9nU2VydmljZRJjCgpVcHNlcnRCb2F0EikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRCb2F0UmVxdWVzdBoqLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0Qm9hdFJlc3BvbnNlEmAKCUxpc3RCb2F0cxIoLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdEJvYXRzUmVxdWVzdBopLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdEJvYXRzUmVzcG9uc2USbwoOVXBzZXJ0T3BlcmF0b3ISLS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydE9wZXJhdG9yUmVxdWVzdBouLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0T3BlcmF0b3JSZXNwb25zZRJsCg1MaXN0T3BlcmF0b3JzEiwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0T3BlcmF0b3JzUmVxdWVzdBotLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdE9wZXJhdG9yc1Jlc3BvbnNlEnIKD0FyY2hpdmVPcGVyYXRvchIuLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZU9wZXJhdG9yUmVxdWVzdBovLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZU9wZXJhdG9yUmVzcG9uc2USYwoKVXBzZXJ0UGllchIpLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0UGllclJlcXVlc3QaKi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydFBpZXJSZXNwb25zZRJgCglMaXN0UGllcnMSKC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RQaWVyc1JlcXVlc3QaKS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RQaWVyc1Jlc3BvbnNlQkFaP2dpdGh1Yi5jb20vY2hvbmxhdGVlMTEvYm9hdC1ib29raW5nL2dlbi9nby9jYXRhbG9nL3YxO2NhdGFsb2d2MWIGcHJvdG8z", [file_events_catalog_v1_boat]);
+  fileDesc("CiFzZXJ2aWNlcy9jYXRhbG9nL3YxL2NhdGFsb2cucHJvdG8SFmJvYXRib29raW5nLmNhdGFsb2cudjEijwEKBEJvYXQSDwoHYm9hdF9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYBCABKAUSOQoGc3RhdHVzGAUgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyKHAQoRVXBzZXJ0Qm9hdFJlcXVlc3QSDwoHYm9hdF9pZBgBIAEoCRIMCgRuYW1lGAIgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYAyABKAUSOQoGc3RhdHVzGAQgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyJAChJVcHNlcnRCb2F0UmVzcG9uc2USKgoEYm9hdBgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuQm9hdCISChBMaXN0Qm9hdHNSZXF1ZXN0IkAKEUxpc3RCb2F0c1Jlc3BvbnNlEisKBWJvYXRzGAEgAygLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0Ij8KCE9wZXJhdG9yEhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkSEAoIYXJjaGl2ZWQYAyABKAgiOgoVVXBzZXJ0T3BlcmF0b3JSZXF1ZXN0EhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkiTAoWVXBzZXJ0T3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiFgoUTGlzdE9wZXJhdG9yc1JlcXVlc3QiTAoVTGlzdE9wZXJhdG9yc1Jlc3BvbnNlEjMKCW9wZXJhdG9ycxgBIAMoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiLQoWQXJjaGl2ZU9wZXJhdG9yUmVxdWVzdBITCgtvcGVyYXRvcl9pZBgBIAEoCSJNChdBcmNoaXZlT3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IisAEKBFBpZXISDwoHcGllcl9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIPCgduYW1lX3RoGAMgASgJEg8KB25hbWVfZW4YBCABKAkSCwoDbGF0GAUgASgBEgsKA2xuZxgGIAEoARIPCgdhZGRyZXNzGAcgASgJEhAKCG9wZW5zX2F0GAggASgJEhEKCWNsb3Nlc19hdBgJIAEoCRIQCghhcmNoaXZlZBgKIAEoCCKrAQoRVXBzZXJ0UGllclJlcXVlc3QSDwoHcGllcl9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIPCgduYW1lX3RoGAMgASgJEg8KB25hbWVfZW4YBCABKAkSCwoDbGF0GAUgASgBEgsKA2xuZxgGIAEoARIPCgdhZGRyZXNzGAcgASgJEhAKCG9wZW5zX2F0GAggASgJEhEKCWNsb3Nlc19hdBgJIAEoCSJAChJVcHNlcnRQaWVyUmVzcG9uc2USKgoEcGllchgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuUGllciInChBMaXN0UGllcnNSZXF1ZXN0EhMKC29wZXJhdG9yX2lkGAEgASgJIkAKEUxpc3RQaWVyc1Jlc3BvbnNlEisKBXBpZXJzGAEgAygLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5QaWVyIkQKEENhbmNlbGxhdGlvblRpZXISGAoQbWluX2hvdXJzX2JlZm9yZRgBIAEoBRIWCg5yZWZ1bmRfcGVyY2VudBgCIAEoBSJ7CgpSb3V0ZVByaWNlEj4KC3RpY2tldF90eXBlGAEgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuVGlja2V0VHlwZRIVCg1hbW91bnRfc2F0YW5nGAIgASgDEhYKDmVmZmVjdGl2ZV9mcm9tGAMgASgJIocCCgVSb3V0ZRIQCghyb3V0ZV9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIUCgxwaWVyX2Zyb21faWQYAyABKAkSEgoKcGllcl90b19pZBgEIAEoCRIYChBkdXJhdGlvbl9taW51dGVzGAUgASgFEkUKE2NhbmNlbGxhdGlvbl9wb2xpY3kYBiADKAsyKC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkNhbmNlbGxhdGlvblRpZXISEAoIYXJjaGl2ZWQYByABKAgSOgoOY3VycmVudF9wcmljZXMYCCADKAsyIi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlJvdXRlUHJpY2UisQEKElVwc2VydFJvdXRlUmVxdWVzdBIQCghyb3V0ZV9pZBgBIAEoCRIUCgxwaWVyX2Zyb21faWQYAiABKAkSEgoKcGllcl90b19pZBgDIAEoCRIYChBkdXJhdGlvbl9taW51dGVzGAQgASgFEkUKE2NhbmNlbGxhdGlvbl9wb2xpY3kYBSADKAsyKC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkNhbmNlbGxhdGlvblRpZXIiQwoTVXBzZXJ0Um91dGVSZXNwb25zZRIsCgVyb3V0ZRgBIAEoCzIdLmJvYXRib29raW5nLmNhdGFsb2cudjEuUm91dGUiKAoRTGlzdFJvdXRlc1JlcXVlc3QSEwoLb3BlcmF0b3JfaWQYASABKAkiQwoSTGlzdFJvdXRlc1Jlc3BvbnNlEi0KBnJvdXRlcxgBIAMoCzIdLmJvYXRib29raW5nLmNhdGFsb2cudjEuUm91dGUiJwoTQXJjaGl2ZVJvdXRlUmVxdWVzdBIQCghyb3V0ZV9pZBgBIAEoCSJEChRBcmNoaXZlUm91dGVSZXNwb25zZRIsCgVyb3V0ZRgBIAEoCzIdLmJvYXRib29raW5nLmNhdGFsb2cudjEuUm91dGUiJQoSQXJjaGl2ZVBpZXJSZXF1ZXN0Eg8KB3BpZXJfaWQYASABKAkiQQoTQXJjaGl2ZVBpZXJSZXNwb25zZRIqCgRwaWVyGAEgASgLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5QaWVyIpcBChRBZGRSb3V0ZVByaWNlUmVxdWVzdBIQCghyb3V0ZV9pZBgBIAEoCRI+Cgt0aWNrZXRfdHlwZRgCIAEoDjIpLmJvYXRib29raW5nLmNhdGFsb2cuZXZlbnRzLnYxLlRpY2tldFR5cGUSFQoNYW1vdW50X3NhdGFuZxgDIAEoAxIWCg5lZmZlY3RpdmVfZnJvbRgEIAEoCSJKChVBZGRSb3V0ZVByaWNlUmVzcG9uc2USMQoFcHJpY2UYASABKAsyIi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlJvdXRlUHJpY2UiKgoWTGlzdFJvdXRlUHJpY2VzUmVxdWVzdBIQCghyb3V0ZV9pZBgBIAEoCSJNChdMaXN0Um91dGVQcmljZXNSZXNwb25zZRIyCgZwcmljZXMYASADKAsyIi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlJvdXRlUHJpY2Uy8woKDkNhdGFsb2dTZXJ2aWNlEmMKClVwc2VydEJvYXQSKS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydEJvYXRSZXF1ZXN0GiouYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRCb2F0UmVzcG9uc2USYAoJTGlzdEJvYXRzEiguYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Qm9hdHNSZXF1ZXN0GikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Qm9hdHNSZXNwb25zZRJvCg5VcHNlcnRPcGVyYXRvchItLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0T3BlcmF0b3JSZXF1ZXN0Gi4uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRPcGVyYXRvclJlc3BvbnNlEmwKDUxpc3RPcGVyYXRvcnMSLC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RPcGVyYXRvcnNSZXF1ZXN0Gi0uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0T3BlcmF0b3JzUmVzcG9uc2UScgoPQXJjaGl2ZU9wZXJhdG9yEi4uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BcmNoaXZlT3BlcmF0b3JSZXF1ZXN0Gi8uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BcmNoaXZlT3BlcmF0b3JSZXNwb25zZRJjCgpVcHNlcnRQaWVyEikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRQaWVyUmVxdWVzdBoqLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0UGllclJlc3BvbnNlEmAKCUxpc3RQaWVycxIoLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdFBpZXJzUmVxdWVzdBopLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdFBpZXJzUmVzcG9uc2USZgoLVXBzZXJ0Um91dGUSKi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydFJvdXRlUmVxdWVzdBorLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0Um91dGVSZXNwb25zZRJjCgpMaXN0Um91dGVzEikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Um91dGVzUmVxdWVzdBoqLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdFJvdXRlc1Jlc3BvbnNlEmkKDEFyY2hpdmVSb3V0ZRIrLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZVJvdXRlUmVxdWVzdBosLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZVJvdXRlUmVzcG9uc2USZgoLQXJjaGl2ZVBpZXISKi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkFyY2hpdmVQaWVyUmVxdWVzdBorLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZVBpZXJSZXNwb25zZRJsCg1BZGRSb3V0ZVByaWNlEiwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BZGRSb3V0ZVByaWNlUmVxdWVzdBotLmJvYXRib29raW5nLmNhdGFsb2cudjEuQWRkUm91dGVQcmljZVJlc3BvbnNlEnIKD0xpc3RSb3V0ZVByaWNlcxIuLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdFJvdXRlUHJpY2VzUmVxdWVzdBovLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdFJvdXRlUHJpY2VzUmVzcG9uc2VCQVo/Z2l0aHViLmNvbS9jaG9ubGF0ZWUxMS9ib2F0LWJvb2tpbmcvZ2VuL2dvL2NhdGFsb2cvdjE7Y2F0YWxvZ3YxYgZwcm90bzM", [file_events_catalog_v1_boat, file_events_catalog_v1_price]);
 
 /**
  * @generated from message boatbooking.catalog.v1.Boat
@@ -758,6 +760,633 @@ export const ListPiersResponseSchema: GenMessage<ListPiersResponse, {jsonType: L
   messageDesc(file_services_catalog_v1_catalog, 16);
 
 /**
+ * CancellationTier is one row of a route's refund schedule (D-13):
+ * cancelling >= min_hours_before departure refunds refund_percent.
+ *
+ * @generated from message boatbooking.catalog.v1.CancellationTier
+ */
+export type CancellationTier = Message<"boatbooking.catalog.v1.CancellationTier"> & {
+  /**
+   * @generated from field: int32 min_hours_before = 1;
+   */
+  minHoursBefore: number;
+
+  /**
+   * @generated from field: int32 refund_percent = 2;
+   */
+  refundPercent: number;
+};
+
+/**
+ * CancellationTier is one row of a route's refund schedule (D-13):
+ * cancelling >= min_hours_before departure refunds refund_percent.
+ *
+ * @generated from message boatbooking.catalog.v1.CancellationTier
+ */
+export type CancellationTierJson = {
+  /**
+   * @generated from field: int32 min_hours_before = 1;
+   */
+  minHoursBefore?: number;
+
+  /**
+   * @generated from field: int32 refund_percent = 2;
+   */
+  refundPercent?: number;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.CancellationTier.
+ * Use `create(CancellationTierSchema)` to create a new message.
+ */
+export const CancellationTierSchema: GenMessage<CancellationTier, {jsonType: CancellationTierJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 17);
+
+/**
+ * RoutePrice is one effective-dated fare row (D-14): the price in effect on
+ * date D is the row with the latest effective_from <= D.
+ *
+ * @generated from message boatbooking.catalog.v1.RoutePrice
+ */
+export type RoutePrice = Message<"boatbooking.catalog.v1.RoutePrice"> & {
+  /**
+   * @generated from field: boatbooking.catalog.events.v1.TicketType ticket_type = 1;
+   */
+  ticketType: TicketType;
+
+  /**
+   * @generated from field: int64 amount_satang = 2;
+   */
+  amountSatang: bigint;
+
+  /**
+   * YYYY-MM-DD, Asia/Bangkok local date
+   *
+   * @generated from field: string effective_from = 3;
+   */
+  effectiveFrom: string;
+};
+
+/**
+ * RoutePrice is one effective-dated fare row (D-14): the price in effect on
+ * date D is the row with the latest effective_from <= D.
+ *
+ * @generated from message boatbooking.catalog.v1.RoutePrice
+ */
+export type RoutePriceJson = {
+  /**
+   * @generated from field: boatbooking.catalog.events.v1.TicketType ticket_type = 1;
+   */
+  ticketType?: TicketTypeJson;
+
+  /**
+   * @generated from field: int64 amount_satang = 2;
+   */
+  amountSatang?: string;
+
+  /**
+   * YYYY-MM-DD, Asia/Bangkok local date
+   *
+   * @generated from field: string effective_from = 3;
+   */
+  effectiveFrom?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.RoutePrice.
+ * Use `create(RoutePriceSchema)` to create a new message.
+ */
+export const RoutePriceSchema: GenMessage<RoutePrice, {jsonType: RoutePriceJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 18);
+
+/**
+ * Route is one-way (D-11): pier_from -> pier_to. Route display name is
+ * derived from its piers, never stored (D-17). current_prices holds each
+ * ticket type's price in effect for today's Asia/Bangkok date (D-14) — a
+ * route with no prices set omits the entry entirely (never a zero amount).
+ *
+ * @generated from message boatbooking.catalog.v1.Route
+ */
+export type Route = Message<"boatbooking.catalog.v1.Route"> & {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId: string;
+
+  /**
+   * @generated from field: string operator_id = 2;
+   */
+  operatorId: string;
+
+  /**
+   * @generated from field: string pier_from_id = 3;
+   */
+  pierFromId: string;
+
+  /**
+   * @generated from field: string pier_to_id = 4;
+   */
+  pierToId: string;
+
+  /**
+   * @generated from field: int32 duration_minutes = 5;
+   */
+  durationMinutes: number;
+
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.CancellationTier cancellation_policy = 6;
+   */
+  cancellationPolicy: CancellationTier[];
+
+  /**
+   * @generated from field: bool archived = 7;
+   */
+  archived: boolean;
+
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.RoutePrice current_prices = 8;
+   */
+  currentPrices: RoutePrice[];
+};
+
+/**
+ * Route is one-way (D-11): pier_from -> pier_to. Route display name is
+ * derived from its piers, never stored (D-17). current_prices holds each
+ * ticket type's price in effect for today's Asia/Bangkok date (D-14) — a
+ * route with no prices set omits the entry entirely (never a zero amount).
+ *
+ * @generated from message boatbooking.catalog.v1.Route
+ */
+export type RouteJson = {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId?: string;
+
+  /**
+   * @generated from field: string operator_id = 2;
+   */
+  operatorId?: string;
+
+  /**
+   * @generated from field: string pier_from_id = 3;
+   */
+  pierFromId?: string;
+
+  /**
+   * @generated from field: string pier_to_id = 4;
+   */
+  pierToId?: string;
+
+  /**
+   * @generated from field: int32 duration_minutes = 5;
+   */
+  durationMinutes?: number;
+
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.CancellationTier cancellation_policy = 6;
+   */
+  cancellationPolicy?: CancellationTierJson[];
+
+  /**
+   * @generated from field: bool archived = 7;
+   */
+  archived?: boolean;
+
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.RoutePrice current_prices = 8;
+   */
+  currentPrices?: RoutePriceJson[];
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.Route.
+ * Use `create(RouteSchema)` to create a new message.
+ */
+export const RouteSchema: GenMessage<Route, {jsonType: RouteJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 19);
+
+/**
+ * An empty route_id means create; a non-empty route_id means update. An
+ * empty cancellation_policy on create uses the default schedule (D-13).
+ * operator_id is always derived from pier_from_id, never taken from the
+ * request (D-30).
+ *
+ * @generated from message boatbooking.catalog.v1.UpsertRouteRequest
+ */
+export type UpsertRouteRequest = Message<"boatbooking.catalog.v1.UpsertRouteRequest"> & {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId: string;
+
+  /**
+   * @generated from field: string pier_from_id = 2;
+   */
+  pierFromId: string;
+
+  /**
+   * @generated from field: string pier_to_id = 3;
+   */
+  pierToId: string;
+
+  /**
+   * @generated from field: int32 duration_minutes = 4;
+   */
+  durationMinutes: number;
+
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.CancellationTier cancellation_policy = 5;
+   */
+  cancellationPolicy: CancellationTier[];
+};
+
+/**
+ * An empty route_id means create; a non-empty route_id means update. An
+ * empty cancellation_policy on create uses the default schedule (D-13).
+ * operator_id is always derived from pier_from_id, never taken from the
+ * request (D-30).
+ *
+ * @generated from message boatbooking.catalog.v1.UpsertRouteRequest
+ */
+export type UpsertRouteRequestJson = {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId?: string;
+
+  /**
+   * @generated from field: string pier_from_id = 2;
+   */
+  pierFromId?: string;
+
+  /**
+   * @generated from field: string pier_to_id = 3;
+   */
+  pierToId?: string;
+
+  /**
+   * @generated from field: int32 duration_minutes = 4;
+   */
+  durationMinutes?: number;
+
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.CancellationTier cancellation_policy = 5;
+   */
+  cancellationPolicy?: CancellationTierJson[];
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.UpsertRouteRequest.
+ * Use `create(UpsertRouteRequestSchema)` to create a new message.
+ */
+export const UpsertRouteRequestSchema: GenMessage<UpsertRouteRequest, {jsonType: UpsertRouteRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 20);
+
+/**
+ * @generated from message boatbooking.catalog.v1.UpsertRouteResponse
+ */
+export type UpsertRouteResponse = Message<"boatbooking.catalog.v1.UpsertRouteResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Route route = 1;
+   */
+  route?: Route | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.UpsertRouteResponse
+ */
+export type UpsertRouteResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Route route = 1;
+   */
+  route?: RouteJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.UpsertRouteResponse.
+ * Use `create(UpsertRouteResponseSchema)` to create a new message.
+ */
+export const UpsertRouteResponseSchema: GenMessage<UpsertRouteResponse, {jsonType: UpsertRouteResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 21);
+
+/**
+ * operator_id is honoured only for super_admin callers; it is ignored for
+ * scoped roles and for the public (no-claims) call (CAT-06).
+ *
+ * @generated from message boatbooking.catalog.v1.ListRoutesRequest
+ */
+export type ListRoutesRequest = Message<"boatbooking.catalog.v1.ListRoutesRequest"> & {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId: string;
+};
+
+/**
+ * operator_id is honoured only for super_admin callers; it is ignored for
+ * scoped roles and for the public (no-claims) call (CAT-06).
+ *
+ * @generated from message boatbooking.catalog.v1.ListRoutesRequest
+ */
+export type ListRoutesRequestJson = {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListRoutesRequest.
+ * Use `create(ListRoutesRequestSchema)` to create a new message.
+ */
+export const ListRoutesRequestSchema: GenMessage<ListRoutesRequest, {jsonType: ListRoutesRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 22);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListRoutesResponse
+ */
+export type ListRoutesResponse = Message<"boatbooking.catalog.v1.ListRoutesResponse"> & {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.Route routes = 1;
+   */
+  routes: Route[];
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListRoutesResponse
+ */
+export type ListRoutesResponseJson = {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.Route routes = 1;
+   */
+  routes?: RouteJson[];
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListRoutesResponse.
+ * Use `create(ListRoutesResponseSchema)` to create a new message.
+ */
+export const ListRoutesResponseSchema: GenMessage<ListRoutesResponse, {jsonType: ListRoutesResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 23);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveRouteRequest
+ */
+export type ArchiveRouteRequest = Message<"boatbooking.catalog.v1.ArchiveRouteRequest"> & {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId: string;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveRouteRequest
+ */
+export type ArchiveRouteRequestJson = {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchiveRouteRequest.
+ * Use `create(ArchiveRouteRequestSchema)` to create a new message.
+ */
+export const ArchiveRouteRequestSchema: GenMessage<ArchiveRouteRequest, {jsonType: ArchiveRouteRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 24);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveRouteResponse
+ */
+export type ArchiveRouteResponse = Message<"boatbooking.catalog.v1.ArchiveRouteResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Route route = 1;
+   */
+  route?: Route | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveRouteResponse
+ */
+export type ArchiveRouteResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Route route = 1;
+   */
+  route?: RouteJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchiveRouteResponse.
+ * Use `create(ArchiveRouteResponseSchema)` to create a new message.
+ */
+export const ArchiveRouteResponseSchema: GenMessage<ArchiveRouteResponse, {jsonType: ArchiveRouteResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 25);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchivePierRequest
+ */
+export type ArchivePierRequest = Message<"boatbooking.catalog.v1.ArchivePierRequest"> & {
+  /**
+   * @generated from field: string pier_id = 1;
+   */
+  pierId: string;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchivePierRequest
+ */
+export type ArchivePierRequestJson = {
+  /**
+   * @generated from field: string pier_id = 1;
+   */
+  pierId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchivePierRequest.
+ * Use `create(ArchivePierRequestSchema)` to create a new message.
+ */
+export const ArchivePierRequestSchema: GenMessage<ArchivePierRequest, {jsonType: ArchivePierRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 26);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchivePierResponse
+ */
+export type ArchivePierResponse = Message<"boatbooking.catalog.v1.ArchivePierResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Pier pier = 1;
+   */
+  pier?: Pier | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchivePierResponse
+ */
+export type ArchivePierResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Pier pier = 1;
+   */
+  pier?: PierJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchivePierResponse.
+ * Use `create(ArchivePierResponseSchema)` to create a new message.
+ */
+export const ArchivePierResponseSchema: GenMessage<ArchivePierResponse, {jsonType: ArchivePierResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 27);
+
+/**
+ * Re-adding the same (route, ticket_type, effective_from) replaces the
+ * amount in place (one row, D-14).
+ *
+ * @generated from message boatbooking.catalog.v1.AddRoutePriceRequest
+ */
+export type AddRoutePriceRequest = Message<"boatbooking.catalog.v1.AddRoutePriceRequest"> & {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId: string;
+
+  /**
+   * @generated from field: boatbooking.catalog.events.v1.TicketType ticket_type = 2;
+   */
+  ticketType: TicketType;
+
+  /**
+   * @generated from field: int64 amount_satang = 3;
+   */
+  amountSatang: bigint;
+
+  /**
+   * YYYY-MM-DD, Asia/Bangkok local date
+   *
+   * @generated from field: string effective_from = 4;
+   */
+  effectiveFrom: string;
+};
+
+/**
+ * Re-adding the same (route, ticket_type, effective_from) replaces the
+ * amount in place (one row, D-14).
+ *
+ * @generated from message boatbooking.catalog.v1.AddRoutePriceRequest
+ */
+export type AddRoutePriceRequestJson = {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId?: string;
+
+  /**
+   * @generated from field: boatbooking.catalog.events.v1.TicketType ticket_type = 2;
+   */
+  ticketType?: TicketTypeJson;
+
+  /**
+   * @generated from field: int64 amount_satang = 3;
+   */
+  amountSatang?: string;
+
+  /**
+   * YYYY-MM-DD, Asia/Bangkok local date
+   *
+   * @generated from field: string effective_from = 4;
+   */
+  effectiveFrom?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.AddRoutePriceRequest.
+ * Use `create(AddRoutePriceRequestSchema)` to create a new message.
+ */
+export const AddRoutePriceRequestSchema: GenMessage<AddRoutePriceRequest, {jsonType: AddRoutePriceRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 28);
+
+/**
+ * @generated from message boatbooking.catalog.v1.AddRoutePriceResponse
+ */
+export type AddRoutePriceResponse = Message<"boatbooking.catalog.v1.AddRoutePriceResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.RoutePrice price = 1;
+   */
+  price?: RoutePrice | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.AddRoutePriceResponse
+ */
+export type AddRoutePriceResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.RoutePrice price = 1;
+   */
+  price?: RoutePriceJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.AddRoutePriceResponse.
+ * Use `create(AddRoutePriceResponseSchema)` to create a new message.
+ */
+export const AddRoutePriceResponseSchema: GenMessage<AddRoutePriceResponse, {jsonType: AddRoutePriceResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 29);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListRoutePricesRequest
+ */
+export type ListRoutePricesRequest = Message<"boatbooking.catalog.v1.ListRoutePricesRequest"> & {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId: string;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListRoutePricesRequest
+ */
+export type ListRoutePricesRequestJson = {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListRoutePricesRequest.
+ * Use `create(ListRoutePricesRequestSchema)` to create a new message.
+ */
+export const ListRoutePricesRequestSchema: GenMessage<ListRoutePricesRequest, {jsonType: ListRoutePricesRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 30);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListRoutePricesResponse
+ */
+export type ListRoutePricesResponse = Message<"boatbooking.catalog.v1.ListRoutePricesResponse"> & {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.RoutePrice prices = 1;
+   */
+  prices: RoutePrice[];
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListRoutePricesResponse
+ */
+export type ListRoutePricesResponseJson = {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.RoutePrice prices = 1;
+   */
+  prices?: RoutePriceJson[];
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListRoutePricesResponse.
+ * Use `create(ListRoutePricesResponseSchema)` to create a new message.
+ */
+export const ListRoutePricesResponseSchema: GenMessage<ListRoutePricesResponse, {jsonType: ListRoutePricesResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 31);
+
+/**
  * CatalogService is the sync API for catalog-owned boats. Reused by the
  * gateway BFF and by other services that need boat data without waiting on
  * the async BoatUpserted projection.
@@ -826,6 +1455,61 @@ export const CatalogService: GenService<{
     methodKind: "unary";
     input: typeof ListPiersRequestSchema;
     output: typeof ListPiersResponseSchema;
+  },
+  /**
+   * Routes are one-way (D-11); pier_from must be in the caller's scope,
+   * pier_to may be any non-archived pier of any operator (D-12). ListRoutes
+   * with no claims returns the public projection (CAT-06).
+   *
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.UpsertRoute
+   */
+  upsertRoute: {
+    methodKind: "unary";
+    input: typeof UpsertRouteRequestSchema;
+    output: typeof UpsertRouteResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ListRoutes
+   */
+  listRoutes: {
+    methodKind: "unary";
+    input: typeof ListRoutesRequestSchema;
+    output: typeof ListRoutesResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ArchiveRoute
+   */
+  archiveRoute: {
+    methodKind: "unary";
+    input: typeof ArchiveRouteRequestSchema;
+    output: typeof ArchiveRouteResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ArchivePier
+   */
+  archivePier: {
+    methodKind: "unary";
+    input: typeof ArchivePierRequestSchema;
+    output: typeof ArchivePierResponseSchema;
+  },
+  /**
+   * Prices are effective-dated (D-14); AddRoutePrice requires the route be
+   * in the caller's scope.
+   *
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.AddRoutePrice
+   */
+  addRoutePrice: {
+    methodKind: "unary";
+    input: typeof AddRoutePriceRequestSchema;
+    output: typeof AddRoutePriceResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ListRoutePrices
+   */
+  listRoutePrices: {
+    methodKind: "unary";
+    input: typeof ListRoutePricesRequestSchema;
+    output: typeof ListRoutePricesResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_services_catalog_v1_catalog, 0);
