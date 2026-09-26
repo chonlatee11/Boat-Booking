@@ -6,17 +6,20 @@ M := github.com/chonlatee11/boat-booking
 COMPOSE := docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.services.yml
 COMPOSE_CI := docker compose --env-file .env -f deploy/ci/docker-compose.yml
 
-# Every service directory that has been scaffolded with `make new-service`
-# (has cmd/main.go). services/_template has no cmd/main.go and is excluded
-# until D-03 gives it one.
-SERVICES ?= $(shell for d in services/*/; do n=$$(basename "$$d"); [ -f "$${d}cmd/main.go" ] && echo "$$n"; done)
+# BASE is the diff base for changed-services.sh: prefer origin/main, fall
+# back to local main when no origin remote/tracking ref exists (D-22).
+BASE ?= $(shell git rev-parse --verify origin/main >/dev/null 2>&1 && echo origin/main || echo main)
+# SERVICES defaults to whatever changed-services.sh selects for BASE, so
+# `make images`/`make push` only touch services actually affected by the
+# diff; override explicitly (e.g. SERVICES=gateway) when needed.
+SERVICES ?= $(shell deploy/ci/changed-services.sh $(BASE))
 TAG ?= $(shell git rev-parse --short HEAD)
 
 PORT ?= 8080
 CATALOG_PORT ?= 8090
 topic ?= catalog.events
 
-.PHONY: dev-keys dev-token up up-infra obs-check down kong-roundtrip proof compose-gen test test-integration dev-tools lint hooks proto-gen proto-check sqlc-gen ci-keys ci-up ci-down images new-service template-smoke migrate-% run-% dlq-list
+.PHONY: dev-keys dev-token up up-infra obs-check down kong-roundtrip proof compose-gen test test-integration dev-tools lint hooks proto-gen proto-check sqlc-gen ci-keys ci-up ci-down images new-service template-smoke migrate-% migrate-validate web-check ci run-% dlq-list
 
 dev-keys:
 	go run $(M)/pkg/auth/cmd/devtoken keys
@@ -234,6 +237,9 @@ lint:
 	done
 	buf lint
 	proto/pii-check.sh proto/events
+	test -d apps/web/node_modules || npm --prefix apps/web ci
+	npm --prefix apps/web run lint
+	npm --prefix apps/web run typecheck
 
 hooks:
 	lefthook install
@@ -258,11 +264,44 @@ ci-down:
 	$(COMPOSE_CI) down
 
 images:
-	@for s in $(SERVICES); do \
-		name=$${s#_}; \
-		echo "building services/$$s -> boatbooking/$$name:$(TAG)"; \
-		docker build --build-arg SERVICE=$$s -t boatbooking/$$name:$(TAG) .; \
+	@if [ -z "$(strip $(SERVICES))" ]; then \
+		echo "no services changed"; \
+	else \
+		for s in $(SERVICES); do \
+			name=$${s#_}; \
+			echo "building services/$$s -> boatbooking/$$name:$(TAG)"; \
+			docker build --build-arg SERVICE=$$s -t boatbooking/$$name:$(TAG) .; \
+		done; \
+	fi
+
+# migrate-validate runs `goose validate` against every service's migrations/
+# dir (D-26) using the same goose version pinned in deploy/migrate/Dockerfile
+# and pkg/go.mod (v3.28.0 requires go1.26, breaking this repo's go1.25.x pin).
+migrate-validate:
+	@for d in services/*/; do \
+		svc=$$(basename "$$d"); \
+		if [ -d "$${d}migrations" ]; then \
+			echo "goose validate services/$$svc"; \
+			go run github.com/pressly/goose/v3/cmd/goose@v3.27.3 -dir "$${d}migrations" validate || exit 1; \
+		fi; \
 	done
+
+web-check:
+	npm --prefix apps/web run format:check
+	npm --prefix apps/web run build
+
+# ci reproduces the Jenkins pipeline locally in the same order, stopping at
+# the first failure; no flag here ever skips test-integration (D-22).
+ci:
+	bash deploy/ci/changed-services_test.sh
+	$(MAKE) lint
+	$(MAKE) proto-check
+	$(MAKE) test
+	$(MAKE) test-integration
+	$(MAKE) migrate-validate
+	$(MAKE) template-smoke
+	$(MAKE) web-check
+	$(MAKE) images
 
 REGISTRY ?= localhost:8880/boatbooking
 HARBOR_USER ?= admin
