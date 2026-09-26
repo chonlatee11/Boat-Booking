@@ -59,6 +59,45 @@ check_traces() {
   return 1
 }
 
+check_logs() {
+  local trace_id span_id ts payload i body
+  trace_id=$(rand_hex 16)
+  span_id=$(rand_hex 8)
+  ts=$(now_ns)
+  payload=$(printf '{"resourceLogs":[{"resource":{"attributes":[{"key":"service.name","value":{"stringValue":"obs-check"}}]},"scopeLogs":[{"logRecords":[{"timeUnixNano":"%s","body":{"stringValue":"obs-check log"},"traceId":"%s","spanId":"%s"}]}]}]}' \
+    "$ts" "$trace_id" "$span_id")
+  send_otlp /v1/logs "$payload" >/dev/null
+
+  for i in $(seq 1 30); do
+    body=$(grafana_get "/api/datasources/proxy/uid/loki/loki/api/v1/query_range?query=%7Bservice_name%3D%22obs-check%22%7D" || true)
+    if echo "$body" | grep -q '"status":"success"' && echo "$body" | grep -q "obs-check log"; then
+      echo "PASS logs"
+      return 0
+    fi
+    sleep 1
+  done
+  echo "FAIL logs"
+  return 1
+}
+
+check_metrics() {
+  local ts payload i body
+  ts=$(now_ns)
+  payload=$(printf '{"resourceMetrics":[{"resource":{"attributes":[{"key":"service.name","value":{"stringValue":"obs-check"}}]},"scopeMetrics":[{"metrics":[{"name":"obs_check_up","gauge":{"dataPoints":[{"timeUnixNano":"%s","asDouble":1}]}}]}]}]}' "$ts")
+  send_otlp /v1/metrics "$payload" >/dev/null
+
+  for i in $(seq 1 30); do
+    body=$(grafana_get "/api/datasources/proxy/uid/prometheus/api/v1/query?query=obs_check_up" || true)
+    if echo "$body" | grep -q '"result":\[{' ; then
+      echo "PASS metrics"
+      return 0
+    fi
+    sleep 1
+  done
+  echo "FAIL metrics"
+  return 1
+}
+
 main() {
   case "${1:-}" in
     traces) check_traces ;;

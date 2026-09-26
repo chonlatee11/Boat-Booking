@@ -18,6 +18,10 @@ exporters:
     endpoint: tempo:4317
     tls:
       insecure: true
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+  otlphttp/prometheus:
+    endpoint: http://prometheus:9090/api/v1/otlp
 
 service:
   pipelines:
@@ -25,3 +29,11 @@ service:
       receivers: [otlp]
       processors: [memory_limiter, batch]
       exporters: [otlp/tempo]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp/loki]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp/prometheus]

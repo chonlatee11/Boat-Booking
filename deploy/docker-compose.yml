@@ -66,6 +66,23 @@ services:
       - ./observability/tempo.yaml:/etc/tempo.yaml:ro
       - tempo_data:/var/tempo
 
+  loki:
+    image: grafana/loki:3.7.8
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes:
+      - ./observability/loki.yaml:/etc/loki/config.yaml:ro
+      - loki_data:/loki
+
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-otlp-receiver
+      - --storage.tsdb.retention.time=3d
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+
   grafana:
     image: grafana/grafana:12.4.9
     environment:
@@ -80,6 +97,15 @@ services:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 5s
       retries: 12
+    depends_on:
+      tempo:
+        condition: service_started
+      loki:
+        condition: service_started
+      prometheus:
+        condition: service_started
 
 volumes:
   tempo_data:
+  loki_data:
+  prometheus_data:
