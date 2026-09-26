@@ -3,6 +3,7 @@ go 1.25.7
 use (
 	./gen/go
 	./pkg
-	./services/gateway
 	./services/_template
+	./services/catalog
+	./services/gateway
 )

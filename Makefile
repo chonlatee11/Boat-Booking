@@ -12,7 +12,7 @@ COMPOSE_CI := docker compose --env-file .env -f deploy/ci/docker-compose.yml
 SERVICES ?= $(shell for d in services/*/; do n=$$(basename "$$d"); [ -f "$${d}cmd/main.go" ] && echo "$$n"; done)
 TAG ?= $(shell git rev-parse --short HEAD)
 
-.PHONY: dev-keys dev-token up up-infra obs-check down kong-roundtrip test test-integration dev-tools lint hooks proto-gen proto-check sqlc-gen ci-keys ci-up ci-down images
+.PHONY: dev-keys dev-token up up-infra obs-check down kong-roundtrip test test-integration dev-tools lint hooks proto-gen proto-check sqlc-gen ci-keys ci-up ci-down images new-service template-smoke
 
 dev-keys:
 	go run $(M)/pkg/auth/cmd/devtoken keys
@@ -53,6 +53,79 @@ dev-tools:
 proto-gen:
 	buf generate
 	cd gen/go && go mod tidy
+
+# new-service scaffolds services/$(name) from services/_template (D-03).
+# Every guard below must exit 1 before anything touches the filesystem.
+new-service:
+	@if [ -z "$(name)" ]; then \
+		echo "new-service: usage: make new-service name=<svc>" >&2; \
+		exit 1; \
+	fi
+	@echo "$(name)" | grep -Eq '^[a-z][a-z0-9]*$$' || { \
+		echo "new-service: name '$(name)' must be lowercase ASCII, start with a letter, letters/digits only" >&2; \
+		exit 1; \
+	}
+	@if [ -e "services/$(name)" ]; then \
+		echo "new-service: services/$(name) already exists" >&2; \
+		exit 1; \
+	fi
+	@if [ -f deploy/services.txt ] && grep -qx "$(name)" deploy/services.txt; then \
+		echo "new-service: '$(name)' is already listed in deploy/services.txt" >&2; \
+		exit 1; \
+	fi
+	cp -r services/_template services/$(name)
+	grep -rl __NAME__ services/$(name) | xargs sed -i 's/__NAME__/$(name)/g'
+	go work use ./services/$(name)
+	mkdir -p deploy
+	echo "$(name)" >> deploy/services.txt
+	@echo "new-service: services/$(name) is ready — cd services/$(name) and replace the sample slice (see CLAUDE.md)"
+
+# template-smoke proves a freshly scaffolded service builds into a container
+# image that reports Docker health status healthy (D-03, D-37), then removes
+# every trace it left behind, success or failure.
+template-smoke:
+	@set -eu; \
+	trap 'docker rm -f bb-tsmoke >/dev/null 2>&1 || true; \
+	      rm -rf services/tsmoke; \
+	      go work edit -dropuse=./services/tsmoke 2>/dev/null || true; \
+	      [ -f deploy/services.txt ] && sed -i "/^tsmoke$$/d" deploy/services.txt || true' EXIT; \
+	for bad in "" "Bad_Name" "9x" "catalog"; do \
+		before=$$(git status --porcelain); \
+		if [ -z "$$bad" ]; then \
+			if $(MAKE) new-service >/dev/null 2>&1; then \
+				echo "template-smoke: new-service with no name should have failed" >&2; \
+				exit 1; \
+			fi; \
+		else \
+			if $(MAKE) new-service name="$$bad" >/dev/null 2>&1; then \
+				echo "template-smoke: new-service name=$$bad should have failed" >&2; \
+				exit 1; \
+			fi; \
+		fi; \
+		after=$$(git status --porcelain); \
+		if [ "$$before" != "$$after" ]; then \
+			echo "template-smoke: new-service name='$$bad' left the tree dirty" >&2; \
+			exit 1; \
+		fi; \
+	done; \
+	$(MAKE) new-service name=tsmoke; \
+	go build github.com/chonlatee11/boat-booking/services/tsmoke/...; \
+	docker build --build-arg SERVICE=tsmoke -t boatbooking/tsmoke:smoke .; \
+	docker run -d --name bb-tsmoke --health-interval=2s \
+		-e INTERNAL_TOKEN=smoke -e RELAY_ENABLED=false -e CONSUMER_ENABLED=false \
+		boatbooking/tsmoke:smoke; \
+	deadline=$$(( $$(date +%s) + 60 )); \
+	status=""; \
+	while [ $$(date +%s) -lt $$deadline ]; do \
+		status=$$(docker inspect -f '{{.State.Health.Status}}' bb-tsmoke 2>/dev/null || echo ""); \
+		[ "$$status" = "healthy" ] && break; \
+		sleep 2; \
+	done; \
+	if [ "$$status" != "healthy" ]; then \
+		echo "template-smoke: bb-tsmoke never reported healthy (last status: $$status)" >&2; \
+		exit 1; \
+	fi; \
+	echo "PASS template-smoke"
 
 sqlc-gen:
 	@for f in services/*/internal/adapters/postgres/sqlc.yaml; do \
