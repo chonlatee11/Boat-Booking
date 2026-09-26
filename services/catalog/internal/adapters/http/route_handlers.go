@@ -92,6 +92,36 @@ func (s *server) ListRoutes(ctx context.Context, req *connect.Request[catalogv1.
 	return connect.NewResponse(resp), nil
 }
 
+// ArchiveRoute requires verified claims; app.ArchiveRoute enforces the
+// route-scope rule from UpsertRoute (D-15).
+func (s *server) ArchiveRoute(ctx context.Context, req *connect.Request[catalogv1.ArchiveRouteRequest]) (*connect.Response[catalogv1.ArchiveRouteResponse], error) {
+	scope, hasClaims, err := scopeFrom(ctx)
+	if !hasClaims {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing claims"))
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := uuid.Parse(req.Msg.RouteId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid route_id"))
+	}
+
+	var stored domain.Route
+	err = bbpgx.WithTx(ctx, s.pool, func(tx pgx.Tx) error {
+		var txErr error
+		stored, txErr = app.ArchiveRoute(ctx, tx, scope, id)
+		return txErr
+	})
+	if err != nil {
+		return nil, toConnectErr(err)
+	}
+	s.nudge()
+
+	return connect.NewResponse(&catalogv1.ArchiveRouteResponse{Route: toProtoRoute(stored)}), nil
+}
+
 func toProtoRoute(r domain.Route) *catalogv1.Route {
 	prices := make([]*catalogv1.RoutePrice, len(r.CurrentPrices))
 	for i, p := range r.CurrentPrices {

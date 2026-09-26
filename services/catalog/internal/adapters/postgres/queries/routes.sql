@@ -32,3 +32,23 @@ join piers pf on pf.id = routes.pier_from_id
 join piers pt on pt.id = routes.pier_to_id
 where routes.archived_at is null and pf.archived_at is null and pt.archived_at is null
 order by pf.name_th, pt.name_th, routes.id;
+
+-- name: ArchiveRoute :one
+update routes
+set archived_at = coalesce(archived_at, now()),
+    updated_at = now()
+where id = $1
+returning *;
+
+-- name: ListActiveRoutesForPier :many
+select
+  routes.id as route_id,
+  routes.operator_id as operator_id,
+  pf.name_th as pier_from_name_th,
+  pt.name_th as pier_to_name_th
+from routes
+join piers pf on pf.id = routes.pier_from_id
+join piers pt on pt.id = routes.pier_to_id
+where routes.archived_at is null
+  and (routes.pier_from_id = $1 or routes.pier_to_id = $1)
+order by pf.name_th, pt.name_th, routes.id;

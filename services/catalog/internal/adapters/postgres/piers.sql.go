@@ -11,6 +11,34 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const archivePier = `-- name: ArchivePier :one
+update piers
+set archived_at = coalesce(archived_at, now()),
+    updated_at = now()
+where id = $1
+returning id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at
+`
+
+func (q *Queries) ArchivePier(ctx context.Context, id pgtype.UUID) (Pier, error) {
+	row := q.db.QueryRow(ctx, archivePier, id)
+	var i Pier
+	err := row.Scan(
+		&i.ID,
+		&i.OperatorID,
+		&i.NameTh,
+		&i.NameEn,
+		&i.Lat,
+		&i.Lng,
+		&i.Address,
+		&i.OpensAt,
+		&i.ClosesAt,
+		&i.ArchivedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getPierForShare = `-- name: GetPierForShare :one
 select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at from piers
 where id = $1

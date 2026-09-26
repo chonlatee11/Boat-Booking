@@ -159,6 +159,43 @@ func updateRoute(ctx context.Context, tx pgx.Tx, q *postgres.Queries, scope Scop
 	return publishRouteUpserted(ctx, tx, updated)
 }
 
+// ArchiveRoute soft-deletes id (super_admin or pier_admin in scope, D-15).
+// Out-of-scope or missing ids return domain.ErrNotFound. Archiving an
+// already-archived route is a successful no-op — it returns the route
+// unchanged and publishes no new event.
+func ArchiveRoute(ctx context.Context, tx pgx.Tx, scope Scope, id uuid.UUID) (domain.Route, error) {
+	if !scope.CanWrite() {
+		return domain.Route{}, domain.ErrPermissionDenied
+	}
+	q := postgres.New(tx)
+
+	stored, err := q.GetRouteForUpdateScoped(ctx, postgres.GetRouteForUpdateScopedParams{
+		ID:         toPgUUID(id),
+		AllScope:   scope.All(),
+		OperatorID: toPgUUID(scope.OperatorID),
+		PierIds:    toPgUUIDs(scope.PierIDArray()),
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Route{}, domain.ErrNotFound
+		}
+		return domain.Route{}, fmt.Errorf("app: get route for archive: %w", err)
+	}
+	if stored.ArchivedAt.Valid {
+		return routeFromRow(stored)
+	}
+
+	row, err := q.ArchiveRoute(ctx, toPgUUID(id))
+	if err != nil {
+		return domain.Route{}, fmt.Errorf("app: archive route: %w", err)
+	}
+	archived, err := routeFromRow(row)
+	if err != nil {
+		return domain.Route{}, err
+	}
+	return publishRouteUpserted(ctx, tx, archived)
+}
+
 // ListRoutes returns routes ordered by pier_from name_th, pier_to name_th,
 // then id, each with CurrentPrices attached for today's Asia/Bangkok date
 // (D-14). public=true (CAT-06, no claims) always returns the non-archived

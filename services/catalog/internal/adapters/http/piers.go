@@ -94,6 +94,36 @@ func (s *server) ListPiers(ctx context.Context, req *connect.Request[catalogv1.L
 	return connect.NewResponse(resp), nil
 }
 
+// ArchivePier requires verified claims; app.ArchivePier enforces the pier
+// scope rule from UpsertPier and the active-routes block (D-15).
+func (s *server) ArchivePier(ctx context.Context, req *connect.Request[catalogv1.ArchivePierRequest]) (*connect.Response[catalogv1.ArchivePierResponse], error) {
+	scope, hasClaims, err := scopeFrom(ctx)
+	if !hasClaims {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing claims"))
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := uuid.Parse(req.Msg.PierId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid pier_id"))
+	}
+
+	var stored domain.Pier
+	err = bbpgx.WithTx(ctx, s.pool, func(tx pgx.Tx) error {
+		var txErr error
+		stored, txErr = app.ArchivePier(ctx, tx, scope, id)
+		return txErr
+	})
+	if err != nil {
+		return nil, toConnectErr(err)
+	}
+	s.nudge()
+
+	return connect.NewResponse(&catalogv1.ArchivePierResponse{Pier: toProtoPier(stored)}), nil
+}
+
 func toProtoPier(p domain.Pier) *catalogv1.Pier {
 	return &catalogv1.Pier{
 		PierId:     p.ID.String(),

@@ -164,6 +164,72 @@ func ListPiers(ctx context.Context, q *postgres.Queries, scope Scope, public boo
 	return piersFromRows(rows), nil
 }
 
+// ArchivePier soft-deletes id (super_admin or pier_admin in scope, D-08).
+// Rejected with domain.ErrFailedPrecondition while any non-archived route
+// uses id as pier_from or pier_to; the error message lists only routes
+// visible in the caller's scope and counts the rest as
+// "+N routes of other operators" — never their names or ids (D-15,
+// CAT-02/CAT-03, T-02-06-03). The row lock (FOR UPDATE via
+// GetPierForUpdateScoped) serializes against UpsertRoute's FOR SHARE lock
+// on pier_from/pier_to, so a route can never be created on a pier archived
+// concurrently. Archiving an already-archived pier is a successful no-op.
+func ArchivePier(ctx context.Context, tx pgx.Tx, scope Scope, id uuid.UUID) (domain.Pier, error) {
+	if !scope.CanWrite() {
+		return domain.Pier{}, domain.ErrPermissionDenied
+	}
+	q := postgres.New(tx)
+
+	stored, err := q.GetPierForUpdateScoped(ctx, postgres.GetPierForUpdateScopedParams{
+		ID:         toPgUUID(id),
+		AllScope:   scope.All(),
+		OperatorID: toPgUUID(scope.OperatorID),
+		PierIds:    toPgUUIDs(scope.PierIDArray()),
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Pier{}, domain.ErrNotFound
+		}
+		return domain.Pier{}, fmt.Errorf("app: get pier for archive: %w", err)
+	}
+	if stored.ArchivedAt.Valid {
+		return pierFromRow(stored), nil
+	}
+
+	activeRoutes, err := q.ListActiveRoutesForPier(ctx, toPgUUID(id))
+	if err != nil {
+		return domain.Pier{}, fmt.Errorf("app: list active routes for pier: %w", err)
+	}
+	if len(activeRoutes) > 0 {
+		return domain.Pier{}, blockedArchiveError(scope, activeRoutes)
+	}
+
+	row, err := q.ArchivePier(ctx, toPgUUID(id))
+	if err != nil {
+		return domain.Pier{}, fmt.Errorf("app: archive pier: %w", err)
+	}
+	return publishPierUpserted(ctx, tx, pierFromRow(row))
+}
+
+// blockedArchiveError builds the FailedPrecondition error for ArchivePier:
+// routes visible in scope are named, routes belonging to other operators
+// are only counted (T-02-06-03).
+func blockedArchiveError(scope Scope, routes []postgres.ListActiveRoutesForPierRow) error {
+	var visible []string
+	otherCount := 0
+	for _, r := range routes {
+		if scope.All() || fromPgUUID(r.OperatorID) == scope.OperatorID {
+			visible = append(visible, fmt.Sprintf("%s → %s", r.PierFromNameTh, r.PierToNameTh))
+		} else {
+			otherCount++
+		}
+	}
+	msg := "active routes: " + strings.Join(visible, ", ")
+	if otherCount > 0 {
+		msg = fmt.Sprintf("%s (+%d routes of other operators)", msg, otherCount)
+	}
+	return fmt.Errorf("%w: %s", domain.ErrFailedPrecondition, msg)
+}
+
 func publishPierUpserted(ctx context.Context, tx pgx.Tx, p domain.Pier) (domain.Pier, error) {
 	env, err := events.New(EventPierUpserted, p.ID.String(), &catalogv1.PierUpserted{
 		PierId:     p.ID.String(),

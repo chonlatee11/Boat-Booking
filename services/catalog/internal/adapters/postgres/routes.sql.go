@@ -11,6 +11,31 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const archiveRoute = `-- name: ArchiveRoute :one
+update routes
+set archived_at = coalesce(archived_at, now()),
+    updated_at = now()
+where id = $1
+returning id, operator_id, pier_from_id, pier_to_id, duration_minutes, cancellation_policy, archived_at, created_at, updated_at
+`
+
+func (q *Queries) ArchiveRoute(ctx context.Context, id pgtype.UUID) (Route, error) {
+	row := q.db.QueryRow(ctx, archiveRoute, id)
+	var i Route
+	err := row.Scan(
+		&i.ID,
+		&i.OperatorID,
+		&i.PierFromID,
+		&i.PierToID,
+		&i.DurationMinutes,
+		&i.CancellationPolicy,
+		&i.ArchivedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getRouteForUpdateScoped = `-- name: GetRouteForUpdateScoped :one
 select routes.id, routes.operator_id, routes.pier_from_id, routes.pier_to_id, routes.duration_minutes, routes.cancellation_policy, routes.archived_at, routes.created_at, routes.updated_at from routes
 where routes.id = $1
@@ -84,6 +109,52 @@ func (q *Queries) InsertRoute(ctx context.Context, arg InsertRouteParams) (Route
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const listActiveRoutesForPier = `-- name: ListActiveRoutesForPier :many
+select
+  routes.id as route_id,
+  routes.operator_id as operator_id,
+  pf.name_th as pier_from_name_th,
+  pt.name_th as pier_to_name_th
+from routes
+join piers pf on pf.id = routes.pier_from_id
+join piers pt on pt.id = routes.pier_to_id
+where routes.archived_at is null
+  and (routes.pier_from_id = $1 or routes.pier_to_id = $1)
+order by pf.name_th, pt.name_th, routes.id
+`
+
+type ListActiveRoutesForPierRow struct {
+	RouteID        pgtype.UUID
+	OperatorID     pgtype.UUID
+	PierFromNameTh string
+	PierToNameTh   string
+}
+
+func (q *Queries) ListActiveRoutesForPier(ctx context.Context, pierFromID pgtype.UUID) ([]ListActiveRoutesForPierRow, error) {
+	rows, err := q.db.Query(ctx, listActiveRoutesForPier, pierFromID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListActiveRoutesForPierRow
+	for rows.Next() {
+		var i ListActiveRoutesForPierRow
+		if err := rows.Scan(
+			&i.RouteID,
+			&i.OperatorID,
+			&i.PierFromNameTh,
+			&i.PierToNameTh,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listRoutesAdmin = `-- name: ListRoutesAdmin :many

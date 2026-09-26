@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -314,4 +315,118 @@ func TestRoutePricesEffectiveDating(t *testing.T) {
 		RouteId: routeNoPrices.RouteId, TicketType: catalogv1.TicketType_TICKET_TYPE_ADULT, AmountSatang: 1, EffectiveFrom: todayStr,
 	}))
 	assertConnectCode(t, err, connect.CodeFailedPrecondition, "AddRoutePrice on archived route")
+}
+
+// TestArchivePierBlockedByRoutes proves D-15/CAT-02/CAT-03/T-02-06-03:
+// ArchivePier is rejected with FailedPrecondition while any non-archived
+// route uses the pier, naming only routes in the caller's scope and
+// counting the rest as "+N routes of other operators" — never leaking
+// another operator's route/pier names or ids; archiving is idempotent; and
+// once no active routes remain, ArchivePier succeeds and the public
+// listings and dependent writes reflect the archive.
+func TestArchivePierBlockedByRoutes(t *testing.T) {
+	addr, dsn := setCatalogEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+	ctx := context.Background()
+
+	superAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RoleSuperAdmin, ""))
+
+	opA := mustCreateOperator(t, ctx, superAdmin, "Operator Archive A")
+	opB := mustCreateOperator(t, ctx, superAdmin, "Operator Archive B")
+	a1 := mustCreatePier(t, ctx, superAdmin, opA, "ท่า AR1", "Pier AR1", 7.2, 98.0)
+	a2 := mustCreatePier(t, ctx, superAdmin, opA, "ท่า AR2", "Pier AR2", 7.21, 98.01)
+	b1 := mustCreatePier(t, ctx, superAdmin, opB, "ท่า BR1", "Pier BR1", 7.3, 98.1)
+
+	pierAdminA1 := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, opA, a1))
+	route := mustCreateRoute(t, ctx, pierAdminA1, a1, b1, 25)
+
+	// pier_admin(A,[A1]) ArchivePier(A1) -> FailedPrecondition naming both
+	// piers of A's own route.
+	_, err := pierAdminA1.ArchivePier(ctx, connect.NewRequest(&catalogv1.ArchivePierRequest{PierId: a1}))
+	if connect.CodeOf(err) != connect.CodeFailedPrecondition {
+		t.Fatalf("ArchivePier(A1) code = %v, want FailedPrecondition (err: %v)", connect.CodeOf(err), err)
+	}
+	if msg := err.Error(); !strings.Contains(msg, "ท่า AR1") || !strings.Contains(msg, "ท่า BR1") {
+		t.Errorf("ArchivePier(A1) message = %q, want to contain both pier names", msg)
+	}
+
+	// pier_admin(B,[B1]) ArchivePier(B1) -> FailedPrecondition counting the
+	// route as "other operators" (the route's operator_id is A's, not B's)
+	// and naming neither A1 nor the route id.
+	pierAdminB1 := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, opB, b1))
+	_, err = pierAdminB1.ArchivePier(ctx, connect.NewRequest(&catalogv1.ArchivePierRequest{PierId: b1}))
+	if connect.CodeOf(err) != connect.CodeFailedPrecondition {
+		t.Fatalf("ArchivePier(B1) code = %v, want FailedPrecondition (err: %v)", connect.CodeOf(err), err)
+	}
+	msgB := err.Error()
+	if !strings.Contains(msgB, "+1 routes of other operators") {
+		t.Errorf("ArchivePier(B1) message = %q, want to contain '+1 routes of other operators'", msgB)
+	}
+	if strings.Contains(msgB, "ท่า AR1") || strings.Contains(msgB, route.RouteId) {
+		t.Errorf("ArchivePier(B1) message = %q, must not name A1 or the route id", msgB)
+	}
+
+	// ArchiveRoute -> ok; repeat -> ok (idempotent, single archive event).
+	archResp, err := pierAdminA1.ArchiveRoute(ctx, connect.NewRequest(&catalogv1.ArchiveRouteRequest{RouteId: route.RouteId}))
+	if err != nil {
+		t.Fatalf("ArchiveRoute: %v", err)
+	}
+	if !archResp.Msg.Route.Archived {
+		t.Fatalf("archived route.Archived = false, want true")
+	}
+	archResp2, err := pierAdminA1.ArchiveRoute(ctx, connect.NewRequest(&catalogv1.ArchiveRouteRequest{RouteId: route.RouteId}))
+	if err != nil {
+		t.Fatalf("re-archive route: %v", err)
+	}
+	if !archResp2.Msg.Route.Archived {
+		t.Fatalf("re-archived route.Archived = false, want true (idempotent)")
+	}
+	if n := countOutboxEvents(t, dsn, app.EventRouteUpserted, route.RouteId); n != 2 {
+		t.Fatalf("RouteUpserted outbox rows = %d, want 2 (1 create + 1 archive; the no-op re-archive publishes nothing)", n)
+	}
+
+	// Now ArchivePier(A1) succeeds — no active routes remain.
+	pierArchResp, err := pierAdminA1.ArchivePier(ctx, connect.NewRequest(&catalogv1.ArchivePierRequest{PierId: a1}))
+	if err != nil {
+		t.Fatalf("ArchivePier(A1) after route archived: %v", err)
+	}
+	if !pierArchResp.Msg.Pier.Archived {
+		t.Fatalf("archived pier.Archived = false, want true")
+	}
+
+	// Public ListPiers/ListRoutes exclude A1 and the (also archived) route.
+	public := newAuthedCatalogClient(baseURL, map[string]string{httpx.HeaderInternalToken: "test-token"})
+	publicPiers, err := public.ListPiers(ctx, connect.NewRequest(&catalogv1.ListPiersRequest{}))
+	if err != nil {
+		t.Fatalf("public ListPiers: %v", err)
+	}
+	for _, p := range publicPiers.Msg.Piers {
+		if p.PierId == a1 {
+			t.Errorf("public ListPiers includes archived pier A1")
+		}
+	}
+	publicRoutes, err := public.ListRoutes(ctx, connect.NewRequest(&catalogv1.ListRoutesRequest{}))
+	if err != nil {
+		t.Fatalf("public ListRoutes: %v", err)
+	}
+	for _, r := range publicRoutes.Msg.Routes {
+		if r.RouteId == route.RouteId {
+			t.Errorf("public ListRoutes includes archived route")
+		}
+	}
+
+	// UpsertPier on archived A1 -> FailedPrecondition.
+	_, err = pierAdminA1.UpsertPier(ctx, connect.NewRequest(&catalogv1.UpsertPierRequest{
+		PierId: a1, NameTh: "x", NameEn: "x", Lat: 7.2, Lng: 98.0,
+	}))
+	assertConnectCode(t, err, connect.CodeFailedPrecondition, "UpsertPier on archived A1")
+
+	// UpsertRoute from A2 to archived A1 -> FailedPrecondition.
+	pierAdminA2 := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, opA, a2))
+	_, err = pierAdminA2.UpsertRoute(ctx, connect.NewRequest(&catalogv1.UpsertRouteRequest{
+		PierFromId: a2, PierToId: a1, DurationMinutes: 15,
+	}))
+	assertConnectCode(t, err, connect.CodeFailedPrecondition, "UpsertRoute to archived pier A1")
 }

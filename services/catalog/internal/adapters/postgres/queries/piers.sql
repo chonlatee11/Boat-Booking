@@ -43,3 +43,10 @@ for share;
 select * from piers
 where id = $1
 for share;
+
+-- name: ArchivePier :one
+update piers
+set archived_at = coalesce(archived_at, now()),
+    updated_at = now()
+where id = $1
+returning *;
