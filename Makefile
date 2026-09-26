@@ -5,7 +5,7 @@ export
 M := github.com/chonlatee11/boat-booking
 COMPOSE := docker compose --env-file .env -f deploy/docker-compose.yml
 
-.PHONY: dev-keys dev-token up down kong-roundtrip test test-integration dev-tools lint hooks
+.PHONY: dev-keys dev-token up down kong-roundtrip test test-integration dev-tools lint hooks proto-gen
 
 dev-keys:
 	go run $(M)/pkg/auth/cmd/devtoken keys
@@ -35,6 +35,11 @@ dev-tools:
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
 	go install github.com/evilmartians/lefthook/v2@v2.1.14
 	go install golang.org/x/tools/cmd/goimports@v0.50.0
+	go install github.com/bufbuild/buf/cmd/buf@v1.73.0
+
+proto-gen:
+	buf generate
+	cd gen/go && go mod tidy
 
 lint:
 	for dir in $$(go list -m -f '{{.Dir}}'); do \

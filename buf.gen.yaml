@@ -1,0 +1,15 @@
+version: v2
+inputs:
+  - directory: proto
+plugins:
+  - remote: buf.build/protocolbuffers/go:v1.36.12
+    out: gen/go
+    opt: module=github.com/chonlatee11/boat-booking/gen/go
+  - remote: buf.build/connectrpc/go:v1.18.1
+    out: gen/go
+    opt: module=github.com/chonlatee11/boat-booking/gen/go
+  - remote: buf.build/bufbuild/es:v2.15.0
+    out: gen/ts
+    opt:
+      - target=ts
+      - json_types=true

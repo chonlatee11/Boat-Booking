@@ -5,6 +5,7 @@ FROM golang:1.25.14-bookworm AS build
 ARG SERVICE
 ENV CGO_ENABLED=0 GOWORK=off
 WORKDIR /src
+COPY gen/go ./gen/go
 COPY pkg ./pkg
 COPY services/${SERVICE} ./services/${SERVICE}
 RUN --mount=type=cache,target=/go/pkg/mod \

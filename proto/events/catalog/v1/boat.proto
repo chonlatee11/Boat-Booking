@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package boatbooking.catalog.events.v1;
+
+option go_package = "github.com/chonlatee11/boat-booking/gen/go/catalog/v1;catalogv1";
+
+// BoatStatus is defined once here and imported by the catalog sync API
+// (proto/services/catalog/v1/catalog.proto) — both protos share the Go
+// package catalogv1, so this enum must not be redeclared there.
+enum BoatStatus {
+  BOAT_STATUS_UNSPECIFIED = 0;
+  BOAT_STATUS_ACTIVE = 1;
+  BOAT_STATUS_MAINTENANCE = 2;
+}
+
+// BoatUpserted is a past-tense fact: a boat was created or updated in the
+// catalog. Ids only, no personal data (D-45) — the boat's own name is not
+// PII.
+message BoatUpserted {
+  string boat_id = 1;
+  string operator_id = 2;
+  string name = 3;
+  int32 default_capacity = 4;
+  BoatStatus status = 5;
+}
