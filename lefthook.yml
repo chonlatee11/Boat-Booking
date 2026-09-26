@@ -1,0 +1,13 @@
+pre-commit:
+  parallel: true
+  commands:
+    goimports:
+      glob: "*.go"
+      run: bash -c 'out=$(goimports -l {staged_files}); if [ -n "$out" ]; then echo "$out"; exit 1; fi'
+    buf-lint:
+      glob: "*.proto"
+      run: buf lint
+    eslint:
+      root: "apps/web/"
+      glob: "*.{ts,tsx}"
+      run: npx eslint {staged_files}

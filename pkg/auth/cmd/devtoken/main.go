@@ -264,7 +264,7 @@ func (e *envFile) set(key, val string) {
 }
 
 func loadEnvFile(path string) (*envFile, error) {
-	f, err := os.Open(path)
+	f, err := os.Open(path) //nolint:gosec // dev CLI reads only its own hardcoded/flag-supplied local paths (.env, .env.example, kong template)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +295,7 @@ func loadEnvFile(path string) (*envFile, error) {
 
 func (e *envFile) writeFile(path string, mode os.FileMode) error {
 	tmp := path + ".tmp"
-	f, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode)
+	f, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode) //nolint:gosec // dev CLI writes only its own hardcoded local .env path
 	if err != nil {
 		return err
 	}
