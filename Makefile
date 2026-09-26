@@ -243,6 +243,9 @@ lint:
 	test -d apps/web/node_modules || npm --prefix apps/web ci
 	npm --prefix apps/web run lint
 	npm --prefix apps/web run typecheck
+	test -d apps/admin/node_modules || npm --prefix apps/admin ci
+	npm --prefix apps/admin run lint
+	npm --prefix apps/admin run typecheck
 
 hooks:
 	lefthook install
@@ -292,6 +295,8 @@ migrate-validate:
 web-check:
 	npm --prefix apps/web run format:check
 	npm --prefix apps/web run build
+	npm --prefix apps/admin run format:check
+	npm --prefix apps/admin run build
 
 # ci reproduces the Jenkins pipeline locally in the same order, stopping at
 # the first failure; no flag here ever skips test-integration (D-22).

@@ -173,6 +173,20 @@ services:
     ports:
       - "127.0.0.1:3001:3001"
 
+  admin:
+    profiles: [web]
+    image: node:24-alpine
+    working_dir: /app
+    volumes:
+      - ../apps/admin:/app
+      - /app/node_modules
+      - ../gen:/gen:ro
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    command: sh -c "npm ci && npm run dev -- -H 0.0.0.0"
+    ports:
+      - "127.0.0.1:3002:3002"
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.161.0
     command: ["--config=/etc/otelcol/config.yaml"]
