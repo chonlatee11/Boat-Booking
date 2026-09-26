@@ -19,7 +19,9 @@ COOKIE_JAR=$(mktemp)
 trap 'rm -f "$COOKIE_JAR"' EXIT
 
 auth_curl() {
-  curl -fsS -u "$ADMIN_USER:$JENKINS_ADMIN_PASSWORD" -c "$COOKIE_JAR" -b "$COOKIE_JAR" "$@"
+  # -g (globoff): the Jenkins tree=... query params below contain literal
+  # "[" "]", which curl otherwise parses as URL globbing syntax.
+  curl -fsS -g -u "$ADMIN_USER:$JENKINS_ADMIN_PASSWORD" -c "$COOKIE_JAR" -b "$COOKIE_JAR" "$@"
 }
 
 # Multibranch encodes "/" in a branch name as "%2F"; nesting that inside
