@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 1
+open_count: 2
 waived_count: 0
 fixed_count: 0
-total_count: 1
-last_updated: 2026-09-26T18:48:07.301Z
+total_count: 2
+last_updated: 2026-09-26T19:10:28.472Z
 ---
 
 # Broken Windows Ledger
@@ -16,6 +16,7 @@ last_updated: 2026-09-26T18:48:07.301Z
 | id | phase | kind | file | line | description | status | reason | recorded_at | resolved_at |
 |----|-------|------|------|------|-------------|--------|--------|-------------|-------------|
 | 1 | 02 | lint-warning | services/gateway/internal/adapters/http/auth_test.go |  | gosec G124: missing Secure/HttpOnly/SameSite on test-only http.Cookie literals (pre-existing from 02-05, out of scope for 02-06) | open |  | 2026-09-26T18:48:07.301Z |  |
+| 2 | 02 | lint-warning | services/gateway/internal/adapters/http/auth_test.go |  | gosec G124: http.Cookie missing Secure/HttpOnly/SameSite in test-only req.AddCookie calls (lines ~251,304,326) — pre-existing from plan 02-05, out of scope for 02-07, blocks 'make lint' | open |  | 2026-09-26T19:10:28.472Z |  |
 
 ````json
 [
@@ -29,6 +30,19 @@ last_updated: 2026-09-26T18:48:07.301Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-26T18:48:07.301Z",
+    "resolved_at": null,
+    "milestone": null
+  },
+  {
+    "id": 2,
+    "kind": "lint-warning",
+    "phase": "02",
+    "file": "services/gateway/internal/adapters/http/auth_test.go",
+    "line": null,
+    "description": "gosec G124: http.Cookie missing Secure/HttpOnly/SameSite in test-only req.AddCookie calls (lines ~251,304,326) — pre-existing from plan 02-05, out of scope for 02-07, blocks 'make lint'",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-26T19:10:28.472Z",
     "resolved_at": null,
     "milestone": null
   }
