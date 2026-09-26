@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
 
 	platformv1 "github.com/chonlatee11/boat-booking/gen/go/platform/v1"
@@ -60,35 +61,129 @@ type Relay struct {
 	PollInterval time.Duration
 	// BatchSize is the max rows read per poll.
 	BatchSize int
+	// SweepInterval is how often Run deletes outbox rows published more
+	// than 7 days ago (D-11).
+	SweepInterval time.Duration
+
+	nudge         chan struct{}
+	publishErrors metric.Int64Counter
 }
 
-// NewRelay builds a Relay with the default poll interval (500ms, D-10) and
-// batch size (100, D-11).
+// NewRelay builds a Relay with the default poll interval (500ms, D-10),
+// batch size (100, D-11), and sweep interval (1h, D-11).
 func NewRelay(pool *pgxpool.Pool, producer *kafka.Producer, log *slog.Logger) *Relay {
-	return &Relay{
-		pool:         pool,
-		producer:     producer,
-		log:          log,
-		PollInterval: 500 * time.Millisecond,
-		BatchSize:    100,
+	r := &Relay{
+		pool:          pool,
+		producer:      producer,
+		log:           log,
+		PollInterval:  500 * time.Millisecond,
+		BatchSize:     100,
+		SweepInterval: time.Hour,
+		nudge:         make(chan struct{}, 1),
+	}
+	r.registerMetrics()
+	return r
+}
+
+// registerMetrics wires the outbox.backlog / outbox.oldest_unpublished_age
+// observable gauges and the outbox.publish_errors counter (D-50). A metric
+// registration failure is a programming error (bad instrument name/config),
+// not a runtime condition — panic rather than silently run unobserved.
+func (r *Relay) registerMetrics() {
+	meter := otel.Meter("github.com/chonlatee11/boat-booking/pkg/outbox")
+
+	counter, err := meter.Int64Counter("outbox.publish_errors")
+	if err != nil {
+		panic(fmt.Errorf("outbox: register publish_errors counter: %w", err))
+	}
+	r.publishErrors = counter
+
+	backlog, err := meter.Int64ObservableGauge("outbox.backlog")
+	if err != nil {
+		panic(fmt.Errorf("outbox: register backlog gauge: %w", err))
+	}
+	age, err := meter.Float64ObservableGauge("outbox.oldest_unpublished_age", metric.WithUnit("s"))
+	if err != nil {
+		panic(fmt.Errorf("outbox: register oldest_unpublished_age gauge: %w", err))
+	}
+
+	_, err = meter.RegisterCallback(func(ctx context.Context, o metric.Observer) error {
+		queryCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		defer cancel()
+
+		var count int64
+		var ageSeconds float64
+		err := r.pool.QueryRow(queryCtx, `
+			select count(*), coalesce(extract(epoch from now() - min(created_at)), 0)
+			from outbox where published_at is null
+		`).Scan(&count, &ageSeconds)
+		if err != nil {
+			return fmt.Errorf("outbox: observe backlog: %w", err)
+		}
+		o.ObserveInt64(backlog, count)
+		o.ObserveFloat64(age, ageSeconds)
+		return nil
+	}, backlog, age)
+	if err != nil {
+		panic(fmt.Errorf("outbox: register backlog callback: %w", err))
 	}
 }
 
-// Run polls for unpublished outbox rows until ctx is cancelled.
+// Run polls for unpublished outbox rows until ctx is cancelled, publishing
+// them in order. It wakes on PollInterval or immediately on Nudge(), sweeps
+// old published rows on SweepInterval, and flushes once more before
+// returning so rows written just before shutdown are not left stranded
+// (D-40).
 func (r *Relay) Run(ctx context.Context) error {
 	ticker := time.NewTicker(r.PollInterval)
 	defer ticker.Stop()
+	sweepTicker := time.NewTicker(r.SweepInterval)
+	defer sweepTicker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
+			flushCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+			err := r.publishOnce(flushCtx)
+			cancel()
+			if err != nil {
+				r.log.Error("outbox: shutdown flush failed", "error", err)
+			}
 			return nil
 		case <-ticker.C:
 			if err := r.publishOnce(ctx); err != nil {
 				r.log.Error("outbox: publish batch failed", "error", err)
 			}
+		case <-r.nudge:
+			if err := r.publishOnce(ctx); err != nil {
+				r.log.Error("outbox: publish batch failed", "error", err)
+			}
+		case <-sweepTicker.C:
+			if _, err := r.Sweep(ctx); err != nil {
+				r.log.Error("outbox: sweep failed", "error", err)
+			}
 		}
 	}
+}
+
+// Nudge wakes the relay immediately instead of waiting for the next poll
+// tick. Non-blocking: a pending nudge is enough, extra calls before it is
+// consumed are no-ops.
+func (r *Relay) Nudge() {
+	select {
+	case r.nudge <- struct{}{}:
+	default:
+	}
+}
+
+// Sweep deletes outbox rows published more than 7 days ago. Unpublished
+// rows are never deleted, regardless of age (D-11).
+func (r *Relay) Sweep(ctx context.Context) (int64, error) {
+	tag, err := r.pool.Exec(ctx, `delete from outbox where published_at < now() - interval '7 days'`)
+	if err != nil {
+		return 0, fmt.Errorf("outbox: sweep: %w", err)
+	}
+	return tag.RowsAffected(), nil
 }
 
 type outboxRow struct {
@@ -151,6 +246,7 @@ func (r *Relay) publishOnce(ctx context.Context) error {
 			if err := r.producer.Publish(rowCtx, row.topic, row.aggregateID, env); err != nil {
 				r.log.Warn("outbox: publish failed, stopping batch",
 					"event_id", row.eventID, "event_type", row.eventType, "aggregate_id", row.aggregateID, "error", err)
+				r.publishErrors.Add(ctx, 1)
 				break
 			}
 			published = append(published, row.id)
