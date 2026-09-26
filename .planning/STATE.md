@@ -2,17 +2,17 @@
 gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Platform Foundation
-status: executing
-stopped_at: Completed 01-12-PLAN.md
-last_updated: "2026-09-26T07:07:23.666Z"
+status: verifying
+stopped_at: Completed 01-13-PLAN.md
+last_updated: "2026-09-26T07:33:39.995Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 01 execution started
-state_head: c5e83a55f61daac9593956d65beba0c6333d3135
+state_head: f6aedcb5bbb596f98df949ae57dfcd338a2d012e
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 13
-  completed_plans: 12
+  completed_plans: 13
   percent: 0
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 
 Phase: 01 (Platform Foundation) — EXECUTING
 Plan: 13 of 13
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-09-26 — Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
@@ -70,6 +70,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P10 | 27min | 2 tasks | 28 files |
 | Phase 01 P11 | ~30min | 2 tasks | 25 files |
 | Phase 01 P12 | 32min | 2 tasks | 12 files |
+| Phase 01 P13 | 25min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,8 @@ Recent decisions affecting current work:
 - [Phase 01]: goose pinned to v3.27.3, not v3.28.0 (go1.26.0 minimum breaks the repo's go1.25.x pin)
 - [Phase 01]: docker compose up --wait replaced with a Makefile wait_ready loop (--wait cannot express a by-design exited-0 one-shot container as success)
 - [Phase 01]: pkg/kafka.Consumer log calls switched to ctx-aware slog *Context methods so trace_id reaches Loki (PLAT-06 proof requirement)
+- [Phase 01]: LC_ALL=C pinned on every sort in changed-services.sh for cross-locale determinism between dev host and CI agent
+- [Phase 01]: smoke.sh fixed for two Rule 1 bugs found during Task 2 verification: pipefail killing the poll loop on any in-progress build, and a Jenkins result-vs-console-flush race in the new test-integration/template-smoke console assertion
 
 ### Pending Todos
 
@@ -120,6 +123,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T07:07:23.613Z
-Stopped at: Completed 01-12-PLAN.md
+Last session: 2026-09-26T07:33:39.936Z
+Stopped at: Completed 01-13-PLAN.md
 Resume file: None

@@ -33,7 +33,7 @@ Five phases deliver Milestone 1 end-to-end: จอง → จ่าย → ต�
   4. Failed event processing retries 3x with backoff then lands in `<topic>.dlq` with error metadata; consumer offsets commit only after successful apply
   5. Jenkins CI builds every service image and runs unit + integration tests (testcontainers) on every push; Next.js skeleton (i18n TH/EN, mobile-first, Thai-friendly font) calls the backend only through Kong with a verified JWT round-trip (Traefik fallback decided if Kong spike fails)
 
-**Plans**: 12/13 plans executed
+**Plans**: 13/13 plans executed
 **UI hint**: yes
 
 Plans:
@@ -75,7 +75,7 @@ Plans:
 
 **Wave 9** *(blocked on Wave 8 completion)*
 
-- [ ] 01-13-PLAN.md — `make ci` = Jenkins pipeline, changed-services scoping, push to Harbor only on main (wave 9)
+- [x] 01-13-PLAN.md — `make ci` = Jenkins pipeline, changed-services scoping, push to Harbor only on main (wave 9)
 
 ### Phase 2: Identity + Catalog
 
@@ -168,7 +168,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Platform Foundation | 12/13 | In Progress|  |
+| 1. Platform Foundation | 13/13 | In Progress|  |
 | 2. Identity + Catalog | 0/? | Not started | - |
 | 3. Schedule | 0/? | Not started | - |
 | 4. Booking Core | 0/? | Not started | - |
