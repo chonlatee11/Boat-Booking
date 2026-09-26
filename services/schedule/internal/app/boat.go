@@ -22,6 +22,7 @@ import (
 // service's own event — schedule publishes nothing yet.
 const EventCatalogBoatUpserted = "catalog.BoatUpserted"
 
+
 // ApplyBoatUpserted unmarshals env's BoatUpserted payload and upserts
 // schedule's own boats projection (D-13: the caller's tx already guarantees
 // this runs at most once per event_id via processed_events). An
