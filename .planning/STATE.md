@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Platform Foundation
 status: executing
-stopped_at: Completed 01-07-PLAN.md
-last_updated: "2026-09-26T04:57:29.172Z"
+stopped_at: Completed 01-08-PLAN.md
+last_updated: "2026-09-26T05:26:27.866Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 01 execution started
-state_head: 0484cd1f79d919c87f1fd078b516c09e8abec77c
+state_head: 48fb79584c54d3efc597237d53ab09b51564f7eb
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 13
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 01 (Platform Foundation) — EXECUTING
-Plan: 8 of 13
+Plan: 9 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 01 execution started
 
@@ -65,6 +65,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P06 | 71min | 2 tasks | 14 files |
 | Phase 01 P05 | 55min | 3 tasks | 21 files |
 | Phase 01 P07 | 24min | 2 tasks | 5 files |
+| Phase 01 P08 | 32min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Rejected unaudited 'cn' npm package; replaced with hand-written clsx+tailwind-merge cn() helper — shadcn init/add commands template components to import a separate 'cn' package not covered by the legitimacy audit; developer rejected it at the blocking-human checkpoint
 - [Phase 01]: Approved radix-ui, pinned exact at 1.6.7 — Legitimate shadcn dependency with strong download/repo signals; pinned exact to match Task 2's --save-exact convention
 - [Phase 01]: kgo BlockRebalanceOnPoll requires AllowRebalance() on every PollFetches iteration, including the ctx-cancelled fake-fetch path — Skipping AllowRebalance on early ctx-done return left the poller count non-zero, deadlocking Client.Close()'s graceful group-leave forever - found and fixed before the first commit
+- [Phase 01]: Loki compactor.delete_request_store must be set whenever limits_config.retention_period is non-zero, even though the plan text didn't call it out — added delete_request_store: filesystem
+- [Phase 01]: Grafana's Loki derived field keeps the literal double-dollar '$${__value.raw}' — Grafana's provisioning-file env-var expansion would otherwise consume a single $ before Loki's own derived-field macro sees it
 
 ### Pending Todos
 
@@ -105,6 +108,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T04:57:13.377Z
-Stopped at: Completed 01-07-PLAN.md
+Last session: 2026-09-26T05:26:27.820Z
+Stopped at: Completed 01-08-PLAN.md
 Resume file: None
