@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Platform Foundation
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-09-26T02:05:45.170Z"
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-09-26T02:52:50.414Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 01 execution started
-state_head: 6d23e755704b3d79269dc6c0f2651eefef23237f
+state_head: 8f07306f33b23eaed94a570858643ac92a1e78ed
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 13
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 01 (Platform Foundation) — EXECUTING
-Plan: 4 of 13
+Plan: 5 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 01 execution started
 
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P01 | 40min | 3 tasks | 23 files |
 | Phase 01 P02 | 18min | 2 tasks | 20 files |
 | Phase 01 P03 | 8min | 2 tasks | 4 files |
+| Phase 01 P04 | 45min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Kong 3.9.1 DB-less passed the D-28 spike on the first attempt (all 8 roundtrip checks) — no Traefik fallback needed
 - [Phase 01]: buf toolchain: pinned protocolbuffers/go v1.36.12, connectrpc/go v1.18.1, bufbuild/es v2.15.0 remote plugins; gen/go and gen/ts committed — Exact tags verified against proxy.golang.org rather than trusting illustrative versions from planning
 - [Phase 01]: pkg/clock/pkg/money TDD RED phase used a genuine Go build failure (undefined symbols) for a brand-new package, not a compiling-but-wrong stub — Idiomatic Go TDD for greenfield packages; confirmed intentional (target symbols only, no unrelated errors) before GREEN
+- [Phase 01]: franz-go pinned to v1.21.7 and goose to v3.27.3 instead of the plan's illustrative v1.22.0/v3.28.0 (both require go1.26.0, breaking the Go 1.25.x pin).
+- [Phase 01]: deploy/redpanda/topics.sh default RPK_BROKERS changed to 127.0.0.1:9093 (Redpanda's internal listener) instead of localhost:9092 — the external listener advertises the host-mapped port, unreachable from inside the same container.
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T02:05:45.125Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-09-26T02:52:50.367Z
+Stopped at: Completed 01-04-PLAN.md
 Resume file: None
