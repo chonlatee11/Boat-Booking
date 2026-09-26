@@ -22,7 +22,7 @@ Milestone 1 = seed Phase 0–4: platform foundation → identity + catalog → s
 
 ### Identity & Access
 
-- [ ] **AUTH-01**: Customer can request an OTP via email or phone and receive a session (JWT in httpOnly cookie) without creating a password account
+- [x] **AUTH-01**: Customer can request an OTP via email or phone and receive a session (JWT in httpOnly cookie) without creating a password account
 - [ ] **AUTH-02**: staff / pier_admin / super_admin can log in and receive `role` + `operator_id` claims
 - [x] **AUTH-03**: Kong verifies the JWT; BFF forwards claims as trusted `X-*` headers; services reject requests lacking gateway headers (network-isolated from public)
 - [ ] **AUTH-04**: super_admin can create pier_admin / staff users and assign them to an operator and pier
@@ -154,7 +154,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAT-08 | Phase 1 | Complete |
 | PLAT-09 | Phase 1 | Complete |
 | PLAT-10 | Phase 1 | Complete |
-| AUTH-01 | Phase 2 | Pending |
+| AUTH-01 | Phase 2 | Complete |
 | AUTH-02 | Phase 2 | Pending |
 | AUTH-03 | Phase 2 | Complete |
 | AUTH-04 | Phase 2 | Pending |
