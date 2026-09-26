@@ -130,7 +130,7 @@ func (e *allowlistExporter) ExportSpans(ctx context.Context, spans []sdktrace.Re
 	filtered := make([]sdktrace.ReadOnlySpan, len(spans))
 	for i, s := range spans {
 		stub := tracetest.SpanStubFromReadOnlySpan(s)
-		kept := stub.Attributes[:0]
+		kept := make([]attribute.KeyValue, 0, len(stub.Attributes))
 		for _, a := range stub.Attributes {
 			if allowedSpanAttr(string(a.Key)) {
 				kept = append(kept, a)
