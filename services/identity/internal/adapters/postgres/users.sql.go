@@ -178,6 +178,44 @@ func (q *Queries) InsertStaffUser(ctx context.Context, arg InsertStaffUserParams
 	return i, err
 }
 
+const listStaffUsers = `-- name: ListStaffUsers :many
+select id, email, phone, name, role, operator_id, pier_ids, disabled_at, created_at, updated_at from users
+where role <> 'customer'
+  and ($1::uuid is null or operator_id = $1::uuid)
+order by email, id
+`
+
+func (q *Queries) ListStaffUsers(ctx context.Context, operatorID pgtype.UUID) ([]User, error) {
+	rows, err := q.db.Query(ctx, listStaffUsers, operatorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Phone,
+			&i.Name,
+			&i.Role,
+			&i.OperatorID,
+			&i.PierIds,
+			&i.DisabledAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const promoteCustomerToStaff = `-- name: PromoteCustomerToStaff :one
 update users
 set role = $2, operator_id = $3, pier_ids = $4, name = $5, updated_at = now()
@@ -200,6 +238,75 @@ func (q *Queries) PromoteCustomerToStaff(ctx context.Context, arg PromoteCustome
 		arg.OperatorID,
 		arg.PierIds,
 		arg.Name,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Phone,
+		&i.Name,
+		&i.Role,
+		&i.OperatorID,
+		&i.PierIds,
+		&i.DisabledAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const setUserDisabledAt = `-- name: SetUserDisabledAt :one
+update users
+set disabled_at = case when $2::bool then now() else null end, updated_at = now()
+where id = $1 and role in ('staff', 'pier_admin')
+returning id, email, phone, name, role, operator_id, pier_ids, disabled_at, created_at, updated_at
+`
+
+type SetUserDisabledAtParams struct {
+	ID       pgtype.UUID
+	Disabled bool
+}
+
+func (q *Queries) SetUserDisabledAt(ctx context.Context, arg SetUserDisabledAtParams) (User, error) {
+	row := q.db.QueryRow(ctx, setUserDisabledAt, arg.ID, arg.Disabled)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Phone,
+		&i.Name,
+		&i.Role,
+		&i.OperatorID,
+		&i.PierIds,
+		&i.DisabledAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateStaffUser = `-- name: UpdateStaffUser :one
+update users
+set name = $2, role = $3, operator_id = $4, pier_ids = $5, updated_at = now()
+where id = $1 and role in ('staff', 'pier_admin')
+returning id, email, phone, name, role, operator_id, pier_ids, disabled_at, created_at, updated_at
+`
+
+type UpdateStaffUserParams struct {
+	ID         pgtype.UUID
+	Name       string
+	Role       string
+	OperatorID pgtype.UUID
+	PierIds    []pgtype.UUID
+}
+
+func (q *Queries) UpdateStaffUser(ctx context.Context, arg UpdateStaffUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateStaffUser,
+		arg.ID,
+		arg.Name,
+		arg.Role,
+		arg.OperatorID,
+		arg.PierIds,
 	)
 	var i User
 	err := row.Scan(

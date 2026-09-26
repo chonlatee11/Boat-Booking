@@ -8,12 +8,14 @@ import (
 	"net/http/httptest"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"connectrpc.com/connect"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 
 	catalogv1 "github.com/chonlatee11/boat-booking/gen/go/catalog/v1"
 	"github.com/chonlatee11/boat-booking/gen/go/catalog/v1/catalogv1connect"
@@ -98,6 +100,19 @@ func superAdminHeaders() map[string]string {
 	h[httpx.HeaderUserID] = uuid.NewString()
 	h[httpx.HeaderRole] = auth.RoleSuperAdmin
 	return h
+}
+
+// clearOtpCooldown deletes dest's D-03 60s resend-cooldown key directly in
+// Valkey, so a test can send a second OTP to the same destination
+// immediately instead of sleeping (same pattern as
+// TestOtpCooldownAndHourlyLimit in main_integration_test.go).
+func clearOtpCooldown(t *testing.T, dest string) {
+	t.Helper()
+	rdb := redis.NewClient(&redis.Options{Addr: valkeyAddr})
+	defer rdb.Close() //nolint:errcheck // test helper, nothing actionable
+	if err := rdb.Del(context.Background(), "otp:cooldown:"+testDestHash(dest)).Err(); err != nil {
+		t.Fatalf("clear otp cooldown: %v", err)
+	}
 }
 
 func pierAdminHeaders(operatorID string) map[string]string {
@@ -274,4 +289,303 @@ func TestStaffLoginCarriesAssignedClaims(t *testing.T) {
 	if len(claims.PierIDs) != 1 || claims.PierIDs[0] != p1.String() {
 		t.Errorf("claims.PierIDs = %v, want [%s]", claims.PierIDs, p1)
 	}
+}
+
+// TestUpsertUserIdempotencyAndConcurrency proves the AUTH-04 idempotency and
+// concurrency edges (D-04-style race handling reused for staff creation):
+// re-creating the same email is rejected, a customer email is promoted in
+// place, and concurrent creates for one new email yield exactly one winner.
+func TestUpsertUserIdempotencyAndConcurrency(t *testing.T) {
+	addr, _, dsn := setIdentityEnv(t)
+	baseURL := "http://" + addr
+
+	opA := uuid.New()
+	p1 := uuid.New()
+	fc := &fakeCatalog{piers: []fakeCatalogPier{{pierID: p1.String(), operatorID: opA.String(), archived: false}}}
+	catalogSrv := startFakeCatalog(t, fc)
+	t.Setenv("CATALOG_URL", catalogSrv.URL)
+
+	runService(t)
+	waitForFullyReady(t, baseURL)
+
+	ctx := context.Background()
+	client := newUserClient(baseURL, superAdminHeaders())
+
+	pool, err := bbpgx.NewPool(ctx, dsn)
+	if err != nil {
+		t.Fatalf("new verification pool: %v", err)
+	}
+	defer pool.Close() //nolint:errcheck // test helper, nothing actionable
+
+	countUsers := func(email string) int {
+		var n int
+		if err := pool.QueryRow(ctx, `select count(*) from users where email = $1`, email).Scan(&n); err != nil {
+			t.Fatalf("count users: %v", err)
+		}
+		return n
+	}
+
+	t.Run("re-creating the same email is rejected", func(t *testing.T) {
+		const email = "dup@example.com"
+		req := func() *connect.Request[identityv1.UpsertUserRequest] {
+			return connect.NewRequest(&identityv1.UpsertUserRequest{
+				Email: email, Name: "Dup", Role: auth.RoleStaff, OperatorId: opA.String(), PierIds: []string{p1.String()},
+			})
+		}
+		if _, err := client.UpsertUser(ctx, req()); err != nil {
+			t.Fatalf("first UpsertUser: %v", err)
+		}
+		_, err := client.UpsertUser(ctx, req())
+		assertConnectCode(t, err, connect.CodeAlreadyExists, "re-created email")
+		if n := countUsers(email); n != 1 {
+			t.Errorf("users count for %s = %d, want 1", email, n)
+		}
+	})
+
+	t.Run("existing customer email is promoted in place", func(t *testing.T) {
+		const email = "promote@example.com"
+		customerID := uuid.Must(uuid.NewV7())
+		if _, err := pool.Exec(ctx, `insert into users (id, email, role) values ($1, $2, 'customer')`, customerID, email); err != nil {
+			t.Fatalf("seed customer: %v", err)
+		}
+
+		resp, err := client.UpsertUser(ctx, connect.NewRequest(&identityv1.UpsertUserRequest{
+			Email: email, Name: "Promoted", Role: auth.RoleStaff, OperatorId: opA.String(), PierIds: []string{p1.String()},
+		}))
+		if err != nil {
+			t.Fatalf("UpsertUser (promote): %v", err)
+		}
+		if resp.Msg.User.UserId != customerID.String() {
+			t.Errorf("UpsertUser promote kept id = %q, want %q (same row)", resp.Msg.User.UserId, customerID)
+		}
+		if resp.Msg.User.Role != auth.RoleStaff {
+			t.Errorf("UpsertUser promote role = %q, want %q", resp.Msg.User.Role, auth.RoleStaff)
+		}
+		if n := countUsers(email); n != 1 {
+			t.Errorf("users count for %s = %d, want 1", email, n)
+		}
+
+		var eventCount int
+		if err := pool.QueryRow(ctx, `select count(*) from outbox where event_type = $1 and aggregate_id = $2`,
+			"identity.UserCreated", customerID.String()).Scan(&eventCount); err != nil {
+			t.Fatalf("count outbox: %v", err)
+		}
+		if eventCount != 0 {
+			t.Errorf("outbox UserCreated count for promoted customer = %d, want 0", eventCount)
+		}
+	})
+
+	t.Run("concurrent creates for one new email yield exactly one winner", func(t *testing.T) {
+		const email = "concurrent@example.com"
+		const n = 5
+		var wg sync.WaitGroup
+		var successCount, alreadyExistsCount int64
+		for i := 0; i < n; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				_, err := client.UpsertUser(ctx, connect.NewRequest(&identityv1.UpsertUserRequest{
+					Email: email, Name: "Concurrent", Role: auth.RoleStaff, OperatorId: opA.String(), PierIds: []string{p1.String()},
+				}))
+				switch {
+				case err == nil:
+					atomic.AddInt64(&successCount, 1)
+				case connect.CodeOf(err) == connect.CodeAlreadyExists:
+					atomic.AddInt64(&alreadyExistsCount, 1)
+				default:
+					t.Errorf("unexpected error: %v", err)
+				}
+			}()
+		}
+		wg.Wait()
+
+		if successCount != 1 {
+			t.Errorf("successCount = %d, want 1", successCount)
+		}
+		if alreadyExistsCount != n-1 {
+			t.Errorf("alreadyExistsCount = %d, want %d", alreadyExistsCount, n-1)
+		}
+		if got := countUsers(email); got != 1 {
+			t.Errorf("users count for %s = %d, want 1", email, got)
+		}
+	})
+}
+
+// TestUpdateAndDisableUser proves the D-10 update/disable guards: update
+// re-validates piers and keeps email immutable; a customer/super_admin row
+// can never be touched; disabling revokes refresh immediately and blocks
+// login, and self/super_admin disable is rejected (T-02-07-01, T-02-07-04,
+// T-02-07-06).
+func TestUpdateAndDisableUser(t *testing.T) {
+	addr, _, dsn := setIdentityEnv(t)
+	baseURL := "http://" + addr
+
+	opA, opB := uuid.New(), uuid.New()
+	p1, p2, p3 := uuid.New(), uuid.New(), uuid.New()
+	fc := &fakeCatalog{piers: []fakeCatalogPier{
+		{pierID: p1.String(), operatorID: opA.String(), archived: false},
+		{pierID: p2.String(), operatorID: opA.String(), archived: false},
+		{pierID: p3.String(), operatorID: opB.String(), archived: false},
+	}}
+	catalogSrv := startFakeCatalog(t, fc)
+	t.Setenv("CATALOG_URL", catalogSrv.URL)
+
+	runService(t)
+	waitForFullyReady(t, baseURL)
+
+	ctx := context.Background()
+	caller := superAdminHeaders()
+	client := newUserClient(baseURL, caller)
+
+	pool, err := bbpgx.NewPool(ctx, dsn)
+	if err != nil {
+		t.Fatalf("new verification pool: %v", err)
+	}
+	defer pool.Close() //nolint:errcheck // test helper, nothing actionable
+
+	const email = "update-disable@example.com"
+	created, err := client.UpsertUser(ctx, connect.NewRequest(&identityv1.UpsertUserRequest{
+		Email: email, Name: "Original Name", Role: auth.RoleStaff, OperatorId: opA.String(), PierIds: []string{p1.String()},
+	}))
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	userID := created.Msg.User.UserId
+
+	t.Run("update changes name/role/operator/piers", func(t *testing.T) {
+		resp, err := client.UpsertUser(ctx, connect.NewRequest(&identityv1.UpsertUserRequest{
+			UserId: userID, Email: email, Name: "New Name", Role: auth.RolePierAdmin, OperatorId: opB.String(), PierIds: []string{p3.String()},
+		}))
+		if err != nil {
+			t.Fatalf("update: %v", err)
+		}
+		if resp.Msg.User.Name != "New Name" || resp.Msg.User.Role != auth.RolePierAdmin || resp.Msg.User.OperatorId != opB.String() {
+			t.Errorf("update result = %+v, want name=New Name role=pier_admin operator_id=%s", resp.Msg.User, opB)
+		}
+		if len(resp.Msg.User.PierIds) != 1 || resp.Msg.User.PierIds[0] != p3.String() {
+			t.Errorf("update pier_ids = %v, want [%s]", resp.Msg.User.PierIds, p3)
+		}
+
+		// Revert to opA/p1/staff for the remaining sub-tests.
+		if _, err := client.UpsertUser(ctx, connect.NewRequest(&identityv1.UpsertUserRequest{
+			UserId: userID, Email: email, Name: "Original Name", Role: auth.RoleStaff, OperatorId: opA.String(), PierIds: []string{p1.String()},
+		})); err != nil {
+			t.Fatalf("revert update: %v", err)
+		}
+	})
+
+	t.Run("changing email on update is rejected", func(t *testing.T) {
+		_, err := client.UpsertUser(ctx, connect.NewRequest(&identityv1.UpsertUserRequest{
+			UserId: userID, Email: "different@example.com", Name: "Original Name", Role: auth.RoleStaff, OperatorId: opA.String(), PierIds: []string{p1.String()},
+		}))
+		assertConnectCode(t, err, connect.CodeInvalidArgument, "email change on update")
+	})
+
+	t.Run("updating a customer row is rejected", func(t *testing.T) {
+		customerID := uuid.Must(uuid.NewV7())
+		const customerEmail = "customer-cannot-update@example.com"
+		if _, err := pool.Exec(ctx, `insert into users (id, email, role) values ($1, $2, 'customer')`, customerID, customerEmail); err != nil {
+			t.Fatalf("seed customer: %v", err)
+		}
+		_, err := client.UpsertUser(ctx, connect.NewRequest(&identityv1.UpsertUserRequest{
+			UserId: customerID.String(), Email: customerEmail, Name: "Nope", Role: auth.RoleStaff, OperatorId: opA.String(), PierIds: []string{p1.String()},
+		}))
+		assertConnectCode(t, err, connect.CodeFailedPrecondition, "update customer row")
+	})
+
+	t.Run("updating a super_admin row is rejected", func(t *testing.T) {
+		var superAdminID, superAdminEmail string
+		if err := pool.QueryRow(ctx, `select id, email from users where role = 'super_admin' limit 1`).Scan(&superAdminID, &superAdminEmail); err != nil {
+			t.Fatalf("find bootstrap super_admin: %v", err)
+		}
+		_, err := client.UpsertUser(ctx, connect.NewRequest(&identityv1.UpsertUserRequest{
+			UserId: superAdminID, Email: superAdminEmail, Name: "Nope", Role: auth.RoleStaff, OperatorId: opA.String(), PierIds: []string{p1.String()},
+		}))
+		assertConnectCode(t, err, connect.CodeFailedPrecondition, "update super_admin row")
+	})
+
+	t.Run("disabling self is rejected", func(t *testing.T) {
+		selfID := caller[httpx.HeaderUserID]
+		_, err := client.SetUserDisabled(ctx, connect.NewRequest(&identityv1.SetUserDisabledRequest{UserId: selfID, Disabled: true}))
+		assertConnectCode(t, err, connect.CodeFailedPrecondition, "disabling self")
+	})
+
+	t.Run("disabling a super_admin is rejected", func(t *testing.T) {
+		var superAdminID string
+		if err := pool.QueryRow(ctx, `select id from users where role = 'super_admin' limit 1`).Scan(&superAdminID); err != nil {
+			t.Fatalf("find bootstrap super_admin: %v", err)
+		}
+		_, err := client.SetUserDisabled(ctx, connect.NewRequest(&identityv1.SetUserDisabledRequest{UserId: superAdminID, Disabled: true}))
+		assertConnectCode(t, err, connect.CodeFailedPrecondition, "disabling super_admin")
+	})
+
+	t.Run("disable revokes refresh and blocks login; re-enable restores it", func(t *testing.T) {
+		authClient := newAuthClient(baseURL, map[string]string{httpx.HeaderInternalToken: fakeCatalogToken})
+
+		if _, err := authClient.RequestOtp(ctx, connect.NewRequest(&identityv1.RequestOtpRequest{Destination: email})); err != nil {
+			t.Fatalf("RequestOtp: %v", err)
+		}
+		code := pollMailpitCode(t, mailpitAPIURL, email)
+		loginResp, err := authClient.VerifyOtp(ctx, connect.NewRequest(&identityv1.VerifyOtpRequest{Destination: email, Code: code}))
+		if err != nil {
+			t.Fatalf("VerifyOtp: %v", err)
+		}
+		refreshToken := loginResp.Msg.RefreshToken
+
+		if _, err := client.SetUserDisabled(ctx, connect.NewRequest(&identityv1.SetUserDisabledRequest{UserId: userID, Disabled: true})); err != nil {
+			t.Fatalf("SetUserDisabled(true): %v", err)
+		}
+
+		_, err = authClient.Refresh(ctx, connect.NewRequest(&identityv1.RefreshRequest{RefreshToken: refreshToken}))
+		assertConnectCode(t, err, connect.CodeUnauthenticated, "refresh after disable")
+
+		clearOtpCooldown(t, email)
+		if _, err := authClient.RequestOtp(ctx, connect.NewRequest(&identityv1.RequestOtpRequest{Destination: email})); err != nil {
+			t.Fatalf("RequestOtp (disabled): %v", err)
+		}
+		code2 := pollMailpitCode(t, mailpitAPIURL, email)
+		_, err = authClient.VerifyOtp(ctx, connect.NewRequest(&identityv1.VerifyOtpRequest{Destination: email, Code: code2}))
+		assertConnectCode(t, err, connect.CodePermissionDenied, "VerifyOtp while disabled")
+
+		if _, err := client.SetUserDisabled(ctx, connect.NewRequest(&identityv1.SetUserDisabledRequest{UserId: userID, Disabled: false})); err != nil {
+			t.Fatalf("SetUserDisabled(false): %v", err)
+		}
+
+		clearOtpCooldown(t, email)
+		if _, err := authClient.RequestOtp(ctx, connect.NewRequest(&identityv1.RequestOtpRequest{Destination: email})); err != nil {
+			t.Fatalf("RequestOtp (re-enabled): %v", err)
+		}
+		code3 := pollMailpitCode(t, mailpitAPIURL, email)
+		if _, err := authClient.VerifyOtp(ctx, connect.NewRequest(&identityv1.VerifyOtpRequest{Destination: email, Code: code3})); err != nil {
+			t.Fatalf("VerifyOtp (re-enabled): %v", err)
+		}
+	})
+
+	t.Run("ListUsers excludes customers, orders by email then id, and filters by operator", func(t *testing.T) {
+		resp, err := client.ListUsers(ctx, connect.NewRequest(&identityv1.ListUsersRequest{}))
+		if err != nil {
+			t.Fatalf("ListUsers: %v", err)
+		}
+		for _, u := range resp.Msg.Users {
+			if u.Role == auth.RoleCustomer {
+				t.Fatalf("ListUsers returned a customer: %+v", u)
+			}
+		}
+		for i := 1; i < len(resp.Msg.Users); i++ {
+			prev, cur := resp.Msg.Users[i-1], resp.Msg.Users[i]
+			if prev.Email > cur.Email || (prev.Email == cur.Email && prev.UserId > cur.UserId) {
+				t.Fatalf("ListUsers not ordered by email,id: %q(%s) before %q(%s)", prev.Email, prev.UserId, cur.Email, cur.UserId)
+			}
+		}
+
+		filtered, err := client.ListUsers(ctx, connect.NewRequest(&identityv1.ListUsersRequest{OperatorId: opA.String()}))
+		if err != nil {
+			t.Fatalf("ListUsers (filtered): %v", err)
+		}
+		for _, u := range filtered.Msg.Users {
+			if u.OperatorId != opA.String() {
+				t.Errorf("ListUsers(operator_id=%s) returned user with operator_id=%s", opA, u.OperatorId)
+			}
+		}
+	})
 }

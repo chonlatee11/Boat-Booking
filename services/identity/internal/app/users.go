@@ -163,9 +163,120 @@ func (u *Users) createUser(ctx context.Context, in domain.StaffUserInput) (domai
 	return user, nil
 }
 
-// updateUser is implemented in Task 2 (list/update/disable).
+// updateUser changes name/role/operator/piers on an existing staff/pier_admin
+// row (D-08). email is immutable — a value differing from the stored row is
+// rejected (ErrInvalidArgument); updating a customer or super_admin row is
+// rejected with ErrFailedPrecondition (D-09 — those roles are never touched
+// through this API).
 func (u *Users) updateUser(ctx context.Context, id uuid.UUID, in domain.StaffUserInput) (domain.User, error) {
-	return domain.User{}, domain.ErrNotFound
+	var user domain.User
+	err := bbpgx.WithTx(ctx, u.Pool, func(tx pgx.Tx) error {
+		q := postgres.New(tx)
+
+		existing, err := q.GetUser(ctx, toPgUUID(id))
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.ErrNotFound
+		}
+		if err != nil {
+			return fmt.Errorf("app: get user: %w", err)
+		}
+		stored := userFromRow(existing)
+		if stored.Role != auth.RoleStaff && stored.Role != auth.RolePierAdmin {
+			return domain.ErrFailedPrecondition
+		}
+		if stored.Email != in.Email {
+			return fmt.Errorf("%w: email is immutable", domain.ErrInvalidArgument)
+		}
+
+		row, err := q.UpdateStaffUser(ctx, postgres.UpdateStaffUserParams{
+			ID:         toPgUUID(id),
+			Name:       in.Name,
+			Role:       in.Role,
+			OperatorID: toPgUUID(in.OperatorID),
+			PierIds:    toPgUUIDs(in.PierIDs),
+		})
+		if err != nil {
+			return fmt.Errorf("app: update staff user: %w", err)
+		}
+		user = userFromRow(row)
+		return nil
+	})
+	if err != nil {
+		return domain.User{}, err
+	}
+	return user, nil
+}
+
+// SetUserDisabled toggles a staff/pier_admin user's disabled_at (D-10). Only
+// super_admin may call this; disabling the caller's own account or a
+// super_admin row is rejected with ErrFailedPrecondition (T-02-07-04). When
+// disabling, every refresh token for the user is revoked in the same tx, so
+// a refresh fails immediately and access ends within one access-token TTL
+// (<=15 min).
+func (u *Users) SetUserDisabled(ctx context.Context, caller httpx.Claims, id uuid.UUID, disabled bool) (domain.User, error) {
+	if caller.Role != auth.RoleSuperAdmin {
+		return domain.User{}, domain.ErrPermissionDenied
+	}
+	if caller.UserID == id.String() {
+		return domain.User{}, domain.ErrFailedPrecondition
+	}
+
+	var user domain.User
+	err := bbpgx.WithTx(ctx, u.Pool, func(tx pgx.Tx) error {
+		q := postgres.New(tx)
+
+		existing, err := q.GetUser(ctx, toPgUUID(id))
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.ErrNotFound
+		}
+		if err != nil {
+			return fmt.Errorf("app: get user: %w", err)
+		}
+		stored := userFromRow(existing)
+		if stored.Role != auth.RoleStaff && stored.Role != auth.RolePierAdmin {
+			return domain.ErrFailedPrecondition
+		}
+
+		row, err := q.SetUserDisabledAt(ctx, postgres.SetUserDisabledAtParams{ID: toPgUUID(id), Disabled: disabled})
+		if err != nil {
+			return fmt.Errorf("app: set user disabled: %w", err)
+		}
+		user = userFromRow(row)
+
+		if disabled {
+			if err := q.RevokeAllRefreshTokens(ctx, toPgUUID(id)); err != nil {
+				return fmt.Errorf("app: revoke all refresh tokens: %w", err)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return domain.User{}, err
+	}
+	return user, nil
+}
+
+// ListUsers returns every staff/pier_admin/super_admin user (never
+// customers, PDPA minimal exposure), ordered by email then id. Only
+// super_admin may call this; an empty operatorFilter returns every operator.
+func (u *Users) ListUsers(ctx context.Context, caller httpx.Claims, operatorFilter uuid.UUID) ([]domain.User, error) {
+	if caller.Role != auth.RoleSuperAdmin {
+		return nil, domain.ErrPermissionDenied
+	}
+
+	var filter pgtype.UUID
+	if operatorFilter != uuid.Nil {
+		filter = toPgUUID(operatorFilter)
+	}
+	rows, err := postgres.New(u.Pool).ListStaffUsers(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("app: list staff users: %w", err)
+	}
+	users := make([]domain.User, len(rows))
+	for i, row := range rows {
+		users[i] = userFromRow(row)
+	}
+	return users, nil
 }
 
 // toPgUUIDs never returns nil — pgx must send an empty array literal to

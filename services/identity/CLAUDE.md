@@ -36,6 +36,27 @@ and layout this service still follows.
   that user (reuse detection, T-02-05-02).
 - `AuthService.Logout` — revokes the presented refresh token. Idempotent: an
   unknown or already-revoked token is not an error.
+- `UserService.{ListUsers,UpsertUser,SetUserDisabled}` — **super_admin only**
+  (AUTH-04, D-08); every RPC needs verified claims (no claims →
+  `Unauthenticated`, any other role → `PermissionDenied`). `UpsertUser`
+  creates or updates a `staff`/`pier_admin` user bound to one operator and
+  1-50 piers — `customer` and `super_admin` can never be assigned here (D-09
+  is the only path to `super_admin`). Before persisting, it forwards the
+  caller's claims + the internal token to catalog's `ListPiers` (filtered by
+  the target operator) and rejects with `InvalidArgument` naming any
+  requested pier that catalog didn't return non-archived under that operator
+  — database-per-service forbids a foreign key, so this synchronous call is
+  the only ownership check (research Pattern 3). Create is idempotent: an
+  email that already belongs to staff/pier_admin/super_admin returns
+  `AlreadyExists` and changes nothing; an existing `customer` email is
+  promoted in place (same user id, no second `identity.UserCreated`). Update
+  keeps `email` immutable and rejects a `customer`/`super_admin` target row
+  with `FailedPrecondition`. `SetUserDisabled(true)` sets `disabled_at` and
+  revokes every refresh token for that user in the same tx (D-10) — refresh
+  fails immediately and access ends within one access-token TTL (≤15 min);
+  disabling the caller's own id or a `super_admin` row is rejected with
+  `FailedPrecondition`. `ListUsers` never returns `customer` rows (PDPA
+  minimal exposure), ordered by `email` then `id`.
 
 ## Startup bootstrap (D-09)
 
@@ -73,15 +94,22 @@ path that can mint a `super_admin` — this env var is the only way.
 - `cmd/` — the one binary: HTTP (chi + the `AuthService` connect handler),
   outbox relay, and Kafka consumer running as `errgroup` goroutines with
   ordered shutdown.
-- `internal/domain/{user,destination,errors}.go` — `User`, `Destination`,
-  `NormalizeDestination`, and the sentinel/`CodeMismatchError` errors —
-  types and validation rules only, no persistence or transport concerns.
-- `internal/app/{otp,session,bootstrap,convert}.go` — `Auth.RequestOtp`/
-  `VerifyOtp`/`Refresh`/`Logout` use-case methods taking a `*pgxpool.Pool`/
-  `*redis.Client` directly, `issueSession`, `EnsureSuperAdmin` (D-09), and
-  sqlc row <-> domain converters. No repository interfaces, no mocks.
-- `internal/adapters/http/routes.go` — the `AuthService` connect handler,
-  mounted behind the internal-token trust boundary set up in `cmd/main.go`.
+- `internal/domain/{user,destination,errors}.go` — `User`, `StaffUserInput`
+  (+ `Validate`), `Destination`, `NormalizeDestination`, and the
+  sentinel/`CodeMismatchError` errors — types and validation rules only, no
+  persistence or transport concerns.
+- `internal/app/{otp,session,bootstrap,users,convert}.go` —
+  `Auth.RequestOtp`/`VerifyOtp`/`Refresh`/`Logout`, `Users.{UpsertUser,
+  ListUsers,SetUserDisabled}` (+ `validatePiers`, the catalog call) use-case
+  methods taking a `*pgxpool.Pool`/`*redis.Client`/`catalogv1connect.CatalogServiceClient`
+  directly, `issueSession`, `EnsureSuperAdmin` (D-09), and sqlc row <->
+  domain converters. No repository interfaces, no mocks.
+- `internal/adapters/http/routes.go` — mounts the `AuthService` and
+  `UserService` connect handlers, both behind the internal-token trust
+  boundary set up in `cmd/main.go`. `internal/adapters/http/users.go` holds
+  `UserService`'s handler methods (`routes.go` only wires the two services
+  together, matching catalog's split between its route-mounting file and
+  per-entity handler files).
 - `internal/adapters/notify/notify.go` — `Sender` interface (`SendOtp`) plus
   the SMTP/Resend/dev-SMS implementations.
 - `internal/adapters/postgres/` — sqlc-generated code from
@@ -103,6 +131,9 @@ path that can mint a `super_admin` — this env var is the only way.
 - `RESEND_API_KEY` — prod email transport (REST, no SDK dependency).
 - `SUPER_ADMIN_EMAIL` — the only email the startup bootstrap (D-09) ever
   promotes to `super_admin`.
+- `CATALOG_URL` (default `http://catalog:8080`) — catalog's base URL,
+  used only by `UserService.UpsertUser`'s `ListPiers` call (research
+  Pattern 3).
 
 ## Valkey key scheme
 

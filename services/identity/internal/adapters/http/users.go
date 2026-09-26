@@ -65,6 +65,50 @@ func (s *userServer) UpsertUser(ctx context.Context, req *connect.Request[identi
 	return connect.NewResponse(&identityv1.UpsertUserResponse{User: toProtoStaffUser(user)}), nil
 }
 
+func (s *userServer) ListUsers(ctx context.Context, req *connect.Request[identityv1.ListUsersRequest]) (*connect.Response[identityv1.ListUsersResponse], error) {
+	claims, ok := httpx.FromContext(ctx)
+	if !ok {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing claims"))
+	}
+
+	var operatorFilter uuid.UUID
+	if req.Msg.OperatorId != "" {
+		id, err := uuid.Parse(req.Msg.OperatorId)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid operator_id"))
+		}
+		operatorFilter = id
+	}
+
+	users, err := s.users.ListUsers(ctx, claims, operatorFilter)
+	if err != nil {
+		return nil, mapUserError(err)
+	}
+	resp := &identityv1.ListUsersResponse{Users: make([]*identityv1.StaffUser, len(users))}
+	for i, user := range users {
+		resp.Users[i] = toProtoStaffUser(user)
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (s *userServer) SetUserDisabled(ctx context.Context, req *connect.Request[identityv1.SetUserDisabledRequest]) (*connect.Response[identityv1.SetUserDisabledResponse], error) {
+	claims, ok := httpx.FromContext(ctx)
+	if !ok {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing claims"))
+	}
+
+	id, err := uuid.Parse(req.Msg.UserId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid user_id"))
+	}
+
+	user, err := s.users.SetUserDisabled(ctx, claims, id, req.Msg.Disabled)
+	if err != nil {
+		return nil, mapUserError(err)
+	}
+	return connect.NewResponse(&identityv1.SetUserDisabledResponse{User: toProtoStaffUser(user)}), nil
+}
+
 func toProtoStaffUser(u domain.User) *identityv1.StaffUser {
 	return &identityv1.StaffUser{
 		UserId:     u.ID.String(),
