@@ -28,19 +28,32 @@ const (
 	RefreshCookie = "refresh_token"
 )
 
-// Claims is the identity carried in a token (D-27).
+// Role names, defined once here so every service imports these instead of
+// repeating string literals (D-06).
+const (
+	RoleCustomer   = "customer"
+	RoleStaff      = "staff"
+	RolePierAdmin  = "pier_admin"
+	RoleSuperAdmin = "super_admin"
+)
+
+// Claims is the identity carried in a token (D-27). PierIDs narrows a
+// pier_admin/staff user's scope to specific piers within OperatorID (D-06,
+// D-07) — it never widens scope, and super_admin bypasses it entirely.
 type Claims struct {
 	UserID     string
 	OperatorID string
 	Role       string
+	PierIDs    []string
 	Kind       Kind
 }
 
 type jwtClaims struct {
-	Sub        string `json:"sub"`
-	OperatorID string `json:"operator_id"`
-	Role       string `json:"role"`
-	Kind       Kind   `json:"kind"`
+	Sub        string   `json:"sub"`
+	OperatorID string   `json:"operator_id"`
+	Role       string   `json:"role"`
+	PierIDs    []string `json:"pier_ids,omitempty"`
+	Kind       Kind     `json:"kind"`
 	jwt.RegisteredClaims
 }
 
@@ -64,6 +77,7 @@ func (i *Issuer) Issue(c Claims, now time.Time) (string, error) {
 		Sub:        c.UserID,
 		OperatorID: c.OperatorID,
 		Role:       c.Role,
+		PierIDs:    c.PierIDs,
 		Kind:       c.Kind,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    i.issuer,
@@ -106,10 +120,15 @@ func (v *Verifier) Verify(token string, want Kind) (Claims, error) {
 	if claims.Kind != want {
 		return Claims{}, ErrWrongKind
 	}
+	pierIDs := claims.PierIDs
+	if pierIDs == nil {
+		pierIDs = []string{}
+	}
 	return Claims{
 		UserID:     claims.Sub,
 		OperatorID: claims.OperatorID,
 		Role:       claims.Role,
+		PierIDs:    pierIDs,
 		Kind:       claims.Kind,
 	}, nil
 }

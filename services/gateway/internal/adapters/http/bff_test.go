@@ -293,11 +293,16 @@ func TestWhoamiUnchanged(t *testing.T) {
 		t.Fatalf("status = %d, want 200", resp.StatusCode)
 	}
 
-	var out map[string]string
+	var out struct {
+		Sub        string   `json:"sub"`
+		OperatorID string   `json:"operator_id"`
+		Role       string   `json:"role"`
+		PierIDs    []string `json:"pier_ids"`
+	}
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if out["sub"] != "u1" || out["operator_id"] != "op1" || out["role"] != "pier_admin" {
+	if out.Sub != "u1" || out.OperatorID != "op1" || out.Role != "pier_admin" {
 		t.Errorf("whoami body = %+v, want sub=u1 operator_id=op1 role=pier_admin", out)
 	}
 }
@@ -380,48 +385,8 @@ func TestWhoamiReturnsEmptyPierIDsArray(t *testing.T) {
 	}
 }
 
-func TestForwardClaimsSetsVerifiedValues(t *testing.T) {
-	h := http.Header{}
-	c := auth.Claims{UserID: "u1", OperatorID: "op1", Role: "pier_admin"}
-	ForwardClaims(h, c, "internal-secret")
-
-	if got := h.Get(httpx.HeaderUserID); got != "u1" {
-		t.Errorf("HeaderUserID = %q, want %q", got, "u1")
-	}
-	if got := h.Get(httpx.HeaderOperatorID); got != "op1" {
-		t.Errorf("HeaderOperatorID = %q, want %q", got, "op1")
-	}
-	if got := h.Get(httpx.HeaderRole); got != "pier_admin" {
-		t.Errorf("HeaderRole = %q, want %q", got, "pier_admin")
-	}
-	if got := h.Get(httpx.HeaderInternalToken); got != "internal-secret" {
-		t.Errorf("HeaderInternalToken = %q, want %q", got, "internal-secret")
-	}
-}
-
-func TestForwardClaimsOverwritesSpoofedHeaders(t *testing.T) {
-	h := http.Header{}
-	h.Set(httpx.HeaderUserID, "attacker")
-	h.Set(httpx.HeaderOperatorID, "attacker-op")
-	h.Set(httpx.HeaderRole, "super_admin")
-	h.Set(httpx.HeaderInternalToken, "guessed-token")
-
-	c := auth.Claims{UserID: "u1", OperatorID: "op1", Role: "pier_admin"}
-	ForwardClaims(h, c, "internal-secret")
-
-	if got := h.Get(httpx.HeaderUserID); got != "u1" {
-		t.Errorf("HeaderUserID = %q, want %q (spoofed value must not survive)", got, "u1")
-	}
-	if got := h.Get(httpx.HeaderOperatorID); got != "op1" {
-		t.Errorf("HeaderOperatorID = %q, want %q (spoofed value must not survive)", got, "op1")
-	}
-	if got := h.Get(httpx.HeaderRole); got != "pier_admin" {
-		t.Errorf("HeaderRole = %q, want %q (spoofed value must not survive)", got, "pier_admin")
-	}
-	if got := h.Get(httpx.HeaderInternalToken); got != "internal-secret" {
-		t.Errorf("HeaderInternalToken = %q, want %q (spoofed value must not survive)", got, "internal-secret")
-	}
-	if len(h[http.CanonicalHeaderKey(httpx.HeaderUserID)]) != 1 {
-		t.Errorf("HeaderUserID has %d values, want exactly 1 (Del then Set)", len(h[http.CanonicalHeaderKey(httpx.HeaderUserID)]))
-	}
-}
+// ForwardClaims itself now lives in pkg/httpx (moved, D-06) — its unit tests
+// (TestForwardClaimsSetsVerifiedValues, TestForwardClaimsOverwritesSpoofedHeaders,
+// TestForwardClaimsEmptyPierIDsSetsNoHeader) live in pkg/httpx/claims_test.go.
+// TestUpsertBoatForwardsVerifiedClaimsAndStripsSpoofedHeaders above still
+// proves the gateway calls it correctly end-to-end.

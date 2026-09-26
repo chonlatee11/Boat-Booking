@@ -37,11 +37,13 @@ Kafka consumer are disabled by env (D-04, D-29).
   `httpx.RequireInternal` — because the gateway is where the internal-token
   trust boundary *originates*, not a consumer of it. Every other service's
   routes ARE behind `httpx.RequireInternal`.
-- Before any outbound connect-go call, `ForwardClaims` deletes whatever
-  `X-User-Id`/`X-Operator-Id`/`X-Role`/`X-Internal-Token` the client sent and
-  sets them fresh from verified claims plus the gateway's own configured
-  `INTERNAL_TOKEN` — a client can never spoof its way past a downstream
-  service's trust boundary (Anti-Pattern 2).
+- Before any outbound connect-go call, `httpx.ForwardClaims` (moved from this
+  package to `pkg/httpx`, D-06) deletes whatever
+  `X-User-Id`/`X-Operator-Id`/`X-Role`/`X-Pier-Ids`/`X-Internal-Token` the
+  client sent and sets them fresh from verified claims plus the gateway's own
+  configured `INTERNAL_TOKEN` — a client can never spoof its way past a
+  downstream service's trust boundary (Anti-Pattern 2). `X-Pier-Ids` is the
+  comma-joined uuid list from `Claims.PierIDs`, set only when non-empty.
 
 ## Rules
 
@@ -54,8 +56,8 @@ Kafka consumer are disabled by env (D-04, D-29).
 - `cmd/main.go` — the one binary: HTTP (chi), the outbox relay and Kafka
   consumer goroutines (both always disabled here — no `DATABASE_URL`), and
   ordered shutdown, identical in shape to every other service.
-- `internal/adapters/http/bff.go` — `Routes`, the claim-verifying handlers,
-  and `ForwardClaims`.
+- `internal/adapters/http/bff.go` — `Routes` and the claim-verifying handlers
+  (calls `httpx.ForwardClaims`, which now lives in `pkg/httpx`).
 - `internal/adapters/kafka/handlers.go` — empty `Register` (template
   parity; gateway consumes nothing).
 

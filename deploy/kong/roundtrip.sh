@@ -80,7 +80,16 @@ status=$(curl -s -o /dev/null -w '%{http_code}' --cookie "access_token=$tok" \
 	"$BASE/api/v1/boats")
 [ "$status" = "201" ] && check "upsert-boat-201" 1 || check "upsert-boat-201" 0
 
-# (k) LAST: send up to 130 authorized requests, PASS when a 429 appears
+# (k) whoami returns pier_ids for a devtoken minted with -pier-ids (D-06).
+pier_tok=$($DEVTOKEN -pier-ids 00000000-0000-0000-0000-0000000000b1,00000000-0000-0000-0000-0000000000b2)
+pier_body=$(curl -s --cookie "access_token=$pier_tok" "$BASE/api/v1/whoami")
+if echo "$pier_body" | jq -e '.pier_ids == ["00000000-0000-0000-0000-0000000000b1","00000000-0000-0000-0000-0000000000b2"]' >/dev/null 2>&1; then
+	check "whoami-pier-ids" 1
+else
+	check "whoami-pier-ids" 0
+fi
+
+# (l) LAST: send up to 130 authorized requests, PASS when a 429 appears
 got429=0
 for i in $(seq 1 130); do
 	status=$(curl -s -o /dev/null -w '%{http_code}' --cookie "access_token=$tok" "$BASE/api/v1/whoami")

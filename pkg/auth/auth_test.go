@@ -37,8 +37,11 @@ func TestIssueVerifyRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("verify: %v", err)
 	}
-	if got != want {
+	if got.UserID != want.UserID || got.OperatorID != want.OperatorID || got.Role != want.Role || got.Kind != want.Kind {
 		t.Fatalf("claims mismatch: got %+v, want %+v", got, want)
+	}
+	if len(got.PierIDs) != 0 {
+		t.Fatalf("PierIDs = %v, want empty (no PierIDs on the issued claims)", got.PierIDs)
 	}
 }
 

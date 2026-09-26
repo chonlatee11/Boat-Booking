@@ -46,10 +46,15 @@ func whoamiHandler(v *auth.Verifier) http.HandlerFunc {
 			httpx.WriteError(w, unauthenticated("invalid access token"))
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]string{
+		pierIDs := claims.PierIDs
+		if pierIDs == nil {
+			pierIDs = []string{}
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
 			"sub":         claims.UserID,
 			"operator_id": claims.OperatorID,
 			"role":        claims.Role,
+			"pier_ids":    pierIDs,
 		})
 	}
 }
@@ -108,7 +113,12 @@ func upsertBoatHandler(v *auth.Verifier, catalog catalogv1connect.CatalogService
 		}
 
 		req := connect.NewRequest(&msg)
-		ForwardClaims(req.Header(), claims, internalToken)
+		httpx.ForwardClaims(req.Header(), httpx.Claims{
+			UserID:     claims.UserID,
+			OperatorID: claims.OperatorID,
+			Role:       claims.Role,
+			PierIDs:    claims.PierIDs,
+		}, internalToken)
 
 		resp, err := catalog.UpsertBoat(r.Context(), req)
 		if err != nil {
@@ -133,7 +143,7 @@ func unauthenticated(msg string) error {
 	return connect.NewError(connect.CodeUnauthenticated, errors.New(msg))
 }
 
-func writeJSON(w http.ResponseWriter, status int, body map[string]string) {
+func writeJSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(body)
@@ -151,19 +161,4 @@ func writeProtoJSON(w http.ResponseWriter, status int, msg proto.Message) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_, _ = w.Write(data)
-}
-
-// ForwardClaims sets the trusted claim headers on an outbound request,
-// deleting any inbound values first so a caller can never spoof them
-// (Anti-Pattern 2, D-30).
-func ForwardClaims(h http.Header, c auth.Claims, internalToken string) {
-	h.Del(httpx.HeaderUserID)
-	h.Del(httpx.HeaderOperatorID)
-	h.Del(httpx.HeaderRole)
-	h.Del(httpx.HeaderInternalToken)
-
-	h.Set(httpx.HeaderUserID, c.UserID)
-	h.Set(httpx.HeaderOperatorID, c.OperatorID)
-	h.Set(httpx.HeaderRole, c.Role)
-	h.Set(httpx.HeaderInternalToken, internalToken)
 }
