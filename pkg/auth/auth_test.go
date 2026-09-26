@@ -171,6 +171,62 @@ func TestVerifyRejectsWrongKind(t *testing.T) {
 	}
 }
 
+func TestIssueVerifyRoundTripWithPierIDs(t *testing.T) {
+	priv := mustGenerateKey(t)
+	issuer := NewIssuer(priv, "test-issuer")
+	verifier := NewVerifier(&priv.PublicKey, "test-issuer")
+
+	now := time.Now()
+	want := Claims{UserID: "u1", OperatorID: "op1", Role: RolePierAdmin, PierIDs: []string{"pier-a", "pier-b"}, Kind: KindAccess}
+	tok, err := issuer.Issue(want, now)
+	if err != nil {
+		t.Fatalf("issue: %v", err)
+	}
+
+	got, err := verifier.Verify(tok, KindAccess)
+	if err != nil {
+		t.Fatalf("verify: %v", err)
+	}
+	if len(got.PierIDs) != 2 || got.PierIDs[0] != "pier-a" || got.PierIDs[1] != "pier-b" {
+		t.Fatalf("PierIDs = %v, want [pier-a pier-b]", got.PierIDs)
+	}
+}
+
+func TestIssueNilPierIDsVerifiesToEmptySlice(t *testing.T) {
+	priv := mustGenerateKey(t)
+	issuer := NewIssuer(priv, "test-issuer")
+	verifier := NewVerifier(&priv.PublicKey, "test-issuer")
+
+	now := time.Now()
+	tok, err := issuer.Issue(Claims{UserID: "u1", Role: RoleCustomer, Kind: KindAccess}, now)
+	if err != nil {
+		t.Fatalf("issue: %v", err)
+	}
+
+	got, err := verifier.Verify(tok, KindAccess)
+	if err != nil {
+		t.Fatalf("verify: %v", err)
+	}
+	if len(got.PierIDs) != 0 {
+		t.Fatalf("PierIDs = %v, want empty slice", got.PierIDs)
+	}
+}
+
+func TestRoleConstants(t *testing.T) {
+	if RoleCustomer != "customer" {
+		t.Errorf("RoleCustomer = %q, want %q", RoleCustomer, "customer")
+	}
+	if RoleStaff != "staff" {
+		t.Errorf("RoleStaff = %q, want %q", RoleStaff, "staff")
+	}
+	if RolePierAdmin != "pier_admin" {
+		t.Errorf("RolePierAdmin = %q, want %q", RolePierAdmin, "pier_admin")
+	}
+	if RoleSuperAdmin != "super_admin" {
+		t.Errorf("RoleSuperAdmin = %q, want %q", RoleSuperAdmin, "super_admin")
+	}
+}
+
 func TestCookieAttributes(t *testing.T) {
 	c := Cookie(KindAccess, "tok")
 	if c.Name != AccessCookie {

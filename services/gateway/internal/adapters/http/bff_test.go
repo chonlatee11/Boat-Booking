@@ -302,6 +302,84 @@ func TestWhoamiUnchanged(t *testing.T) {
 	}
 }
 
+func TestWhoamiReturnsPierIDs(t *testing.T) {
+	issuer, verifier := newTestAuth(t)
+	fc := &fakeCatalog{}
+	catalog := newFakeCatalogServer(t, fc)
+	srv := newGatewayServer(t, verifier, catalog)
+
+	tok, err := issuer.Issue(auth.Claims{
+		UserID: "u1", OperatorID: "op1", Role: "pier_admin",
+		PierIDs: []string{"00000000-0000-0000-0000-0000000000b1", "00000000-0000-0000-0000-0000000000b2"},
+		Kind:    auth.KindAccess,
+	}, time.Now())
+	if err != nil {
+		t.Fatalf("issue token: %v", err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, srv.URL+"/api/v1/whoami", nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	req.AddCookie(auth.Cookie(auth.KindAccess, tok))
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("do request: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", resp.StatusCode)
+	}
+
+	var out struct {
+		PierIDs []string `json:"pier_ids"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	want := []string{"00000000-0000-0000-0000-0000000000b1", "00000000-0000-0000-0000-0000000000b2"}
+	if len(out.PierIDs) != len(want) || out.PierIDs[0] != want[0] || out.PierIDs[1] != want[1] {
+		t.Fatalf("pier_ids = %v, want %v", out.PierIDs, want)
+	}
+}
+
+func TestWhoamiReturnsEmptyPierIDsArray(t *testing.T) {
+	issuer, verifier := newTestAuth(t)
+	fc := &fakeCatalog{}
+	catalog := newFakeCatalogServer(t, fc)
+	srv := newGatewayServer(t, verifier, catalog)
+
+	tok, err := issuer.Issue(auth.Claims{UserID: "u1", OperatorID: "op1", Role: "customer", Kind: auth.KindAccess}, time.Now())
+	if err != nil {
+		t.Fatalf("issue token: %v", err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, srv.URL+"/api/v1/whoami", nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	req.AddCookie(auth.Cookie(auth.KindAccess, tok))
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("do request: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
+
+	var out map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	pierIDs, ok := out["pier_ids"].([]any)
+	if !ok {
+		t.Fatalf(`out["pier_ids"] = %#v (type %T), want a JSON array`, out["pier_ids"], out["pier_ids"])
+	}
+	if len(pierIDs) != 0 {
+		t.Errorf("pier_ids = %v, want empty", pierIDs)
+	}
+}
+
 func TestForwardClaimsSetsVerifiedValues(t *testing.T) {
 	h := http.Header{}
 	c := auth.Claims{UserID: "u1", OperatorID: "op1", Role: "pier_admin"}
