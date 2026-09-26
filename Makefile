@@ -5,7 +5,7 @@ export
 M := github.com/chonlatee11/boat-booking
 COMPOSE := docker compose --env-file .env -f deploy/docker-compose.yml
 
-.PHONY: dev-keys dev-token up down kong-roundtrip test test-integration dev-tools lint hooks proto-gen
+.PHONY: dev-keys dev-token up down kong-roundtrip test test-integration dev-tools lint hooks proto-gen proto-check
 
 dev-keys:
 	go run $(M)/pkg/auth/cmd/devtoken keys
@@ -41,11 +41,28 @@ proto-gen:
 	buf generate
 	cd gen/go && go mod tidy
 
+proto-check:
+	buf lint
+	@if git cat-file -e main:buf.yaml 2>/dev/null; then \
+		buf breaking --against '.git#branch=main'; \
+	else \
+		echo "proto-check: main has no buf.yaml yet, breaking check skipped"; \
+	fi
+	proto/pii-check.sh proto/events
+	$(MAKE) proto-gen
+	@if [ -n "$$(git status --porcelain --untracked-files=all -- gen/)" ]; then \
+		echo "proto-check: gen/ is stale — run 'make proto-gen' and commit the result"; \
+		git status --porcelain --untracked-files=all -- gen/; \
+		exit 1; \
+	fi
+
 lint:
 	for dir in $$(go list -m -f '{{.Dir}}'); do \
 		case "$$dir" in */gen/go) continue ;; esac; \
 		(cd "$$dir" && golangci-lint run ./...) || exit 1; \
 	done
+	buf lint
+	proto/pii-check.sh proto/events
 
 hooks:
 	lefthook install
