@@ -88,6 +88,12 @@ func SetupOTel(ctx context.Context, service string) (shutdown func(context.Conte
 // attributes may carry (D-45) — everything else (client IPs, user agents,
 // query strings, and any other attribute a future instrumentation adds) is
 // dropped before export.
+//
+// IN-02: this list has no compile-time link to what instrumentation
+// libraries or manual span.SetAttributes calls actually emit. A new
+// attribute added anywhere without a matching entry here is silently
+// dropped (the safe failure direction for PII) rather than erroring — if a
+// new span attribute isn't showing up in traces, check here first.
 var spanAttrAllowlist = []string{
 	"http.request.method",
 	"http.response.status_code",
