@@ -101,4 +101,48 @@ else
 	check "whoami-customer" 0
 fi
 
+# jar_value prints the (last, i.e. most recent) value of cookie $1 stored in
+# the Netscape-format jar file $2.
+jar_value() {
+	awk -F'\t' -v n="$1" '$6==n{v=$7} END{print v}' "$2"
+}
+
+# (h) refresh rotates: the jar's refresh_token value changes, response is 200.
+OLD_REFRESH=$(jar_value refresh_token "$JAR")
+refresh_status=$(curl -s -o /dev/null -w '%{http_code}' -b "$JAR" -c "$JAR" -X POST "$BASE/api/v1/auth/refresh")
+NEW_REFRESH=$(jar_value refresh_token "$JAR")
+if [ "$refresh_status" = "200" ] && [ -n "$NEW_REFRESH" ] && [ "$NEW_REFRESH" != "$OLD_REFRESH" ]; then
+	check "refresh-rotates" 1
+else
+	check "refresh-rotates" 0
+fi
+
+# (i) replaying the now-rotated old refresh token is rejected.
+status=$(curl -s -o /dev/null -w '%{http_code}' -b "refresh_token=$OLD_REFRESH" -X POST "$BASE/api/v1/auth/refresh")
+[ "$status" = "401" ] && check "refresh-reuse-401" 1 || check "refresh-reuse-401" 0
+
+# (j) the reuse above revoked the whole family — the newest token is dead too.
+status=$(curl -s -o /dev/null -w '%{http_code}' -b "refresh_token=$NEW_REFRESH" -X POST "$BASE/api/v1/auth/refresh")
+[ "$status" = "401" ] && check "refresh-after-reuse-401" 1 || check "refresh-after-reuse-401" 0
+
+# (k) a fresh login, then logout, then that same token is refused.
+LOGOUT_JAR="$(mktemp)"
+DEST2="e2e-logout-$(date +%s)@example.com"
+curl -s -o /dev/null -X POST -H 'Content-Type: application/json' \
+	-d "{\"destination\":\"$DEST2\"}" "$BASE/api/v1/auth/otp/request"
+if CODE2=$(mailpit_code "$DEST2"); then
+	curl -s -o /dev/null -c "$LOGOUT_JAR" -X POST -H 'Content-Type: application/json' \
+		-d "{\"destination\":\"$DEST2\",\"code\":\"$CODE2\"}" "$BASE/api/v1/auth/otp/verify"
+	logout_status=$(curl -s -o /dev/null -w '%{http_code}' -b "$LOGOUT_JAR" -X POST "$BASE/api/v1/auth/logout")
+	[ "$logout_status" = "204" ] && check "logout-204" 1 || check "logout-204" 0
+
+	LOGOUT_REFRESH=$(jar_value refresh_token "$LOGOUT_JAR")
+	status=$(curl -s -o /dev/null -w '%{http_code}' -b "refresh_token=$LOGOUT_REFRESH" -X POST "$BASE/api/v1/auth/refresh")
+	[ "$status" = "401" ] && check "refresh-after-logout-401" 1 || check "refresh-after-logout-401" 0
+else
+	check "logout-204" 0
+	check "refresh-after-logout-401" 0
+fi
+rm -f "$LOGOUT_JAR"
+
 exit $failed

@@ -11,6 +11,24 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getRefreshTokenForUpdate = `-- name: GetRefreshTokenForUpdate :one
+select id, user_id, token_hash, expires_at, revoked_at, created_at from refresh_tokens where token_hash = $1 for update
+`
+
+func (q *Queries) GetRefreshTokenForUpdate(ctx context.Context, tokenHash []byte) (RefreshToken, error) {
+	row := q.db.QueryRow(ctx, getRefreshTokenForUpdate, tokenHash)
+	var i RefreshToken
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TokenHash,
+		&i.ExpiresAt,
+		&i.RevokedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const insertRefreshToken = `-- name: InsertRefreshToken :exec
 insert into refresh_tokens (id, user_id, token_hash, expires_at)
 values ($1, $2, $3, $4)
@@ -30,5 +48,32 @@ func (q *Queries) InsertRefreshToken(ctx context.Context, arg InsertRefreshToken
 		arg.TokenHash,
 		arg.ExpiresAt,
 	)
+	return err
+}
+
+const revokeAllRefreshTokens = `-- name: RevokeAllRefreshTokens :exec
+update refresh_tokens set revoked_at = now() where user_id = $1 and revoked_at is null
+`
+
+func (q *Queries) RevokeAllRefreshTokens(ctx context.Context, userID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, revokeAllRefreshTokens, userID)
+	return err
+}
+
+const revokeRefreshToken = `-- name: RevokeRefreshToken :exec
+update refresh_tokens set revoked_at = now() where id = $1 and revoked_at is null
+`
+
+func (q *Queries) RevokeRefreshToken(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, revokeRefreshToken, id)
+	return err
+}
+
+const revokeRefreshTokenByHash = `-- name: RevokeRefreshTokenByHash :exec
+update refresh_tokens set revoked_at = now() where token_hash = $1 and revoked_at is null
+`
+
+func (q *Queries) RevokeRefreshTokenByHash(ctx context.Context, tokenHash []byte) error {
+	_, err := q.db.Exec(ctx, revokeRefreshTokenByHash, tokenHash)
 	return err
 }

@@ -28,6 +28,8 @@ const maxAuthBodyBytes = 4 * 1024
 func AuthRoutes(r chi.Router, identity identityv1connect.AuthServiceClient, internalToken string) {
 	r.Post("/api/v1/auth/otp/request", otpRequestHandler(identity, internalToken))
 	r.Post("/api/v1/auth/otp/verify", otpVerifyHandler(identity, internalToken))
+	r.Post("/api/v1/auth/refresh", refreshHandler(identity, internalToken))
+	r.Post("/api/v1/auth/logout", logoutHandler(identity, internalToken))
 }
 
 func otpRequestHandler(identity identityv1connect.AuthServiceClient, internalToken string) http.HandlerFunc {
@@ -62,6 +64,66 @@ func otpVerifyHandler(identity identityv1connect.AuthServiceClient, internalToke
 		http.SetCookie(w, auth.Cookie(auth.KindAccess, resp.Msg.AccessToken))
 		http.SetCookie(w, auth.Cookie(auth.KindRefresh, resp.Msg.RefreshToken))
 		writeJSON(w, http.StatusOK, sessionUserBody(resp.Msg.User))
+	}
+}
+
+// refreshHandler rotates the session (D-10): missing cookie or any identity
+// error clears both cookies and fails; success re-sets both from the fresh
+// pair. Never trusts a client-supplied user id — only the cookie's opaque
+// refresh token identifies the session.
+func refreshHandler(identity identityv1connect.AuthServiceClient, internalToken string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c, err := r.Cookie(auth.RefreshCookie)
+		if err != nil || c.Value == "" {
+			clearAuthCookies(w)
+			httpx.WriteError(w, connect.NewError(connect.CodeUnauthenticated, errors.New("missing refresh token")))
+			return
+		}
+		req := connect.NewRequest(&identityv1.RefreshRequest{RefreshToken: c.Value})
+		req.Header().Set(httpx.HeaderInternalToken, internalToken)
+		resp, err := identity.Refresh(r.Context(), req)
+		if err != nil {
+			clearAuthCookies(w)
+			httpx.WriteError(w, err)
+			return
+		}
+		http.SetCookie(w, auth.Cookie(auth.KindAccess, resp.Msg.AccessToken))
+		http.SetCookie(w, auth.Cookie(auth.KindRefresh, resp.Msg.RefreshToken))
+		writeJSON(w, http.StatusOK, sessionUserBody(resp.Msg.User))
+	}
+}
+
+// logoutHandler always clears both cookies and returns 204, even when
+// identity errors or no refresh cookie was presented — from the browser's
+// point of view the session is gone either way.
+func logoutHandler(identity identityv1connect.AuthServiceClient, internalToken string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if c, err := r.Cookie(auth.RefreshCookie); err == nil && c.Value != "" {
+			req := connect.NewRequest(&identityv1.LogoutRequest{RefreshToken: c.Value})
+			req.Header().Set(httpx.HeaderInternalToken, internalToken)
+			_, _ = identity.Logout(r.Context(), req)
+		}
+		clearAuthCookies(w)
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// clearAuthCookies expires both session cookies — same name/path/flags as
+// auth.Cookie, empty value, MaxAge -1, so the browser deletes them.
+func clearAuthCookies(w http.ResponseWriter) {
+	http.SetCookie(w, clearedCookie(auth.AccessCookie))
+	http.SetCookie(w, clearedCookie(auth.RefreshCookie))
+}
+
+func clearedCookie(name string) *http.Cookie {
+	return &http.Cookie{
+		Name:     name,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
 	}
 }
 

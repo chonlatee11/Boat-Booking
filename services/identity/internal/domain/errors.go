@@ -15,6 +15,7 @@ var (
 	ErrRateLimited         = errors.New("rate limited")
 	ErrDisabled            = errors.New("user disabled")
 	ErrDeliveryUnavailable = errors.New("delivery channel unavailable")
+	ErrSessionInvalid      = errors.New("session invalid, expired, or reused")
 )
 
 // CodeMismatchError is returned when a wrong OTP code is presented, and

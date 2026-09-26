@@ -53,13 +53,36 @@ func (s *server) VerifyOtp(ctx context.Context, req *connect.Request[identityv1.
 	return connect.NewResponse(&identityv1.VerifyOtpResponse{
 		AccessToken:  sess.AccessToken,
 		RefreshToken: sess.RefreshToken,
-		User: &identityv1.SessionUser{
-			UserId:     sess.User.ID.String(),
-			Role:       sess.User.Role,
-			OperatorId: sess.User.OperatorID,
-			PierIds:    sess.User.PierIDs,
-		},
+		User:         sessionUserProto(sess.User),
 	}), nil
+}
+
+func (s *server) Refresh(ctx context.Context, req *connect.Request[identityv1.RefreshRequest]) (*connect.Response[identityv1.RefreshResponse], error) {
+	sess, err := s.auth.Refresh(ctx, req.Msg.RefreshToken)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return connect.NewResponse(&identityv1.RefreshResponse{
+		AccessToken:  sess.AccessToken,
+		RefreshToken: sess.RefreshToken,
+		User:         sessionUserProto(sess.User),
+	}), nil
+}
+
+func (s *server) Logout(ctx context.Context, req *connect.Request[identityv1.LogoutRequest]) (*connect.Response[identityv1.LogoutResponse], error) {
+	if err := s.auth.Logout(ctx, req.Msg.RefreshToken); err != nil {
+		return nil, mapAuthError(err)
+	}
+	return connect.NewResponse(&identityv1.LogoutResponse{}), nil
+}
+
+func sessionUserProto(u domain.User) *identityv1.SessionUser {
+	return &identityv1.SessionUser{
+		UserId:     u.ID.String(),
+		Role:       u.Role,
+		OperatorId: u.OperatorID,
+		PierIds:    u.PierIDs,
+	}
 }
 
 // mapAuthError converts app/domain errors to connect codes. CodeMismatchError
@@ -79,6 +102,8 @@ func mapAuthError(err error) error {
 		return connect.NewError(connect.CodeResourceExhausted, err)
 	case errors.Is(err, domain.ErrDisabled):
 		return connect.NewError(connect.CodePermissionDenied, err)
+	case errors.Is(err, domain.ErrSessionInvalid):
+		return connect.NewError(connect.CodeUnauthenticated, err)
 	default:
 		return connect.NewError(connect.CodeInternal, err)
 	}

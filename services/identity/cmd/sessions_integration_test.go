@@ -60,9 +60,12 @@ func TestRefreshRotationAndReuseDetection(t *testing.T) {
 	if refreshed.Msg.RefreshToken == initial.RefreshToken {
 		t.Fatal("Refresh(A) returned the same refresh token, want a fresh one")
 	}
-	if refreshed.Msg.AccessToken == initial.AccessToken {
-		t.Fatal("Refresh(A) returned the same access token, want a fresh one")
-	}
+	// Note: the access token can be byte-identical to the previous one when
+	// nothing in the claims changed and both are issued within the same
+	// wall-clock second — RS256 (PKCS1v15) signing is deterministic for an
+	// identical header+payload. The refresh token is the property that
+	// proves rotation happened; TestRefreshRereadsClaimsAndDisabled proves
+	// the access token DOES change once the underlying claims do.
 	if _, err := verifier.Verify(refreshed.Msg.AccessToken, auth.KindAccess); err != nil {
 		t.Fatalf("verify refreshed access token: %v", err)
 	}
