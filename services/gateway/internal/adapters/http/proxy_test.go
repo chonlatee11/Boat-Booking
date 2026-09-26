@@ -104,7 +104,7 @@ func TestAdminProxyForwardsVerifiedClaimsAndStripsSpoofed(t *testing.T) {
 	req.Header.Set(httpx.HeaderPierIDs, "attacker-pier")
 	req.Header.Set(httpx.HeaderInternalToken, "attacker-token")
 	req.Header.Set("Authorization", "Bearer attacker-bearer")
-	req.AddCookie(&http.Cookie{Name: "somecookie", Value: "attacker"})
+	req.AddCookie(&http.Cookie{Name: "somecookie", Value: "attacker"}) //nolint:gosec // inbound test request cookie, not a Set-Cookie
 	req.AddCookie(auth.Cookie(auth.KindAccess, tok))
 
 	resp, err := http.DefaultClient.Do(req)
@@ -362,7 +362,7 @@ func TestPublicProxyIsClaimLess(t *testing.T) {
 		t.Fatalf("new request: %v", err)
 	}
 	req.Header.Set(httpx.HeaderUserID, "attacker")
-	req.AddCookie(&http.Cookie{Name: "access_token", Value: "spoofed"})
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: "spoofed"}) //nolint:gosec // inbound test request cookie, not a Set-Cookie
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

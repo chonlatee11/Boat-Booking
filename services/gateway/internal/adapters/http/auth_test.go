@@ -248,7 +248,7 @@ func TestRefreshRotatesCookiesAndReturnsUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request: %v", err)
 	}
-	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "old-refresh-token"})
+	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "old-refresh-token"}) //nolint:gosec // inbound test request cookie, not a Set-Cookie
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -301,7 +301,7 @@ func TestRefreshIdentityErrorClearsCookies(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request: %v", err)
 	}
-	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "reused-token"})
+	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "reused-token"}) //nolint:gosec // inbound test request cookie, not a Set-Cookie
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -323,7 +323,7 @@ func TestLogoutClearsCookiesAndReturns204(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request: %v", err)
 	}
-	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "a-refresh-token"})
+	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "a-refresh-token"}) //nolint:gosec // inbound test request cookie, not a Set-Cookie
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -348,7 +348,7 @@ func TestLogoutClearsCookiesEvenOnIdentityError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request: %v", err)
 	}
-	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "a-refresh-token"})
+	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "a-refresh-token"}) //nolint:gosec // inbound test request cookie, not a Set-Cookie
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

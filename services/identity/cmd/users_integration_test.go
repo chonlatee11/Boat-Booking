@@ -33,7 +33,7 @@ const fakeCatalogToken = "test-token" // matches setIdentityEnv's INTERNAL_TOKEN
 // real catalog service is involved in these tests.
 type fakeCatalogPier struct {
 	pierID, operatorID string
-	archived            bool
+	archived           bool
 }
 
 // fakeCatalog implements just enough of catalogv1connect.CatalogServiceHandler
