@@ -12,6 +12,11 @@ option go_package = "github.com/chonlatee11/boat-booking/gen/go/catalog/v1;catal
 service CatalogService {
   rpc UpsertBoat(UpsertBoatRequest) returns (UpsertBoatResponse);
   rpc ListBoats(ListBoatsRequest) returns (ListBoatsResponse);
+
+  // Operator management is super_admin only (D-08, AUTH-05).
+  rpc UpsertOperator(UpsertOperatorRequest) returns (UpsertOperatorResponse);
+  rpc ListOperators(ListOperatorsRequest) returns (ListOperatorsResponse);
+  rpc ArchiveOperator(ArchiveOperatorRequest) returns (ArchiveOperatorResponse);
 }
 
 message Boat {
@@ -40,4 +45,35 @@ message ListBoatsRequest {}
 
 message ListBoatsResponse {
   repeated Boat boats = 1;
+}
+
+message Operator {
+  string operator_id = 1;
+  string name = 2;
+  bool archived = 3;
+}
+
+// An empty operator_id means create; a non-empty operator_id means update.
+// Only super_admin may call this (D-08).
+message UpsertOperatorRequest {
+  string operator_id = 1;
+  string name = 2;
+}
+
+message UpsertOperatorResponse {
+  Operator operator = 1;
+}
+
+message ListOperatorsRequest {}
+
+message ListOperatorsResponse {
+  repeated Operator operators = 1;
+}
+
+message ArchiveOperatorRequest {
+  string operator_id = 1;
+}
+
+message ArchiveOperatorResponse {
+  Operator operator = 1;
 }

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package boatbooking.catalog.events.v1;
+
+option go_package = "github.com/chonlatee11/boat-booking/gen/go/catalog/v1;catalogv1";
+
+// OperatorUpserted is a past-tense fact: an operator was created, renamed,
+// or archived. Ids only, no personal data (D-45) — the operator's own
+// business name is not PII.
+message OperatorUpserted {
+  string operator_id = 1;
+  string name = 2;
+  bool archived = 3;
+}

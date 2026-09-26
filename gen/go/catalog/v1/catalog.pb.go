@@ -292,6 +292,332 @@ func (x *ListBoatsResponse) GetBoats() []*Boat {
 	return nil
 }
 
+type Operator struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OperatorId    string                 `protobuf:"bytes,1,opt,name=operator_id,json=operatorId,proto3" json:"operator_id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Archived      bool                   `protobuf:"varint,3,opt,name=archived,proto3" json:"archived,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Operator) Reset() {
+	*x = Operator{}
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Operator) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Operator) ProtoMessage() {}
+
+func (x *Operator) ProtoReflect() protoreflect.Message {
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Operator.ProtoReflect.Descriptor instead.
+func (*Operator) Descriptor() ([]byte, []int) {
+	return file_services_catalog_v1_catalog_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Operator) GetOperatorId() string {
+	if x != nil {
+		return x.OperatorId
+	}
+	return ""
+}
+
+func (x *Operator) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Operator) GetArchived() bool {
+	if x != nil {
+		return x.Archived
+	}
+	return false
+}
+
+// An empty operator_id means create; a non-empty operator_id means update.
+// Only super_admin may call this (D-08).
+type UpsertOperatorRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OperatorId    string                 `protobuf:"bytes,1,opt,name=operator_id,json=operatorId,proto3" json:"operator_id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpsertOperatorRequest) Reset() {
+	*x = UpsertOperatorRequest{}
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpsertOperatorRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpsertOperatorRequest) ProtoMessage() {}
+
+func (x *UpsertOperatorRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpsertOperatorRequest.ProtoReflect.Descriptor instead.
+func (*UpsertOperatorRequest) Descriptor() ([]byte, []int) {
+	return file_services_catalog_v1_catalog_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *UpsertOperatorRequest) GetOperatorId() string {
+	if x != nil {
+		return x.OperatorId
+	}
+	return ""
+}
+
+func (x *UpsertOperatorRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type UpsertOperatorResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Operator      *Operator              `protobuf:"bytes,1,opt,name=operator,proto3" json:"operator,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpsertOperatorResponse) Reset() {
+	*x = UpsertOperatorResponse{}
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpsertOperatorResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpsertOperatorResponse) ProtoMessage() {}
+
+func (x *UpsertOperatorResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpsertOperatorResponse.ProtoReflect.Descriptor instead.
+func (*UpsertOperatorResponse) Descriptor() ([]byte, []int) {
+	return file_services_catalog_v1_catalog_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *UpsertOperatorResponse) GetOperator() *Operator {
+	if x != nil {
+		return x.Operator
+	}
+	return nil
+}
+
+type ListOperatorsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListOperatorsRequest) Reset() {
+	*x = ListOperatorsRequest{}
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListOperatorsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListOperatorsRequest) ProtoMessage() {}
+
+func (x *ListOperatorsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListOperatorsRequest.ProtoReflect.Descriptor instead.
+func (*ListOperatorsRequest) Descriptor() ([]byte, []int) {
+	return file_services_catalog_v1_catalog_proto_rawDescGZIP(), []int{8}
+}
+
+type ListOperatorsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Operators     []*Operator            `protobuf:"bytes,1,rep,name=operators,proto3" json:"operators,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListOperatorsResponse) Reset() {
+	*x = ListOperatorsResponse{}
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListOperatorsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListOperatorsResponse) ProtoMessage() {}
+
+func (x *ListOperatorsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListOperatorsResponse.ProtoReflect.Descriptor instead.
+func (*ListOperatorsResponse) Descriptor() ([]byte, []int) {
+	return file_services_catalog_v1_catalog_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ListOperatorsResponse) GetOperators() []*Operator {
+	if x != nil {
+		return x.Operators
+	}
+	return nil
+}
+
+type ArchiveOperatorRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OperatorId    string                 `protobuf:"bytes,1,opt,name=operator_id,json=operatorId,proto3" json:"operator_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ArchiveOperatorRequest) Reset() {
+	*x = ArchiveOperatorRequest{}
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ArchiveOperatorRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ArchiveOperatorRequest) ProtoMessage() {}
+
+func (x *ArchiveOperatorRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ArchiveOperatorRequest.ProtoReflect.Descriptor instead.
+func (*ArchiveOperatorRequest) Descriptor() ([]byte, []int) {
+	return file_services_catalog_v1_catalog_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ArchiveOperatorRequest) GetOperatorId() string {
+	if x != nil {
+		return x.OperatorId
+	}
+	return ""
+}
+
+type ArchiveOperatorResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Operator      *Operator              `protobuf:"bytes,1,opt,name=operator,proto3" json:"operator,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ArchiveOperatorResponse) Reset() {
+	*x = ArchiveOperatorResponse{}
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ArchiveOperatorResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ArchiveOperatorResponse) ProtoMessage() {}
+
+func (x *ArchiveOperatorResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_services_catalog_v1_catalog_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ArchiveOperatorResponse.ProtoReflect.Descriptor instead.
+func (*ArchiveOperatorResponse) Descriptor() ([]byte, []int) {
+	return file_services_catalog_v1_catalog_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *ArchiveOperatorResponse) GetOperator() *Operator {
+	if x != nil {
+		return x.Operator
+	}
+	return nil
+}
+
 var File_services_catalog_v1_catalog_proto protoreflect.FileDescriptor
 
 const file_services_catalog_v1_catalog_proto_rawDesc = "" +
@@ -313,11 +639,33 @@ const file_services_catalog_v1_catalog_proto_rawDesc = "" +
 	"\x04boat\x18\x01 \x01(\v2\x1c.boatbooking.catalog.v1.BoatR\x04boat\"\x12\n" +
 	"\x10ListBoatsRequest\"G\n" +
 	"\x11ListBoatsResponse\x122\n" +
-	"\x05boats\x18\x01 \x03(\v2\x1c.boatbooking.catalog.v1.BoatR\x05boats2\xd7\x01\n" +
+	"\x05boats\x18\x01 \x03(\v2\x1c.boatbooking.catalog.v1.BoatR\x05boats\"[\n" +
+	"\bOperator\x12\x1f\n" +
+	"\voperator_id\x18\x01 \x01(\tR\n" +
+	"operatorId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
+	"\barchived\x18\x03 \x01(\bR\barchived\"L\n" +
+	"\x15UpsertOperatorRequest\x12\x1f\n" +
+	"\voperator_id\x18\x01 \x01(\tR\n" +
+	"operatorId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"V\n" +
+	"\x16UpsertOperatorResponse\x12<\n" +
+	"\boperator\x18\x01 \x01(\v2 .boatbooking.catalog.v1.OperatorR\boperator\"\x16\n" +
+	"\x14ListOperatorsRequest\"W\n" +
+	"\x15ListOperatorsResponse\x12>\n" +
+	"\toperators\x18\x01 \x03(\v2 .boatbooking.catalog.v1.OperatorR\toperators\"9\n" +
+	"\x16ArchiveOperatorRequest\x12\x1f\n" +
+	"\voperator_id\x18\x01 \x01(\tR\n" +
+	"operatorId\"W\n" +
+	"\x17ArchiveOperatorResponse\x12<\n" +
+	"\boperator\x18\x01 \x01(\v2 .boatbooking.catalog.v1.OperatorR\boperator2\xaa\x04\n" +
 	"\x0eCatalogService\x12c\n" +
 	"\n" +
 	"UpsertBoat\x12).boatbooking.catalog.v1.UpsertBoatRequest\x1a*.boatbooking.catalog.v1.UpsertBoatResponse\x12`\n" +
-	"\tListBoats\x12(.boatbooking.catalog.v1.ListBoatsRequest\x1a).boatbooking.catalog.v1.ListBoatsResponseBAZ?github.com/chonlatee11/boat-booking/gen/go/catalog/v1;catalogv1b\x06proto3"
+	"\tListBoats\x12(.boatbooking.catalog.v1.ListBoatsRequest\x1a).boatbooking.catalog.v1.ListBoatsResponse\x12o\n" +
+	"\x0eUpsertOperator\x12-.boatbooking.catalog.v1.UpsertOperatorRequest\x1a..boatbooking.catalog.v1.UpsertOperatorResponse\x12l\n" +
+	"\rListOperators\x12,.boatbooking.catalog.v1.ListOperatorsRequest\x1a-.boatbooking.catalog.v1.ListOperatorsResponse\x12r\n" +
+	"\x0fArchiveOperator\x12..boatbooking.catalog.v1.ArchiveOperatorRequest\x1a/.boatbooking.catalog.v1.ArchiveOperatorResponseBAZ?github.com/chonlatee11/boat-booking/gen/go/catalog/v1;catalogv1b\x06proto3"
 
 var (
 	file_services_catalog_v1_catalog_proto_rawDescOnce sync.Once
@@ -331,29 +679,45 @@ func file_services_catalog_v1_catalog_proto_rawDescGZIP() []byte {
 	return file_services_catalog_v1_catalog_proto_rawDescData
 }
 
-var file_services_catalog_v1_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_services_catalog_v1_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_services_catalog_v1_catalog_proto_goTypes = []any{
-	(*Boat)(nil),               // 0: boatbooking.catalog.v1.Boat
-	(*UpsertBoatRequest)(nil),  // 1: boatbooking.catalog.v1.UpsertBoatRequest
-	(*UpsertBoatResponse)(nil), // 2: boatbooking.catalog.v1.UpsertBoatResponse
-	(*ListBoatsRequest)(nil),   // 3: boatbooking.catalog.v1.ListBoatsRequest
-	(*ListBoatsResponse)(nil),  // 4: boatbooking.catalog.v1.ListBoatsResponse
-	(BoatStatus)(0),            // 5: boatbooking.catalog.events.v1.BoatStatus
+	(*Boat)(nil),                    // 0: boatbooking.catalog.v1.Boat
+	(*UpsertBoatRequest)(nil),       // 1: boatbooking.catalog.v1.UpsertBoatRequest
+	(*UpsertBoatResponse)(nil),      // 2: boatbooking.catalog.v1.UpsertBoatResponse
+	(*ListBoatsRequest)(nil),        // 3: boatbooking.catalog.v1.ListBoatsRequest
+	(*ListBoatsResponse)(nil),       // 4: boatbooking.catalog.v1.ListBoatsResponse
+	(*Operator)(nil),                // 5: boatbooking.catalog.v1.Operator
+	(*UpsertOperatorRequest)(nil),   // 6: boatbooking.catalog.v1.UpsertOperatorRequest
+	(*UpsertOperatorResponse)(nil),  // 7: boatbooking.catalog.v1.UpsertOperatorResponse
+	(*ListOperatorsRequest)(nil),    // 8: boatbooking.catalog.v1.ListOperatorsRequest
+	(*ListOperatorsResponse)(nil),   // 9: boatbooking.catalog.v1.ListOperatorsResponse
+	(*ArchiveOperatorRequest)(nil),  // 10: boatbooking.catalog.v1.ArchiveOperatorRequest
+	(*ArchiveOperatorResponse)(nil), // 11: boatbooking.catalog.v1.ArchiveOperatorResponse
+	(BoatStatus)(0),                 // 12: boatbooking.catalog.events.v1.BoatStatus
 }
 var file_services_catalog_v1_catalog_proto_depIdxs = []int32{
-	5, // 0: boatbooking.catalog.v1.Boat.status:type_name -> boatbooking.catalog.events.v1.BoatStatus
-	5, // 1: boatbooking.catalog.v1.UpsertBoatRequest.status:type_name -> boatbooking.catalog.events.v1.BoatStatus
-	0, // 2: boatbooking.catalog.v1.UpsertBoatResponse.boat:type_name -> boatbooking.catalog.v1.Boat
-	0, // 3: boatbooking.catalog.v1.ListBoatsResponse.boats:type_name -> boatbooking.catalog.v1.Boat
-	1, // 4: boatbooking.catalog.v1.CatalogService.UpsertBoat:input_type -> boatbooking.catalog.v1.UpsertBoatRequest
-	3, // 5: boatbooking.catalog.v1.CatalogService.ListBoats:input_type -> boatbooking.catalog.v1.ListBoatsRequest
-	2, // 6: boatbooking.catalog.v1.CatalogService.UpsertBoat:output_type -> boatbooking.catalog.v1.UpsertBoatResponse
-	4, // 7: boatbooking.catalog.v1.CatalogService.ListBoats:output_type -> boatbooking.catalog.v1.ListBoatsResponse
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	12, // 0: boatbooking.catalog.v1.Boat.status:type_name -> boatbooking.catalog.events.v1.BoatStatus
+	12, // 1: boatbooking.catalog.v1.UpsertBoatRequest.status:type_name -> boatbooking.catalog.events.v1.BoatStatus
+	0,  // 2: boatbooking.catalog.v1.UpsertBoatResponse.boat:type_name -> boatbooking.catalog.v1.Boat
+	0,  // 3: boatbooking.catalog.v1.ListBoatsResponse.boats:type_name -> boatbooking.catalog.v1.Boat
+	5,  // 4: boatbooking.catalog.v1.UpsertOperatorResponse.operator:type_name -> boatbooking.catalog.v1.Operator
+	5,  // 5: boatbooking.catalog.v1.ListOperatorsResponse.operators:type_name -> boatbooking.catalog.v1.Operator
+	5,  // 6: boatbooking.catalog.v1.ArchiveOperatorResponse.operator:type_name -> boatbooking.catalog.v1.Operator
+	1,  // 7: boatbooking.catalog.v1.CatalogService.UpsertBoat:input_type -> boatbooking.catalog.v1.UpsertBoatRequest
+	3,  // 8: boatbooking.catalog.v1.CatalogService.ListBoats:input_type -> boatbooking.catalog.v1.ListBoatsRequest
+	6,  // 9: boatbooking.catalog.v1.CatalogService.UpsertOperator:input_type -> boatbooking.catalog.v1.UpsertOperatorRequest
+	8,  // 10: boatbooking.catalog.v1.CatalogService.ListOperators:input_type -> boatbooking.catalog.v1.ListOperatorsRequest
+	10, // 11: boatbooking.catalog.v1.CatalogService.ArchiveOperator:input_type -> boatbooking.catalog.v1.ArchiveOperatorRequest
+	2,  // 12: boatbooking.catalog.v1.CatalogService.UpsertBoat:output_type -> boatbooking.catalog.v1.UpsertBoatResponse
+	4,  // 13: boatbooking.catalog.v1.CatalogService.ListBoats:output_type -> boatbooking.catalog.v1.ListBoatsResponse
+	7,  // 14: boatbooking.catalog.v1.CatalogService.UpsertOperator:output_type -> boatbooking.catalog.v1.UpsertOperatorResponse
+	9,  // 15: boatbooking.catalog.v1.CatalogService.ListOperators:output_type -> boatbooking.catalog.v1.ListOperatorsResponse
+	11, // 16: boatbooking.catalog.v1.CatalogService.ArchiveOperator:output_type -> boatbooking.catalog.v1.ArchiveOperatorResponse
+	12, // [12:17] is the sub-list for method output_type
+	7,  // [7:12] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_services_catalog_v1_catalog_proto_init() }
@@ -368,7 +732,7 @@ func file_services_catalog_v1_catalog_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_services_catalog_v1_catalog_proto_rawDesc), len(file_services_catalog_v1_catalog_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

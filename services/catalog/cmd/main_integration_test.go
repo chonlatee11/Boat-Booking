@@ -221,6 +221,27 @@ func newClaimHeaders(operatorID string) map[string]string {
 	}
 }
 
+// claimHeaders builds the trust-boundary headers RequireInternal expects for
+// a request carrying a specific role/operator/pier scope — the general
+// helper used by the operators/piers scoping tests (plan 02-03). X-Pier-Ids
+// is set only when pierIDs is non-empty, matching httpx.ForwardClaims's
+// convention; operatorID is omitted from the headers when empty (the
+// super_admin case, which never reads it).
+func claimHeaders(role, operatorID string, pierIDs ...string) map[string]string {
+	h := map[string]string{
+		httpx.HeaderInternalToken: "test-token",
+		httpx.HeaderUserID:        uuid.NewString(),
+		httpx.HeaderRole:          role,
+	}
+	if operatorID != "" {
+		h[httpx.HeaderOperatorID] = operatorID
+	}
+	if len(pierIDs) > 0 {
+		h[httpx.HeaderPierIDs] = strings.Join(pierIDs, ",")
+	}
+	return h
+}
+
 // waitForBoatUpserted spins up a throwaway pkg/kafka.Consumer (a fresh
 // consumer group reads catalog.events from the beginning by default) and
 // waits for the first catalog.BoatUpserted envelope it delivers — proving

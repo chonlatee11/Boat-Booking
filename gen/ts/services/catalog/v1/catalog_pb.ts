@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file services/catalog/v1/catalog.proto.
  */
 export const file_services_catalog_v1_catalog: GenFile = /*@__PURE__*/
-  fileDesc("CiFzZXJ2aWNlcy9jYXRhbG9nL3YxL2NhdGFsb2cucHJvdG8SFmJvYXRib29raW5nLmNhdGFsb2cudjEijwEKBEJvYXQSDwoHYm9hdF9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYBCABKAUSOQoGc3RhdHVzGAUgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyKHAQoRVXBzZXJ0Qm9hdFJlcXVlc3QSDwoHYm9hdF9pZBgBIAEoCRIMCgRuYW1lGAIgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYAyABKAUSOQoGc3RhdHVzGAQgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyJAChJVcHNlcnRCb2F0UmVzcG9uc2USKgoEYm9hdBgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuQm9hdCISChBMaXN0Qm9hdHNSZXF1ZXN0IkAKEUxpc3RCb2F0c1Jlc3BvbnNlEisKBWJvYXRzGAEgAygLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0MtcBCg5DYXRhbG9nU2VydmljZRJjCgpVcHNlcnRCb2F0EikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRCb2F0UmVxdWVzdBoqLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0Qm9hdFJlc3BvbnNlEmAKCUxpc3RCb2F0cxIoLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdEJvYXRzUmVxdWVzdBopLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdEJvYXRzUmVzcG9uc2VCQVo/Z2l0aHViLmNvbS9jaG9ubGF0ZWUxMS9ib2F0LWJvb2tpbmcvZ2VuL2dvL2NhdGFsb2cvdjE7Y2F0YWxvZ3YxYgZwcm90bzM", [file_events_catalog_v1_boat]);
+  fileDesc("CiFzZXJ2aWNlcy9jYXRhbG9nL3YxL2NhdGFsb2cucHJvdG8SFmJvYXRib29raW5nLmNhdGFsb2cudjEijwEKBEJvYXQSDwoHYm9hdF9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYBCABKAUSOQoGc3RhdHVzGAUgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyKHAQoRVXBzZXJ0Qm9hdFJlcXVlc3QSDwoHYm9hdF9pZBgBIAEoCRIMCgRuYW1lGAIgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYAyABKAUSOQoGc3RhdHVzGAQgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyJAChJVcHNlcnRCb2F0UmVzcG9uc2USKgoEYm9hdBgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuQm9hdCISChBMaXN0Qm9hdHNSZXF1ZXN0IkAKEUxpc3RCb2F0c1Jlc3BvbnNlEisKBWJvYXRzGAEgAygLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0Ij8KCE9wZXJhdG9yEhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkSEAoIYXJjaGl2ZWQYAyABKAgiOgoVVXBzZXJ0T3BlcmF0b3JSZXF1ZXN0EhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkiTAoWVXBzZXJ0T3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiFgoUTGlzdE9wZXJhdG9yc1JlcXVlc3QiTAoVTGlzdE9wZXJhdG9yc1Jlc3BvbnNlEjMKCW9wZXJhdG9ycxgBIAMoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiLQoWQXJjaGl2ZU9wZXJhdG9yUmVxdWVzdBITCgtvcGVyYXRvcl9pZBgBIAEoCSJNChdBcmNoaXZlT3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IyqgQKDkNhdGFsb2dTZXJ2aWNlEmMKClVwc2VydEJvYXQSKS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydEJvYXRSZXF1ZXN0GiouYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRCb2F0UmVzcG9uc2USYAoJTGlzdEJvYXRzEiguYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Qm9hdHNSZXF1ZXN0GikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Qm9hdHNSZXNwb25zZRJvCg5VcHNlcnRPcGVyYXRvchItLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0T3BlcmF0b3JSZXF1ZXN0Gi4uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRPcGVyYXRvclJlc3BvbnNlEmwKDUxpc3RPcGVyYXRvcnMSLC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RPcGVyYXRvcnNSZXF1ZXN0Gi0uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0T3BlcmF0b3JzUmVzcG9uc2UScgoPQXJjaGl2ZU9wZXJhdG9yEi4uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BcmNoaXZlT3BlcmF0b3JSZXF1ZXN0Gi8uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BcmNoaXZlT3BlcmF0b3JSZXNwb25zZUJBWj9naXRodWIuY29tL2Nob25sYXRlZTExL2JvYXQtYm9va2luZy9nZW4vZ28vY2F0YWxvZy92MTtjYXRhbG9ndjFiBnByb3RvMw", [file_events_catalog_v1_boat]);
 
 /**
  * @generated from message boatbooking.catalog.v1.Boat
@@ -220,6 +220,223 @@ export const ListBoatsResponseSchema: GenMessage<ListBoatsResponse, {jsonType: L
   messageDesc(file_services_catalog_v1_catalog, 4);
 
 /**
+ * @generated from message boatbooking.catalog.v1.Operator
+ */
+export type Operator = Message<"boatbooking.catalog.v1.Operator"> & {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: bool archived = 3;
+   */
+  archived: boolean;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.Operator
+ */
+export type OperatorJson = {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId?: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name?: string;
+
+  /**
+   * @generated from field: bool archived = 3;
+   */
+  archived?: boolean;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.Operator.
+ * Use `create(OperatorSchema)` to create a new message.
+ */
+export const OperatorSchema: GenMessage<Operator, {jsonType: OperatorJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 5);
+
+/**
+ * An empty operator_id means create; a non-empty operator_id means update.
+ * Only super_admin may call this (D-08).
+ *
+ * @generated from message boatbooking.catalog.v1.UpsertOperatorRequest
+ */
+export type UpsertOperatorRequest = Message<"boatbooking.catalog.v1.UpsertOperatorRequest"> & {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+};
+
+/**
+ * An empty operator_id means create; a non-empty operator_id means update.
+ * Only super_admin may call this (D-08).
+ *
+ * @generated from message boatbooking.catalog.v1.UpsertOperatorRequest
+ */
+export type UpsertOperatorRequestJson = {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId?: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.UpsertOperatorRequest.
+ * Use `create(UpsertOperatorRequestSchema)` to create a new message.
+ */
+export const UpsertOperatorRequestSchema: GenMessage<UpsertOperatorRequest, {jsonType: UpsertOperatorRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 6);
+
+/**
+ * @generated from message boatbooking.catalog.v1.UpsertOperatorResponse
+ */
+export type UpsertOperatorResponse = Message<"boatbooking.catalog.v1.UpsertOperatorResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Operator operator = 1;
+   */
+  operator?: Operator | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.UpsertOperatorResponse
+ */
+export type UpsertOperatorResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Operator operator = 1;
+   */
+  operator?: OperatorJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.UpsertOperatorResponse.
+ * Use `create(UpsertOperatorResponseSchema)` to create a new message.
+ */
+export const UpsertOperatorResponseSchema: GenMessage<UpsertOperatorResponse, {jsonType: UpsertOperatorResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 7);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListOperatorsRequest
+ */
+export type ListOperatorsRequest = Message<"boatbooking.catalog.v1.ListOperatorsRequest"> & {
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListOperatorsRequest
+ */
+export type ListOperatorsRequestJson = {
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListOperatorsRequest.
+ * Use `create(ListOperatorsRequestSchema)` to create a new message.
+ */
+export const ListOperatorsRequestSchema: GenMessage<ListOperatorsRequest, {jsonType: ListOperatorsRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 8);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListOperatorsResponse
+ */
+export type ListOperatorsResponse = Message<"boatbooking.catalog.v1.ListOperatorsResponse"> & {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.Operator operators = 1;
+   */
+  operators: Operator[];
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListOperatorsResponse
+ */
+export type ListOperatorsResponseJson = {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.Operator operators = 1;
+   */
+  operators?: OperatorJson[];
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListOperatorsResponse.
+ * Use `create(ListOperatorsResponseSchema)` to create a new message.
+ */
+export const ListOperatorsResponseSchema: GenMessage<ListOperatorsResponse, {jsonType: ListOperatorsResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 9);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveOperatorRequest
+ */
+export type ArchiveOperatorRequest = Message<"boatbooking.catalog.v1.ArchiveOperatorRequest"> & {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId: string;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveOperatorRequest
+ */
+export type ArchiveOperatorRequestJson = {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchiveOperatorRequest.
+ * Use `create(ArchiveOperatorRequestSchema)` to create a new message.
+ */
+export const ArchiveOperatorRequestSchema: GenMessage<ArchiveOperatorRequest, {jsonType: ArchiveOperatorRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 10);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveOperatorResponse
+ */
+export type ArchiveOperatorResponse = Message<"boatbooking.catalog.v1.ArchiveOperatorResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Operator operator = 1;
+   */
+  operator?: Operator | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveOperatorResponse
+ */
+export type ArchiveOperatorResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Operator operator = 1;
+   */
+  operator?: OperatorJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchiveOperatorResponse.
+ * Use `create(ArchiveOperatorResponseSchema)` to create a new message.
+ */
+export const ArchiveOperatorResponseSchema: GenMessage<ArchiveOperatorResponse, {jsonType: ArchiveOperatorResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 11);
+
+/**
  * CatalogService is the sync API for catalog-owned boats. Reused by the
  * gateway BFF and by other services that need boat data without waiting on
  * the async BoatUpserted projection.
@@ -242,6 +459,32 @@ export const CatalogService: GenService<{
     methodKind: "unary";
     input: typeof ListBoatsRequestSchema;
     output: typeof ListBoatsResponseSchema;
+  },
+  /**
+   * Operator management is super_admin only (D-08, AUTH-05).
+   *
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.UpsertOperator
+   */
+  upsertOperator: {
+    methodKind: "unary";
+    input: typeof UpsertOperatorRequestSchema;
+    output: typeof UpsertOperatorResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ListOperators
+   */
+  listOperators: {
+    methodKind: "unary";
+    input: typeof ListOperatorsRequestSchema;
+    output: typeof ListOperatorsResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ArchiveOperator
+   */
+  archiveOperator: {
+    methodKind: "unary";
+    input: typeof ArchiveOperatorRequestSchema;
+    output: typeof ArchiveOperatorResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_services_catalog_v1_catalog, 0);

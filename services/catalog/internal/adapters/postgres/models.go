@@ -18,6 +18,14 @@ type Boat struct {
 	UpdatedAt       pgtype.Timestamptz
 }
 
+type Operator struct {
+	ID         pgtype.UUID
+	Name       string
+	ArchivedAt pgtype.Timestamptz
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+}
+
 type Outbox struct {
 	ID          int64
 	EventID     pgtype.UUID

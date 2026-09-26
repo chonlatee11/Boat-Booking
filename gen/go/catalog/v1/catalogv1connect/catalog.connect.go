@@ -39,12 +39,25 @@ const (
 	// CatalogServiceListBoatsProcedure is the fully-qualified name of the CatalogService's ListBoats
 	// RPC.
 	CatalogServiceListBoatsProcedure = "/boatbooking.catalog.v1.CatalogService/ListBoats"
+	// CatalogServiceUpsertOperatorProcedure is the fully-qualified name of the CatalogService's
+	// UpsertOperator RPC.
+	CatalogServiceUpsertOperatorProcedure = "/boatbooking.catalog.v1.CatalogService/UpsertOperator"
+	// CatalogServiceListOperatorsProcedure is the fully-qualified name of the CatalogService's
+	// ListOperators RPC.
+	CatalogServiceListOperatorsProcedure = "/boatbooking.catalog.v1.CatalogService/ListOperators"
+	// CatalogServiceArchiveOperatorProcedure is the fully-qualified name of the CatalogService's
+	// ArchiveOperator RPC.
+	CatalogServiceArchiveOperatorProcedure = "/boatbooking.catalog.v1.CatalogService/ArchiveOperator"
 )
 
 // CatalogServiceClient is a client for the boatbooking.catalog.v1.CatalogService service.
 type CatalogServiceClient interface {
 	UpsertBoat(context.Context, *connect.Request[v1.UpsertBoatRequest]) (*connect.Response[v1.UpsertBoatResponse], error)
 	ListBoats(context.Context, *connect.Request[v1.ListBoatsRequest]) (*connect.Response[v1.ListBoatsResponse], error)
+	// Operator management is super_admin only (D-08, AUTH-05).
+	UpsertOperator(context.Context, *connect.Request[v1.UpsertOperatorRequest]) (*connect.Response[v1.UpsertOperatorResponse], error)
+	ListOperators(context.Context, *connect.Request[v1.ListOperatorsRequest]) (*connect.Response[v1.ListOperatorsResponse], error)
+	ArchiveOperator(context.Context, *connect.Request[v1.ArchiveOperatorRequest]) (*connect.Response[v1.ArchiveOperatorResponse], error)
 }
 
 // NewCatalogServiceClient constructs a client for the boatbooking.catalog.v1.CatalogService
@@ -70,13 +83,34 @@ func NewCatalogServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(catalogServiceMethods.ByName("ListBoats")),
 			connect.WithClientOptions(opts...),
 		),
+		upsertOperator: connect.NewClient[v1.UpsertOperatorRequest, v1.UpsertOperatorResponse](
+			httpClient,
+			baseURL+CatalogServiceUpsertOperatorProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("UpsertOperator")),
+			connect.WithClientOptions(opts...),
+		),
+		listOperators: connect.NewClient[v1.ListOperatorsRequest, v1.ListOperatorsResponse](
+			httpClient,
+			baseURL+CatalogServiceListOperatorsProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("ListOperators")),
+			connect.WithClientOptions(opts...),
+		),
+		archiveOperator: connect.NewClient[v1.ArchiveOperatorRequest, v1.ArchiveOperatorResponse](
+			httpClient,
+			baseURL+CatalogServiceArchiveOperatorProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("ArchiveOperator")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // catalogServiceClient implements CatalogServiceClient.
 type catalogServiceClient struct {
-	upsertBoat *connect.Client[v1.UpsertBoatRequest, v1.UpsertBoatResponse]
-	listBoats  *connect.Client[v1.ListBoatsRequest, v1.ListBoatsResponse]
+	upsertBoat      *connect.Client[v1.UpsertBoatRequest, v1.UpsertBoatResponse]
+	listBoats       *connect.Client[v1.ListBoatsRequest, v1.ListBoatsResponse]
+	upsertOperator  *connect.Client[v1.UpsertOperatorRequest, v1.UpsertOperatorResponse]
+	listOperators   *connect.Client[v1.ListOperatorsRequest, v1.ListOperatorsResponse]
+	archiveOperator *connect.Client[v1.ArchiveOperatorRequest, v1.ArchiveOperatorResponse]
 }
 
 // UpsertBoat calls boatbooking.catalog.v1.CatalogService.UpsertBoat.
@@ -89,10 +123,29 @@ func (c *catalogServiceClient) ListBoats(ctx context.Context, req *connect.Reque
 	return c.listBoats.CallUnary(ctx, req)
 }
 
+// UpsertOperator calls boatbooking.catalog.v1.CatalogService.UpsertOperator.
+func (c *catalogServiceClient) UpsertOperator(ctx context.Context, req *connect.Request[v1.UpsertOperatorRequest]) (*connect.Response[v1.UpsertOperatorResponse], error) {
+	return c.upsertOperator.CallUnary(ctx, req)
+}
+
+// ListOperators calls boatbooking.catalog.v1.CatalogService.ListOperators.
+func (c *catalogServiceClient) ListOperators(ctx context.Context, req *connect.Request[v1.ListOperatorsRequest]) (*connect.Response[v1.ListOperatorsResponse], error) {
+	return c.listOperators.CallUnary(ctx, req)
+}
+
+// ArchiveOperator calls boatbooking.catalog.v1.CatalogService.ArchiveOperator.
+func (c *catalogServiceClient) ArchiveOperator(ctx context.Context, req *connect.Request[v1.ArchiveOperatorRequest]) (*connect.Response[v1.ArchiveOperatorResponse], error) {
+	return c.archiveOperator.CallUnary(ctx, req)
+}
+
 // CatalogServiceHandler is an implementation of the boatbooking.catalog.v1.CatalogService service.
 type CatalogServiceHandler interface {
 	UpsertBoat(context.Context, *connect.Request[v1.UpsertBoatRequest]) (*connect.Response[v1.UpsertBoatResponse], error)
 	ListBoats(context.Context, *connect.Request[v1.ListBoatsRequest]) (*connect.Response[v1.ListBoatsResponse], error)
+	// Operator management is super_admin only (D-08, AUTH-05).
+	UpsertOperator(context.Context, *connect.Request[v1.UpsertOperatorRequest]) (*connect.Response[v1.UpsertOperatorResponse], error)
+	ListOperators(context.Context, *connect.Request[v1.ListOperatorsRequest]) (*connect.Response[v1.ListOperatorsResponse], error)
+	ArchiveOperator(context.Context, *connect.Request[v1.ArchiveOperatorRequest]) (*connect.Response[v1.ArchiveOperatorResponse], error)
 }
 
 // NewCatalogServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -114,12 +167,36 @@ func NewCatalogServiceHandler(svc CatalogServiceHandler, opts ...connect.Handler
 		connect.WithSchema(catalogServiceMethods.ByName("ListBoats")),
 		connect.WithHandlerOptions(opts...),
 	)
+	catalogServiceUpsertOperatorHandler := connect.NewUnaryHandler(
+		CatalogServiceUpsertOperatorProcedure,
+		svc.UpsertOperator,
+		connect.WithSchema(catalogServiceMethods.ByName("UpsertOperator")),
+		connect.WithHandlerOptions(opts...),
+	)
+	catalogServiceListOperatorsHandler := connect.NewUnaryHandler(
+		CatalogServiceListOperatorsProcedure,
+		svc.ListOperators,
+		connect.WithSchema(catalogServiceMethods.ByName("ListOperators")),
+		connect.WithHandlerOptions(opts...),
+	)
+	catalogServiceArchiveOperatorHandler := connect.NewUnaryHandler(
+		CatalogServiceArchiveOperatorProcedure,
+		svc.ArchiveOperator,
+		connect.WithSchema(catalogServiceMethods.ByName("ArchiveOperator")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/boatbooking.catalog.v1.CatalogService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case CatalogServiceUpsertBoatProcedure:
 			catalogServiceUpsertBoatHandler.ServeHTTP(w, r)
 		case CatalogServiceListBoatsProcedure:
 			catalogServiceListBoatsHandler.ServeHTTP(w, r)
+		case CatalogServiceUpsertOperatorProcedure:
+			catalogServiceUpsertOperatorHandler.ServeHTTP(w, r)
+		case CatalogServiceListOperatorsProcedure:
+			catalogServiceListOperatorsHandler.ServeHTTP(w, r)
+		case CatalogServiceArchiveOperatorProcedure:
+			catalogServiceArchiveOperatorHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -135,4 +212,16 @@ func (UnimplementedCatalogServiceHandler) UpsertBoat(context.Context, *connect.R
 
 func (UnimplementedCatalogServiceHandler) ListBoats(context.Context, *connect.Request[v1.ListBoatsRequest]) (*connect.Response[v1.ListBoatsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ListBoats is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) UpsertOperator(context.Context, *connect.Request[v1.UpsertOperatorRequest]) (*connect.Response[v1.UpsertOperatorResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.UpsertOperator is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) ListOperators(context.Context, *connect.Request[v1.ListOperatorsRequest]) (*connect.Response[v1.ListOperatorsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ListOperators is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) ArchiveOperator(context.Context, *connect.Request[v1.ArchiveOperatorRequest]) (*connect.Response[v1.ArchiveOperatorResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ArchiveOperator is not implemented"))
 }
