@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 02
 current_phase_name: Identity + Catalog
 status: executing
-stopped_at: Completed 02-10-PLAN.md
-last_updated: "2026-09-26T20:18:24.029Z"
+stopped_at: Completed 02-11-PLAN.md
+last_updated: "2026-09-26T20:53:27.946Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 02 execution started
-state_head: 888b25b0be97ec0f5ff4659cd3884276ce3b0100
+state_head: 55e2d4ac5575e8b840dc69b89580c4a0b3a7b1fe
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 27
-  completed_plans: 24
+  completed_plans: 25
   percent: 20
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 02 (Identity + Catalog) — EXECUTING
-Plan: 11 of 13
+Plan: 12 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 02 execution started
 
@@ -82,6 +82,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 02 P08 | 48min | 2 tasks | 32 files |
 | Phase 02 P09 | 35min | 3 tasks | 51 files |
 | Phase 02 P10 | 7min | 2 tasks | 12 files |
+| Phase 02 P11 | 33min | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -136,6 +137,8 @@ Recent decisions affecting current work:
 - [Phase 02]: [Phase 02] AdminShell's "collapsible to top bar on narrow screens" is a Tailwind hidden md:flex / md:hidden sidebar-vs-top-nav pair, not a Sheet-based hamburger drawer
 - [Phase 02]: [Phase 02] apps/web otp-login.tsx and api.ts mirror apps/admin's exact refresh-retry/parsed-error and OTP error-mapping shapes rather than a fresh design — Consistent auth UX across both frontends, smallest diff, reuses code already proven in 02-09
 - [Phase 02]: [Phase 02] apps/web's shadcn add pulled the same unaudited 'cn' npm package 02-09 already rejected -- rewrote every generated ui/*.tsx import to @/lib/utils and dropped 'cn' from package.json/lockfile before writing app code — Matches the established mitigation from 02-09; keeps the dependency tree auditable
+- [Phase 02]: [Phase 02] storage-init retries s3.configure up to 15x/2s instead of trusting storage's healthcheck alone -- the master HTTP healthcheck can pass before the filer's gRPC listener (which weed shell dials) is ready under load; a cold make up hit this race
+- [Phase 02]: [Phase 02] maplibre-gl v6 has no default export -- import { Map as MapLibreMap, Marker } from 'maplibre-gl', not the v1-v3 default `maplibregl` import
 
 ### Pending Todos
 
@@ -156,6 +159,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T20:18:23.950Z
-Stopped at: Completed 02-10-PLAN.md
+Last session: 2026-09-26T20:53:27.862Z
+Stopped at: Completed 02-11-PLAN.md
 Resume file: None
