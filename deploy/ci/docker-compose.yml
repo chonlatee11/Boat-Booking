@@ -1,0 +1,46 @@
+name: boatbooking-ci
+
+services:
+  jenkins:
+    build: ./jenkins
+    environment:
+      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD}
+      JENKINS_AGENT_SSH_PRIVATE_KEY_B64: ${JENKINS_AGENT_SSH_PRIVATE_KEY_B64}
+      CI_REPO_URL: ${CI_REPO_URL}
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ../..:/repo:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080' 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  jenkins-agent:
+    build: ./agent
+    environment:
+      JENKINS_AGENT_SSH_PUBKEY: ${JENKINS_AGENT_SSH_PUBKEY}
+      TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../..:/repo:ro
+      - agent_go:/home/jenkins/go
+      - agent_cache:/home/jenkins/.cache
+    group_add:
+      - "${DOCKER_GID}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/22'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+volumes:
+  jenkins_home:
+  agent_go:
+  agent_cache:

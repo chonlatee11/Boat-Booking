@@ -3,3 +3,5 @@ deploy/kong/kong.yml
 bin/
 *.test
 coverage.out
+deploy/ci/harbor/installer/
+deploy/ci/harbor/data/

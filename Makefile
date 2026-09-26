@@ -4,8 +4,15 @@ export
 
 M := github.com/chonlatee11/boat-booking
 COMPOSE := docker compose --env-file .env -f deploy/docker-compose.yml
+COMPOSE_CI := docker compose --env-file .env -f deploy/ci/docker-compose.yml
 
-.PHONY: dev-keys dev-token up down kong-roundtrip test test-integration dev-tools lint hooks proto-gen proto-check
+# Every service directory that has been scaffolded with `make new-service`
+# (has cmd/main.go). services/_template has no cmd/main.go and is excluded
+# until D-03 gives it one.
+SERVICES ?= $(shell for d in services/*/; do n=$$(basename "$$d"); [ -f "$${d}cmd/main.go" ] && echo "$$n"; done)
+TAG ?= $(shell git rev-parse --short HEAD)
+
+.PHONY: dev-keys dev-token up down kong-roundtrip test test-integration dev-tools lint hooks proto-gen proto-check ci-keys ci-up ci-down images
 
 dev-keys:
 	go run $(M)/pkg/auth/cmd/devtoken keys
@@ -66,3 +73,19 @@ lint:
 
 hooks:
 	lefthook install
+
+ci-keys: dev-keys
+	deploy/ci/ci-keys.sh
+
+ci-up: ci-keys
+	$(COMPOSE_CI) up -d --build --wait
+
+ci-down:
+	$(COMPOSE_CI) down
+
+images:
+	@for s in $(SERVICES); do \
+		name=$${s#_}; \
+		echo "building services/$$s -> boatbooking/$$name:$(TAG)"; \
+		docker build --build-arg SERVICE=$$s -t boatbooking/$$name:$(TAG) .; \
+	done
