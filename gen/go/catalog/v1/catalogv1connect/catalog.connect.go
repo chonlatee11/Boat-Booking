@@ -48,6 +48,12 @@ const (
 	// CatalogServiceArchiveOperatorProcedure is the fully-qualified name of the CatalogService's
 	// ArchiveOperator RPC.
 	CatalogServiceArchiveOperatorProcedure = "/boatbooking.catalog.v1.CatalogService/ArchiveOperator"
+	// CatalogServiceUpsertPierProcedure is the fully-qualified name of the CatalogService's UpsertPier
+	// RPC.
+	CatalogServiceUpsertPierProcedure = "/boatbooking.catalog.v1.CatalogService/UpsertPier"
+	// CatalogServiceListPiersProcedure is the fully-qualified name of the CatalogService's ListPiers
+	// RPC.
+	CatalogServiceListPiersProcedure = "/boatbooking.catalog.v1.CatalogService/ListPiers"
 )
 
 // CatalogServiceClient is a client for the boatbooking.catalog.v1.CatalogService service.
@@ -58,6 +64,11 @@ type CatalogServiceClient interface {
 	UpsertOperator(context.Context, *connect.Request[v1.UpsertOperatorRequest]) (*connect.Response[v1.UpsertOperatorResponse], error)
 	ListOperators(context.Context, *connect.Request[v1.ListOperatorsRequest]) (*connect.Response[v1.ListOperatorsResponse], error)
 	ArchiveOperator(context.Context, *connect.Request[v1.ArchiveOperatorRequest]) (*connect.Response[v1.ArchiveOperatorResponse], error)
+	// Pier creation is super_admin only; pier_admin/staff are scoped to
+	// (operator_id, pier_ids) (D-07, D-08, AUTH-05). ListPiers with no claims
+	// returns the public projection (CAT-06).
+	UpsertPier(context.Context, *connect.Request[v1.UpsertPierRequest]) (*connect.Response[v1.UpsertPierResponse], error)
+	ListPiers(context.Context, *connect.Request[v1.ListPiersRequest]) (*connect.Response[v1.ListPiersResponse], error)
 }
 
 // NewCatalogServiceClient constructs a client for the boatbooking.catalog.v1.CatalogService
@@ -101,6 +112,18 @@ func NewCatalogServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(catalogServiceMethods.ByName("ArchiveOperator")),
 			connect.WithClientOptions(opts...),
 		),
+		upsertPier: connect.NewClient[v1.UpsertPierRequest, v1.UpsertPierResponse](
+			httpClient,
+			baseURL+CatalogServiceUpsertPierProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("UpsertPier")),
+			connect.WithClientOptions(opts...),
+		),
+		listPiers: connect.NewClient[v1.ListPiersRequest, v1.ListPiersResponse](
+			httpClient,
+			baseURL+CatalogServiceListPiersProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("ListPiers")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -111,6 +134,8 @@ type catalogServiceClient struct {
 	upsertOperator  *connect.Client[v1.UpsertOperatorRequest, v1.UpsertOperatorResponse]
 	listOperators   *connect.Client[v1.ListOperatorsRequest, v1.ListOperatorsResponse]
 	archiveOperator *connect.Client[v1.ArchiveOperatorRequest, v1.ArchiveOperatorResponse]
+	upsertPier      *connect.Client[v1.UpsertPierRequest, v1.UpsertPierResponse]
+	listPiers       *connect.Client[v1.ListPiersRequest, v1.ListPiersResponse]
 }
 
 // UpsertBoat calls boatbooking.catalog.v1.CatalogService.UpsertBoat.
@@ -138,6 +163,16 @@ func (c *catalogServiceClient) ArchiveOperator(ctx context.Context, req *connect
 	return c.archiveOperator.CallUnary(ctx, req)
 }
 
+// UpsertPier calls boatbooking.catalog.v1.CatalogService.UpsertPier.
+func (c *catalogServiceClient) UpsertPier(ctx context.Context, req *connect.Request[v1.UpsertPierRequest]) (*connect.Response[v1.UpsertPierResponse], error) {
+	return c.upsertPier.CallUnary(ctx, req)
+}
+
+// ListPiers calls boatbooking.catalog.v1.CatalogService.ListPiers.
+func (c *catalogServiceClient) ListPiers(ctx context.Context, req *connect.Request[v1.ListPiersRequest]) (*connect.Response[v1.ListPiersResponse], error) {
+	return c.listPiers.CallUnary(ctx, req)
+}
+
 // CatalogServiceHandler is an implementation of the boatbooking.catalog.v1.CatalogService service.
 type CatalogServiceHandler interface {
 	UpsertBoat(context.Context, *connect.Request[v1.UpsertBoatRequest]) (*connect.Response[v1.UpsertBoatResponse], error)
@@ -146,6 +181,11 @@ type CatalogServiceHandler interface {
 	UpsertOperator(context.Context, *connect.Request[v1.UpsertOperatorRequest]) (*connect.Response[v1.UpsertOperatorResponse], error)
 	ListOperators(context.Context, *connect.Request[v1.ListOperatorsRequest]) (*connect.Response[v1.ListOperatorsResponse], error)
 	ArchiveOperator(context.Context, *connect.Request[v1.ArchiveOperatorRequest]) (*connect.Response[v1.ArchiveOperatorResponse], error)
+	// Pier creation is super_admin only; pier_admin/staff are scoped to
+	// (operator_id, pier_ids) (D-07, D-08, AUTH-05). ListPiers with no claims
+	// returns the public projection (CAT-06).
+	UpsertPier(context.Context, *connect.Request[v1.UpsertPierRequest]) (*connect.Response[v1.UpsertPierResponse], error)
+	ListPiers(context.Context, *connect.Request[v1.ListPiersRequest]) (*connect.Response[v1.ListPiersResponse], error)
 }
 
 // NewCatalogServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -185,6 +225,18 @@ func NewCatalogServiceHandler(svc CatalogServiceHandler, opts ...connect.Handler
 		connect.WithSchema(catalogServiceMethods.ByName("ArchiveOperator")),
 		connect.WithHandlerOptions(opts...),
 	)
+	catalogServiceUpsertPierHandler := connect.NewUnaryHandler(
+		CatalogServiceUpsertPierProcedure,
+		svc.UpsertPier,
+		connect.WithSchema(catalogServiceMethods.ByName("UpsertPier")),
+		connect.WithHandlerOptions(opts...),
+	)
+	catalogServiceListPiersHandler := connect.NewUnaryHandler(
+		CatalogServiceListPiersProcedure,
+		svc.ListPiers,
+		connect.WithSchema(catalogServiceMethods.ByName("ListPiers")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/boatbooking.catalog.v1.CatalogService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case CatalogServiceUpsertBoatProcedure:
@@ -197,6 +249,10 @@ func NewCatalogServiceHandler(svc CatalogServiceHandler, opts ...connect.Handler
 			catalogServiceListOperatorsHandler.ServeHTTP(w, r)
 		case CatalogServiceArchiveOperatorProcedure:
 			catalogServiceArchiveOperatorHandler.ServeHTTP(w, r)
+		case CatalogServiceUpsertPierProcedure:
+			catalogServiceUpsertPierHandler.ServeHTTP(w, r)
+		case CatalogServiceListPiersProcedure:
+			catalogServiceListPiersHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -224,4 +280,12 @@ func (UnimplementedCatalogServiceHandler) ListOperators(context.Context, *connec
 
 func (UnimplementedCatalogServiceHandler) ArchiveOperator(context.Context, *connect.Request[v1.ArchiveOperatorRequest]) (*connect.Response[v1.ArchiveOperatorResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ArchiveOperator is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) UpsertPier(context.Context, *connect.Request[v1.UpsertPierRequest]) (*connect.Response[v1.UpsertPierResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.UpsertPier is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) ListPiers(context.Context, *connect.Request[v1.ListPiersRequest]) (*connect.Response[v1.ListPiersResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ListPiers is not implemented"))
 }

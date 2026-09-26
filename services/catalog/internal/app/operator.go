@@ -91,6 +91,49 @@ func ListOperators(ctx context.Context, q *postgres.Queries, scope Scope) ([]dom
 	return operators, nil
 }
 
+// ArchiveOperator soft-deletes an operator (super_admin only). Rejected
+// with domain.ErrFailedPrecondition while the operator still owns any
+// non-archived pier — archiving is never a cascade (D-15). Archiving an
+// already-archived operator succeeds as a no-op, keeping Archived=true.
+func ArchiveOperator(ctx context.Context, tx pgx.Tx, scope Scope, id uuid.UUID) (domain.Operator, error) {
+	if !scope.All() {
+		return domain.Operator{}, domain.ErrPermissionDenied
+	}
+
+	q := postgres.New(tx)
+
+	activePiers, err := q.CountActivePiersForOperator(ctx, toPgUUID(id))
+	if err != nil {
+		return domain.Operator{}, fmt.Errorf("app: count active piers: %w", err)
+	}
+	if activePiers > 0 {
+		return domain.Operator{}, fmt.Errorf("%w: operator still has %d active piers", domain.ErrFailedPrecondition, activePiers)
+	}
+
+	row, err := q.ArchiveOperator(ctx, toPgUUID(id))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Operator{}, domain.ErrNotFound
+		}
+		return domain.Operator{}, fmt.Errorf("app: archive operator: %w", err)
+	}
+	stored := operatorFromRow(row)
+
+	env, err := events.New(EventOperatorUpserted, stored.ID.String(), &catalogv1.OperatorUpserted{
+		OperatorId: stored.ID.String(),
+		Name:       stored.Name,
+		Archived:   stored.Archived,
+	})
+	if err != nil {
+		return domain.Operator{}, fmt.Errorf("app: build event: %w", err)
+	}
+	if err := outbox.Insert(ctx, tx, env); err != nil {
+		return domain.Operator{}, fmt.Errorf("app: outbox insert: %w", err)
+	}
+
+	return stored, nil
+}
+
 func operatorFromRow(row postgres.Operator) domain.Operator {
 	return domain.Operator{
 		ID:       fromPgUUID(row.ID),

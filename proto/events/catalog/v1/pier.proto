@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package boatbooking.catalog.events.v1;
+
+option go_package = "github.com/chonlatee11/boat-booking/gen/go/catalog/v1;catalogv1";
+
+// PierUpserted is a past-tense fact: a pier was created, edited, or
+// archived. Deliberately carries no address — a physical address is
+// PII-shaped and the proto/pii-check.sh gate rejects it (Pitfall 5, D-45).
+// The public catalog API (CAT-06) serves address via the sync ListPiers
+// call, not this event.
+message PierUpserted {
+  string pier_id = 1;
+  string operator_id = 2;
+  string name_th = 3;
+  string name_en = 4;
+  double lat = 5;
+  double lng = 6;
+  bool archived = 7;
+}

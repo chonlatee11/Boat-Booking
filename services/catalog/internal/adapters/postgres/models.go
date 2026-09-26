@@ -38,6 +38,21 @@ type Outbox struct {
 	PublishedAt pgtype.Timestamptz
 }
 
+type Pier struct {
+	ID         pgtype.UUID
+	OperatorID pgtype.UUID
+	NameTh     string
+	NameEn     string
+	Lat        float64
+	Lng        float64
+	Address    string
+	OpensAt    pgtype.Time
+	ClosesAt   pgtype.Time
+	ArchivedAt pgtype.Timestamptz
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+}
+
 type ProcessedEvent struct {
 	EventID     pgtype.UUID
 	EventType   string

@@ -32,6 +32,17 @@ func (q *Queries) ArchiveOperator(ctx context.Context, id pgtype.UUID) (Operator
 	return i, err
 }
 
+const countActivePiersForOperator = `-- name: CountActivePiersForOperator :one
+select count(*) from piers where operator_id = $1 and archived_at is null
+`
+
+func (q *Queries) CountActivePiersForOperator(ctx context.Context, operatorID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countActivePiersForOperator, operatorID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getOperator = `-- name: GetOperator :one
 select id, name, archived_at, created_at, updated_at from operators where id = $1
 `

@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file services/catalog/v1/catalog.proto.
  */
 export const file_services_catalog_v1_catalog: GenFile = /*@__PURE__*/
-  fileDesc("CiFzZXJ2aWNlcy9jYXRhbG9nL3YxL2NhdGFsb2cucHJvdG8SFmJvYXRib29raW5nLmNhdGFsb2cudjEijwEKBEJvYXQSDwoHYm9hdF9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYBCABKAUSOQoGc3RhdHVzGAUgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyKHAQoRVXBzZXJ0Qm9hdFJlcXVlc3QSDwoHYm9hdF9pZBgBIAEoCRIMCgRuYW1lGAIgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYAyABKAUSOQoGc3RhdHVzGAQgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyJAChJVcHNlcnRCb2F0UmVzcG9uc2USKgoEYm9hdBgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuQm9hdCISChBMaXN0Qm9hdHNSZXF1ZXN0IkAKEUxpc3RCb2F0c1Jlc3BvbnNlEisKBWJvYXRzGAEgAygLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0Ij8KCE9wZXJhdG9yEhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkSEAoIYXJjaGl2ZWQYAyABKAgiOgoVVXBzZXJ0T3BlcmF0b3JSZXF1ZXN0EhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkiTAoWVXBzZXJ0T3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiFgoUTGlzdE9wZXJhdG9yc1JlcXVlc3QiTAoVTGlzdE9wZXJhdG9yc1Jlc3BvbnNlEjMKCW9wZXJhdG9ycxgBIAMoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiLQoWQXJjaGl2ZU9wZXJhdG9yUmVxdWVzdBITCgtvcGVyYXRvcl9pZBgBIAEoCSJNChdBcmNoaXZlT3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IyqgQKDkNhdGFsb2dTZXJ2aWNlEmMKClVwc2VydEJvYXQSKS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydEJvYXRSZXF1ZXN0GiouYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRCb2F0UmVzcG9uc2USYAoJTGlzdEJvYXRzEiguYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Qm9hdHNSZXF1ZXN0GikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Qm9hdHNSZXNwb25zZRJvCg5VcHNlcnRPcGVyYXRvchItLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0T3BlcmF0b3JSZXF1ZXN0Gi4uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRPcGVyYXRvclJlc3BvbnNlEmwKDUxpc3RPcGVyYXRvcnMSLC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RPcGVyYXRvcnNSZXF1ZXN0Gi0uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0T3BlcmF0b3JzUmVzcG9uc2UScgoPQXJjaGl2ZU9wZXJhdG9yEi4uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BcmNoaXZlT3BlcmF0b3JSZXF1ZXN0Gi8uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BcmNoaXZlT3BlcmF0b3JSZXNwb25zZUJBWj9naXRodWIuY29tL2Nob25sYXRlZTExL2JvYXQtYm9va2luZy9nZW4vZ28vY2F0YWxvZy92MTtjYXRhbG9ndjFiBnByb3RvMw", [file_events_catalog_v1_boat]);
+  fileDesc("CiFzZXJ2aWNlcy9jYXRhbG9nL3YxL2NhdGFsb2cucHJvdG8SFmJvYXRib29raW5nLmNhdGFsb2cudjEijwEKBEJvYXQSDwoHYm9hdF9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYBCABKAUSOQoGc3RhdHVzGAUgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyKHAQoRVXBzZXJ0Qm9hdFJlcXVlc3QSDwoHYm9hdF9pZBgBIAEoCRIMCgRuYW1lGAIgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYAyABKAUSOQoGc3RhdHVzGAQgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyJAChJVcHNlcnRCb2F0UmVzcG9uc2USKgoEYm9hdBgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuQm9hdCISChBMaXN0Qm9hdHNSZXF1ZXN0IkAKEUxpc3RCb2F0c1Jlc3BvbnNlEisKBWJvYXRzGAEgAygLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0Ij8KCE9wZXJhdG9yEhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkSEAoIYXJjaGl2ZWQYAyABKAgiOgoVVXBzZXJ0T3BlcmF0b3JSZXF1ZXN0EhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkiTAoWVXBzZXJ0T3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiFgoUTGlzdE9wZXJhdG9yc1JlcXVlc3QiTAoVTGlzdE9wZXJhdG9yc1Jlc3BvbnNlEjMKCW9wZXJhdG9ycxgBIAMoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiLQoWQXJjaGl2ZU9wZXJhdG9yUmVxdWVzdBITCgtvcGVyYXRvcl9pZBgBIAEoCSJNChdBcmNoaXZlT3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IisAEKBFBpZXISDwoHcGllcl9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIPCgduYW1lX3RoGAMgASgJEg8KB25hbWVfZW4YBCABKAkSCwoDbGF0GAUgASgBEgsKA2xuZxgGIAEoARIPCgdhZGRyZXNzGAcgASgJEhAKCG9wZW5zX2F0GAggASgJEhEKCWNsb3Nlc19hdBgJIAEoCRIQCghhcmNoaXZlZBgKIAEoCCKrAQoRVXBzZXJ0UGllclJlcXVlc3QSDwoHcGllcl9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIPCgduYW1lX3RoGAMgASgJEg8KB25hbWVfZW4YBCABKAkSCwoDbGF0GAUgASgBEgsKA2xuZxgGIAEoARIPCgdhZGRyZXNzGAcgASgJEhAKCG9wZW5zX2F0GAggASgJEhEKCWNsb3Nlc19hdBgJIAEoCSJAChJVcHNlcnRQaWVyUmVzcG9uc2USKgoEcGllchgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuUGllciInChBMaXN0UGllcnNSZXF1ZXN0EhMKC29wZXJhdG9yX2lkGAEgASgJIkAKEUxpc3RQaWVyc1Jlc3BvbnNlEisKBXBpZXJzGAEgAygLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5QaWVyMvEFCg5DYXRhbG9nU2VydmljZRJjCgpVcHNlcnRCb2F0EikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRCb2F0UmVxdWVzdBoqLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0Qm9hdFJlc3BvbnNlEmAKCUxpc3RCb2F0cxIoLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdEJvYXRzUmVxdWVzdBopLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdEJvYXRzUmVzcG9uc2USbwoOVXBzZXJ0T3BlcmF0b3ISLS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydE9wZXJhdG9yUmVxdWVzdBouLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0T3BlcmF0b3JSZXNwb25zZRJsCg1MaXN0T3BlcmF0b3JzEiwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0T3BlcmF0b3JzUmVxdWVzdBotLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdE9wZXJhdG9yc1Jlc3BvbnNlEnIKD0FyY2hpdmVPcGVyYXRvchIuLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZU9wZXJhdG9yUmVxdWVzdBovLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZU9wZXJhdG9yUmVzcG9uc2USYwoKVXBzZXJ0UGllchIpLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0UGllclJlcXVlc3QaKi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydFBpZXJSZXNwb25zZRJgCglMaXN0UGllcnMSKC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RQaWVyc1JlcXVlc3QaKS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RQaWVyc1Jlc3BvbnNlQkFaP2dpdGh1Yi5jb20vY2hvbmxhdGVlMTEvYm9hdC1ib29raW5nL2dlbi9nby9jYXRhbG9nL3YxO2NhdGFsb2d2MWIGcHJvdG8z", [file_events_catalog_v1_boat]);
 
 /**
  * @generated from message boatbooking.catalog.v1.Boat
@@ -437,6 +437,327 @@ export const ArchiveOperatorResponseSchema: GenMessage<ArchiveOperatorResponse, 
   messageDesc(file_services_catalog_v1_catalog, 11);
 
 /**
+ * @generated from message boatbooking.catalog.v1.Pier
+ */
+export type Pier = Message<"boatbooking.catalog.v1.Pier"> & {
+  /**
+   * @generated from field: string pier_id = 1;
+   */
+  pierId: string;
+
+  /**
+   * @generated from field: string operator_id = 2;
+   */
+  operatorId: string;
+
+  /**
+   * @generated from field: string name_th = 3;
+   */
+  nameTh: string;
+
+  /**
+   * @generated from field: string name_en = 4;
+   */
+  nameEn: string;
+
+  /**
+   * @generated from field: double lat = 5;
+   */
+  lat: number;
+
+  /**
+   * @generated from field: double lng = 6;
+   */
+  lng: number;
+
+  /**
+   * @generated from field: string address = 7;
+   */
+  address: string;
+
+  /**
+   * @generated from field: string opens_at = 8;
+   */
+  opensAt: string;
+
+  /**
+   * @generated from field: string closes_at = 9;
+   */
+  closesAt: string;
+
+  /**
+   * @generated from field: bool archived = 10;
+   */
+  archived: boolean;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.Pier
+ */
+export type PierJson = {
+  /**
+   * @generated from field: string pier_id = 1;
+   */
+  pierId?: string;
+
+  /**
+   * @generated from field: string operator_id = 2;
+   */
+  operatorId?: string;
+
+  /**
+   * @generated from field: string name_th = 3;
+   */
+  nameTh?: string;
+
+  /**
+   * @generated from field: string name_en = 4;
+   */
+  nameEn?: string;
+
+  /**
+   * @generated from field: double lat = 5;
+   */
+  lat?: number | "NaN" | "Infinity" | "-Infinity";
+
+  /**
+   * @generated from field: double lng = 6;
+   */
+  lng?: number | "NaN" | "Infinity" | "-Infinity";
+
+  /**
+   * @generated from field: string address = 7;
+   */
+  address?: string;
+
+  /**
+   * @generated from field: string opens_at = 8;
+   */
+  opensAt?: string;
+
+  /**
+   * @generated from field: string closes_at = 9;
+   */
+  closesAt?: string;
+
+  /**
+   * @generated from field: bool archived = 10;
+   */
+  archived?: boolean;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.Pier.
+ * Use `create(PierSchema)` to create a new message.
+ */
+export const PierSchema: GenMessage<Pier, {jsonType: PierJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 12);
+
+/**
+ * An empty pier_id means create (super_admin only, operator_id taken from
+ * the request); a non-empty pier_id means update (pier_admin/staff scoped
+ * to their own operator/pier_ids) and the stored operator_id is kept
+ * unchanged regardless of what the request sends (D-30).
+ *
+ * @generated from message boatbooking.catalog.v1.UpsertPierRequest
+ */
+export type UpsertPierRequest = Message<"boatbooking.catalog.v1.UpsertPierRequest"> & {
+  /**
+   * @generated from field: string pier_id = 1;
+   */
+  pierId: string;
+
+  /**
+   * @generated from field: string operator_id = 2;
+   */
+  operatorId: string;
+
+  /**
+   * @generated from field: string name_th = 3;
+   */
+  nameTh: string;
+
+  /**
+   * @generated from field: string name_en = 4;
+   */
+  nameEn: string;
+
+  /**
+   * @generated from field: double lat = 5;
+   */
+  lat: number;
+
+  /**
+   * @generated from field: double lng = 6;
+   */
+  lng: number;
+
+  /**
+   * @generated from field: string address = 7;
+   */
+  address: string;
+
+  /**
+   * @generated from field: string opens_at = 8;
+   */
+  opensAt: string;
+
+  /**
+   * @generated from field: string closes_at = 9;
+   */
+  closesAt: string;
+};
+
+/**
+ * An empty pier_id means create (super_admin only, operator_id taken from
+ * the request); a non-empty pier_id means update (pier_admin/staff scoped
+ * to their own operator/pier_ids) and the stored operator_id is kept
+ * unchanged regardless of what the request sends (D-30).
+ *
+ * @generated from message boatbooking.catalog.v1.UpsertPierRequest
+ */
+export type UpsertPierRequestJson = {
+  /**
+   * @generated from field: string pier_id = 1;
+   */
+  pierId?: string;
+
+  /**
+   * @generated from field: string operator_id = 2;
+   */
+  operatorId?: string;
+
+  /**
+   * @generated from field: string name_th = 3;
+   */
+  nameTh?: string;
+
+  /**
+   * @generated from field: string name_en = 4;
+   */
+  nameEn?: string;
+
+  /**
+   * @generated from field: double lat = 5;
+   */
+  lat?: number | "NaN" | "Infinity" | "-Infinity";
+
+  /**
+   * @generated from field: double lng = 6;
+   */
+  lng?: number | "NaN" | "Infinity" | "-Infinity";
+
+  /**
+   * @generated from field: string address = 7;
+   */
+  address?: string;
+
+  /**
+   * @generated from field: string opens_at = 8;
+   */
+  opensAt?: string;
+
+  /**
+   * @generated from field: string closes_at = 9;
+   */
+  closesAt?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.UpsertPierRequest.
+ * Use `create(UpsertPierRequestSchema)` to create a new message.
+ */
+export const UpsertPierRequestSchema: GenMessage<UpsertPierRequest, {jsonType: UpsertPierRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 13);
+
+/**
+ * @generated from message boatbooking.catalog.v1.UpsertPierResponse
+ */
+export type UpsertPierResponse = Message<"boatbooking.catalog.v1.UpsertPierResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Pier pier = 1;
+   */
+  pier?: Pier | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.UpsertPierResponse
+ */
+export type UpsertPierResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Pier pier = 1;
+   */
+  pier?: PierJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.UpsertPierResponse.
+ * Use `create(UpsertPierResponseSchema)` to create a new message.
+ */
+export const UpsertPierResponseSchema: GenMessage<UpsertPierResponse, {jsonType: UpsertPierResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 14);
+
+/**
+ * operator_id is honoured only for super_admin callers (CAT-06/AUTH-05); it
+ * is ignored for scoped roles and for the public (no-claims) call.
+ *
+ * @generated from message boatbooking.catalog.v1.ListPiersRequest
+ */
+export type ListPiersRequest = Message<"boatbooking.catalog.v1.ListPiersRequest"> & {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId: string;
+};
+
+/**
+ * operator_id is honoured only for super_admin callers (CAT-06/AUTH-05); it
+ * is ignored for scoped roles and for the public (no-claims) call.
+ *
+ * @generated from message boatbooking.catalog.v1.ListPiersRequest
+ */
+export type ListPiersRequestJson = {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListPiersRequest.
+ * Use `create(ListPiersRequestSchema)` to create a new message.
+ */
+export const ListPiersRequestSchema: GenMessage<ListPiersRequest, {jsonType: ListPiersRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 15);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListPiersResponse
+ */
+export type ListPiersResponse = Message<"boatbooking.catalog.v1.ListPiersResponse"> & {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.Pier piers = 1;
+   */
+  piers: Pier[];
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListPiersResponse
+ */
+export type ListPiersResponseJson = {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.Pier piers = 1;
+   */
+  piers?: PierJson[];
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListPiersResponse.
+ * Use `create(ListPiersResponseSchema)` to create a new message.
+ */
+export const ListPiersResponseSchema: GenMessage<ListPiersResponse, {jsonType: ListPiersResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 16);
+
+/**
  * CatalogService is the sync API for catalog-owned boats. Reused by the
  * gateway BFF and by other services that need boat data without waiting on
  * the async BoatUpserted projection.
@@ -485,6 +806,26 @@ export const CatalogService: GenService<{
     methodKind: "unary";
     input: typeof ArchiveOperatorRequestSchema;
     output: typeof ArchiveOperatorResponseSchema;
+  },
+  /**
+   * Pier creation is super_admin only; pier_admin/staff are scoped to
+   * (operator_id, pier_ids) (D-07, D-08, AUTH-05). ListPiers with no claims
+   * returns the public projection (CAT-06).
+   *
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.UpsertPier
+   */
+  upsertPier: {
+    methodKind: "unary";
+    input: typeof UpsertPierRequestSchema;
+    output: typeof UpsertPierResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ListPiers
+   */
+  listPiers: {
+    methodKind: "unary";
+    input: typeof ListPiersRequestSchema;
+    output: typeof ListPiersResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_services_catalog_v1_catalog, 0);

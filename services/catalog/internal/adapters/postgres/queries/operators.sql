@@ -21,3 +21,6 @@ set archived_at = coalesce(archived_at, now()),
     updated_at = now()
 where id = $1
 returning *;
+
+-- name: CountActivePiersForOperator :one
+select count(*) from piers where operator_id = $1 and archived_at is null;

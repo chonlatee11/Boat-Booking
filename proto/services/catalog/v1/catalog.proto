@@ -17,6 +17,12 @@ service CatalogService {
   rpc UpsertOperator(UpsertOperatorRequest) returns (UpsertOperatorResponse);
   rpc ListOperators(ListOperatorsRequest) returns (ListOperatorsResponse);
   rpc ArchiveOperator(ArchiveOperatorRequest) returns (ArchiveOperatorResponse);
+
+  // Pier creation is super_admin only; pier_admin/staff are scoped to
+  // (operator_id, pier_ids) (D-07, D-08, AUTH-05). ListPiers with no claims
+  // returns the public projection (CAT-06).
+  rpc UpsertPier(UpsertPierRequest) returns (UpsertPierResponse);
+  rpc ListPiers(ListPiersRequest) returns (ListPiersResponse);
 }
 
 message Boat {
@@ -76,4 +82,47 @@ message ArchiveOperatorRequest {
 
 message ArchiveOperatorResponse {
   Operator operator = 1;
+}
+
+message Pier {
+  string pier_id = 1;
+  string operator_id = 2;
+  string name_th = 3;
+  string name_en = 4;
+  double lat = 5;
+  double lng = 6;
+  string address = 7;
+  string opens_at = 8;
+  string closes_at = 9;
+  bool archived = 10;
+}
+
+// An empty pier_id means create (super_admin only, operator_id taken from
+// the request); a non-empty pier_id means update (pier_admin/staff scoped
+// to their own operator/pier_ids) and the stored operator_id is kept
+// unchanged regardless of what the request sends (D-30).
+message UpsertPierRequest {
+  string pier_id = 1;
+  string operator_id = 2;
+  string name_th = 3;
+  string name_en = 4;
+  double lat = 5;
+  double lng = 6;
+  string address = 7;
+  string opens_at = 8;
+  string closes_at = 9;
+}
+
+message UpsertPierResponse {
+  Pier pier = 1;
+}
+
+// operator_id is honoured only for super_admin callers (CAT-06/AUTH-05); it
+// is ignored for scoped roles and for the public (no-claims) call.
+message ListPiersRequest {
+  string operator_id = 1;
+}
+
+message ListPiersResponse {
+  repeated Pier piers = 1;
 }
