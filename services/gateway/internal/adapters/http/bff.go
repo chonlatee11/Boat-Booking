@@ -61,5 +61,17 @@ func writeJSON(w http.ResponseWriter, status int, body map[string]string) {
 	_ = json.NewEncoder(w).Encode(body)
 }
 
-// ForwardClaims is added in Task 2, once pkg/httpx exposes the trusted
-// claim header constants (D-30).
+// ForwardClaims sets the trusted claim headers on an outbound request,
+// deleting any inbound values first so a caller can never spoof them
+// (Anti-Pattern 2, D-30).
+func ForwardClaims(h http.Header, c auth.Claims, internalToken string) {
+	h.Del(httpx.HeaderUserID)
+	h.Del(httpx.HeaderOperatorID)
+	h.Del(httpx.HeaderRole)
+	h.Del(httpx.HeaderInternalToken)
+
+	h.Set(httpx.HeaderUserID, c.UserID)
+	h.Set(httpx.HeaderOperatorID, c.OperatorID)
+	h.Set(httpx.HeaderRole, c.Role)
+	h.Set(httpx.HeaderInternalToken, internalToken)
+}
