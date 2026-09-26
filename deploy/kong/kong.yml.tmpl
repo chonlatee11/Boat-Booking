@@ -1,0 +1,41 @@
+_format_version: "3.0"
+
+consumers:
+  - username: boatbooking-dev
+    jwt_secrets:
+      - key: {{.Issuer}}
+        algorithm: RS256
+        secret: unused-for-rs256 # required by DB-less validation, never used for RS256
+        rsa_public_key: |
+{{.PublicKeyPEM}}
+
+services:
+  - name: gateway
+    url: http://gateway:8080
+    routes:
+      - name: api-public
+        paths: ["/api/v1/public"]
+        strip_path: false
+      - name: api
+        paths: ["/api"]
+        strip_path: false
+        plugins:
+          - name: jwt
+            config:
+              cookie_names: [access_token]
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              run_on_preflight: false
+
+plugins:
+  - name: cors
+    config:
+      origins: ["http://localhost:3001"]
+      credentials: true
+      methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+      headers: [Content-Type, Authorization]
+      max_age: 600
+  - name: rate-limiting
+    config:
+      minute: 120
+      policy: local

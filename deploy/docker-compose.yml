@@ -1,0 +1,40 @@
+name: boatbooking
+
+services:
+  gateway:
+    profiles: [app]
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        SERVICE: gateway
+    environment:
+      JWT_PUBLIC_KEY_B64: ${JWT_PUBLIC_KEY_B64}
+      JWT_ISSUER: ${JWT_ISSUER}
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN}
+      HTTP_ADDR: ":8080"
+    healthcheck:
+      test: ["CMD", "/service", "-healthcheck"]
+      interval: 5s
+      retries: 12
+    stop_grace_period: 20s
+
+  kong:
+    profiles: [app]
+    image: kong:3.9.1
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_ADMIN_LISTEN: "off"
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+    volumes:
+      - ./kong/kong.yml:/kong/kong.yml:ro
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+    depends_on:
+      gateway:
+        condition: service_healthy
