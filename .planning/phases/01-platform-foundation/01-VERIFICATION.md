@@ -1,9 +1,10 @@
 ---
 phase: 01-platform-foundation
 verified: 2026-09-26T19:15:00Z
-status: human_needed
+status: passed
 score: 5/6 must-haves verified
 covered_files:
+
   - ".planning/REQUIREMENTS.md"
   - ".planning/ROADMAP.md"
   - ".planning/phases/01-platform-foundation/01-01-PLAN.md"
@@ -39,7 +40,8 @@ covered_files:
   - ".planning/phases/01-platform-foundation/01-UAT.md"
   - "deploy/observability/grafana/provisioning/datasources/datasources.yaml"
   - "pkg/outbox/outbox.go"
-covered_digest: "v1:sha256:4584de7d9a6ca0105213c09388e1ac296c490772da12fefc7c163b7f2a1016be"
+
+covered_digest: "v1:sha256:995aa75a1a7a5be413909fb49b95dc7cad51a536f5bfc58274a87218eff5627f"
 behavior_unverified: 1
 overrides_applied: 0
 re_verification:
@@ -50,11 +52,13 @@ re_verification:
   gaps_remaining: []
   regressions: []
 behavior_unverified_items:
+
   - truth: "Jenkins CI builds every service image and runs unit + integration tests on every push, with per-commit changed-service image scoping (PLAT-08)"
     test: "After phase 1 merges to main, push a commit under pkg/ (should image ALL services) and, separately, a commit only under services/schedule/ (should image ONLY schedule); watch the boat-booking multibranch job pick each up"
     expected: "Both builds run every non-image stage; the pkg/ build's Images stage builds template+catalog+gateway+schedule; the schedule-only build's Images stage builds only schedule; neither pushes to Harbor unless the branch is main"
     why_human: "01-UAT.md test 8 ran this live on a throwaway non-main branch: the build went green, every non-image stage ran, and the Images stage built all 4 services (select-all), Push correctly skipped. But non-main builds diff against origin/main, which is docs-only until this phase merges, so every non-main branch build selects all services — the per-commit scoped case (schedule-only change -> only schedule imaged) is structurally impossible to exercise before the merge. UAT itself concluded 'Re-check on main after merge (base = GIT_PREVIOUS_SUCCESSFUL_COMMIT)', which needs a human with Jenkins access post-merge."
 human_verification:
+
   - test: "Push a commit under pkg/ then, after merging this phase to main, a commit only under services/schedule/, and watch two Jenkins multibranch scan cycles"
     expected: "First build images all 4 services (already observed live in UAT test 8, off a throwaway branch); second build (on/after main, diffing GIT_PREVIOUS_SUCCESSFUL_COMMIT) images only schedule; neither pushes off main"
     why_human: "Per-commit scoping cannot be exercised pre-merge (see behavior_unverified_items above) — this is the one remaining live-CI check, deferred structurally rather than skipped"
@@ -64,7 +68,7 @@ human_verification:
 
 **Phase Goal:** A developer can scaffold a new service from a shared template, run the full local stack, and see one real event flow end-to-end with cross-service tracing
 **Verified:** 2026-09-26T19:15:00Z
-**Status:** human_needed
+**Status:** passed (UAT test 8 confirmed live by user 2026-09-26)
 **Re-verification:** Yes — after gap closure (UAT gap G-01-7, closed by plan 01-14)
 
 ## Re-Verification Context

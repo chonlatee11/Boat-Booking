@@ -1,0 +1,38 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": null,
+  "phases": [
+    {
+      "number": "1",
+      "name": "Platform Foundation",
+      "status": "in_progress"
+    },
+    {
+      "number": "2",
+      "name": "Identity + Catalog",
+      "status": "pending"
+    },
+    {
+      "number": "3",
+      "name": "Schedule",
+      "status": "pending"
+    },
+    {
+      "number": "4",
+      "name": "Booking Core",
+      "status": "pending"
+    },
+    {
+      "number": "5",
+      "name": "Payment + Ticket + Notification",
+      "status": "pending"
+    }
+  ],
+  "next": {
+    "command": "/gsd:progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 01 of 5 · 0% · executing"
+  },
+  "updated_at": "2026-09-26T11:22:02.945Z"
+}

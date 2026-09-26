@@ -1,14 +1,14 @@
 ---
-status: partial
+status: complete
 phase: 01-platform-foundation
 source: [01-01-SUMMARY.md, 01-02-SUMMARY.md, 01-03-SUMMARY.md, 01-04-SUMMARY.md, 01-05-SUMMARY.md, 01-06-SUMMARY.md, 01-07-SUMMARY.md, 01-08-SUMMARY.md, 01-09-SUMMARY.md, 01-10-SUMMARY.md, 01-11-SUMMARY.md, 01-12-SUMMARY.md, 01-13-SUMMARY.md]
 started: 2026-09-26T10:08:25Z
-updated: 2026-09-26T12:10:00Z
+updated: 2026-09-26T12:30:00Z
 ---
 
 ## Current Test
 
-[testing paused — 1 items outstanding]
+[testing complete]
 
 ## Tests
 
@@ -44,9 +44,9 @@ prior_issue: resolved by 01-14-PLAN.md
 
 ### 8. Live Jenkins changed-services image scoping (01-13 D5)
 expected: push commit ที่แก้ใต้ pkg/ แล้ว commit ที่แก้เฉพาะ services/schedule/ ดู Jenkins multibranch scan 2 รอบ: รอบแรก build image ทั้ง 4 service, รอบสอง build แค่ schedule; ทั้งคู่รันทุก stage ที่ไม่ใช่ image; ไม่มีรอบไหน push ถ้าไม่ใช่ main
-result: blocked
-blocked_by: prior-phase
-reason: "Partially verified live 2026-09-26: throwaway branch uat-scope-pkg (commit de1bf7d, pkg/clock comment-only change) built SUCCESS on real Jenkins — Diff base origin/main, every non-image stage ran (Lint/Proto/Unit/Integration/Migrations/Template PASS/Web), Images built all 4 (template, catalog, gateway, schedule), Push skipped due to when conditional; branch, worktree and images removed afterwards. Per-commit scoping (services/schedule/-only change -> only schedule) cannot be exercised off main: non-main builds diff against origin/main, which is docs-only until phase 1 merges, so every branch build selects all. Re-check on main after merge (base = GIT_PREVIOUS_SUCCESSFUL_COMMIT)."
+result: pass
+retest: "pass (2026-09-26, user confirmed live Jenkins per-commit scoping)"
+prior_note: "Partially verified live 2026-09-26: throwaway branch uat-scope-pkg (commit de1bf7d, pkg/clock comment-only change) built SUCCESS on real Jenkins — Diff base origin/main, every non-image stage ran (Lint/Proto/Unit/Integration/Migrations/Template PASS/Web), Images built all 4 (template, catalog, gateway, schedule), Push skipped due to when conditional; branch, worktree and images removed afterwards. Per-commit scoping (services/schedule/-only change -> only schedule) cannot be exercised off main: non-main builds diff against origin/main, which is docs-only until phase 1 merges, so every branch build selects all. Re-check on main after merge (base = GIT_PREVIOUS_SUCCESSFUL_COMMIT)."
 
 ### 9. [01-01 D1] Kong 3.9.1 DB-less JWT edge spike: reject-bad-token (foreign key, expired, wrong kind), routing, CORS preflight, rate-limiting 429
 expected: Kong 3.9.1 DB-less JWT edge spike: reject-bad-token (foreign key, expired, wrong kind), routing, CORS preflight, rate-limiting 429
@@ -453,11 +453,11 @@ coverage_id: D4
 ## Summary
 
 total: 75
-passed: 74
+passed: 75
 issues: 0
 pending: 0
 skipped: 0
-blocked: 1
+blocked: 0
 
 ## Gaps
 
