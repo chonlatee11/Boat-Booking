@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Platform Foundation
 status: executing
-stopped_at: Completed 01-11-PLAN.md
-last_updated: "2026-09-26T06:32:17.751Z"
+stopped_at: Completed 01-12-PLAN.md
+last_updated: "2026-09-26T07:07:23.666Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 01 execution started
-state_head: 3f59d7b3427f601cc907eafc448bfb12daa7b476
+state_head: c5e83a55f61daac9593956d65beba0c6333d3135
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 13
-  completed_plans: 11
+  completed_plans: 12
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 01 (Platform Foundation) — EXECUTING
-Plan: 12 of 13
+Plan: 13 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 01 execution started
 
@@ -69,6 +69,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P09 | 45min | 2 tasks | 28 files |
 | Phase 01 P10 | 27min | 2 tasks | 28 files |
 | Phase 01 P11 | ~30min | 2 tasks | 25 files |
+| Phase 01 P12 | 32min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,9 @@ Recent decisions affecting current work:
 - [Phase 01]: [Phase 01] otelconnect pinned to v0.10.0; GOWORK=off go mod tidy re-run for pkg/services/_template/services/catalog/services/gateway after pkg gained an otelconnect dependency
 - [Phase 01]: [Phase 01] Kafka-consume proof for TestUpsertBoatPublishesBoatUpserted reuses pkg/kafka.Consumer (fresh consumer group reads from earliest offset by default) instead of new raw-consumer test infra
 - [Phase 01]: gateway re-scaffolded onto the exact template run(ctx) shape (no DB special-casing needed) with routes mounted directly, not behind httpx.RequireInternal — gateway is the origin of the internal-token trust boundary, not a consumer of it (D-29, D-30)
+- [Phase 01]: goose pinned to v3.27.3, not v3.28.0 (go1.26.0 minimum breaks the repo's go1.25.x pin)
+- [Phase 01]: docker compose up --wait replaced with a Makefile wait_ready loop (--wait cannot express a by-design exited-0 one-shot container as success)
+- [Phase 01]: pkg/kafka.Consumer log calls switched to ctx-aware slog *Context methods so trace_id reaches Loki (PLAT-06 proof requirement)
 
 ### Pending Todos
 
@@ -116,6 +120,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T06:32:17.701Z
-Stopped at: Completed 01-11-PLAN.md
+Last session: 2026-09-26T07:07:23.613Z
+Stopped at: Completed 01-12-PLAN.md
 Resume file: None
