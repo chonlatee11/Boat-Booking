@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Boat-Booking",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

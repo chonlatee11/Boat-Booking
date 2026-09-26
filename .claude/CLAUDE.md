@@ -201,6 +201,11 @@ Seed document: `PROJECT.md` ที่ root ของ repo (v2: Go microservices 
 
 <!-- GSD:stack-end -->
 
+## User Preferences
+
+- **ภาษา**: ตอบคำถามและถามคำถามผู้ใช้เป็นภาษาไทยเสมอ (technical terms, code, file paths, commit messages, subagent prompts คงเป็นภาษาอังกฤษ)
+- **การเขียนโค้ด**: ใช้ skill `ponytail` (full) ทุกครั้งที่เขียน/แก้/รีวิวโค้ด — เลือกวิธีที่สั้นและง่ายที่สุดที่ใช้งานได้จริง, YAGNI, stdlib/native ก่อน dependency ใหม่, ห้ามเพิ่ม abstraction ที่ไม่ได้ขอ
+
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
 
 ## Conventions
