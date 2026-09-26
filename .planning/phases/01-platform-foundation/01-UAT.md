@@ -3,7 +3,7 @@ status: partial
 phase: 01-platform-foundation
 source: [01-01-SUMMARY.md, 01-02-SUMMARY.md, 01-03-SUMMARY.md, 01-04-SUMMARY.md, 01-05-SUMMARY.md, 01-06-SUMMARY.md, 01-07-SUMMARY.md, 01-08-SUMMARY.md, 01-09-SUMMARY.md, 01-10-SUMMARY.md, 01-11-SUMMARY.md, 01-12-SUMMARY.md, 01-13-SUMMARY.md]
 started: 2026-09-26T10:08:25Z
-updated: 2026-09-26T10:59:43Z
+updated: 2026-09-26T12:10:00Z
 ---
 
 ## Current Test
@@ -38,9 +38,9 @@ result: pass
 
 ### 7. Grafana trace continuity across Kafka hop + platform dashboard (01-12 D9)
 expected: หลัง `make proof` เปิด http://localhost:3000 -> Explore -> Tempo ค้น { span.aggregate_id = "<boat id จาก make proof>" }: trace เดียวมี gateway HTTP -> catalog connect -> Kafka publish -> schedule consume span, trace id เดียวกัน ไม่ขาดตรง Kafka; 'Logs for this span' กระโดดไป Loki ได้; dashboard 'platform' มี panel HTTP rate / consumer lag / processed-events / outbox backlog ที่มีข้อมูลจริง
-result: issue
-reported: "กด Logs for this span กระโดดไป Loki ได้ แต่ไม่มีข้อมูลอะไรเลย แบบนี้ถูกแล้วไหม แต่กดจาก gateway มีข้อมูล dashboard 'platform' กดได้ มีข้อมูล HTTP rate Processed events แต่ consumer lag Outbox backlog Outbox oldest unpublished age ว่างเปล่า"
-severity: minor
+result: pass
+retest: "pass (2026-09-26, after 01-14 fix for G-01-7)"
+prior_issue: resolved by 01-14-PLAN.md
 
 ### 8. Live Jenkins changed-services image scoping (01-13 D5)
 expected: push commit ที่แก้ใต้ pkg/ แล้ว commit ที่แก้เฉพาะ services/schedule/ ดู Jenkins multibranch scan 2 รอบ: รอบแรก build image ทั้ง 4 service, รอบสอง build แค่ schedule; ทั้งคู่รันทุก stage ที่ไม่ใช่ image; ไม่มีรอบไหน push ถ้าไม่ใช่ main
@@ -453,8 +453,8 @@ coverage_id: D4
 ## Summary
 
 total: 75
-passed: 73
-issues: 1
+passed: 74
+issues: 0
 pending: 0
 skipped: 0
 blocked: 1
@@ -463,7 +463,9 @@ blocked: 1
 
 - gap_id: G-01-7
   truth: "หลัง `make proof` เปิด http://localhost:3000 -> Explore -> Tempo ค้น { span.aggregate_id = \"<boat id จาก make proof>\" }: trace เดียวมี gateway HTTP -> catalog connect -> Kafka publish -> schedule consume span, trace id เดียวกัน ไม่ขาดตรง Kafka; 'Logs for this span' กระโดดไป Loki ได้; dashboard 'platform' มี panel HTTP rate / consumer lag / processed-events / outbox backlog ที่มีข้อมูลจริง"
-  status: failed
+  status: resolved
+  resolved_by: 01-14-PLAN.md
+  resolved_at: 2026-09-26
   reason: "User reported: กด Logs for this span กระโดดไป Loki ได้ แต่ไม่มีข้อมูลอะไรเลย แบบนี้ถูกแล้วไหม แต่กดจาก gateway มีข้อมูล dashboard 'platform' กดได้ มีข้อมูล HTTP rate Processed events แต่ consumer lag Outbox backlog Outbox oldest unpublished age ว่างเปล่า"
   severity: minor
   test: 7
