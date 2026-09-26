@@ -78,7 +78,17 @@ ci-keys: dev-keys
 	deploy/ci/ci-keys.sh
 
 ci-up: ci-keys
+	deploy/ci/harbor-prepare.sh
 	$(COMPOSE_CI) up -d --build --wait
+	@HARBOR_ADMIN_PASSWORD=$$(grep -E '^HARBOR_ADMIN_PASSWORD=' .env | tail -1 | cut -d= -f2-); \
+	STATUS=$$(curl -s -o /dev/null -w '%{http_code}' -u "admin:$$HARBOR_ADMIN_PASSWORD" \
+		-X POST http://localhost:8880/api/v2.0/projects \
+		-H 'Content-Type: application/json' \
+		-d '{"project_name":"boatbooking","metadata":{"public":"false"}}'); \
+	case "$$STATUS" in \
+		201|409) ;; \
+		*) echo "harbor project create failed: HTTP $$STATUS" >&2; exit 1 ;; \
+	esac
 
 ci-down:
 	$(COMPOSE_CI) down
@@ -88,4 +98,16 @@ images:
 		name=$${s#_}; \
 		echo "building services/$$s -> boatbooking/$$name:$(TAG)"; \
 		docker build --build-arg SERVICE=$$s -t boatbooking/$$name:$(TAG) .; \
+	done
+
+REGISTRY ?= localhost:8880/boatbooking
+HARBOR_USER ?= admin
+HARBOR_PASSWORD ?= $(HARBOR_ADMIN_PASSWORD)
+
+push:
+	@echo "$(HARBOR_PASSWORD)" | docker login localhost:8880 -u "$(HARBOR_USER)" --password-stdin
+	@for s in $(SERVICES); do \
+		name=$${s#_}; \
+		docker tag boatbooking/$$name:$(TAG) $(REGISTRY)/$$name:$(TAG); \
+		docker push $(REGISTRY)/$$name:$(TAG); \
 	done

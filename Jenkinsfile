@@ -42,5 +42,13 @@ pipeline {
                 sh 'make images TAG=${GIT_COMMIT}'
             }
         }
+        stage('Push') {
+            when { branch 'main' }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'harbor', usernameVariable: 'HARBOR_USER', passwordVariable: 'HARBOR_PASSWORD')]) {
+                    sh 'make push TAG=${GIT_COMMIT}'
+                }
+            }
+        }
     }
 }

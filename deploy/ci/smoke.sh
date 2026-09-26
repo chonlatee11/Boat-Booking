@@ -2,6 +2,10 @@
 # Verifies Jenkins built and tested the current branch's HEAD commit
 # (SUCCESS), triggering a scan/build if needed. Prints "PASS jenkins-build
 # SUCCESS" and exits 0 only on a genuine green build of HEAD.
+#
+# `deploy/ci/smoke.sh --harbor` instead verifies Harbor is reachable and the
+# boatbooking project exists (D-21); set EXPECT_TAG to also require a
+# gateway:<tag> artifact (D-22).
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
@@ -9,6 +13,37 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 # pubkey, contain spaces) so read only the keys we need instead of sourcing
 # the whole file as a shell script.
 env_get() { grep -E "^$1=" .env | tail -1 | cut -d= -f2-; }
+
+if [ "${1:-}" = "--harbor" ]; then
+  HARBOR_URL=http://localhost:8880
+  HARBOR_ADMIN_PASSWORD=$(env_get HARBOR_ADMIN_PASSWORD)
+  : "${HARBOR_ADMIN_PASSWORD:?HARBOR_ADMIN_PASSWORD is empty — run 'make ci-up' first}"
+
+  PING=$(curl -fsS "$HARBOR_URL/api/v2.0/ping" || true)
+  if [ "$PING" != "Pong" ]; then
+    echo "FAIL harbor-ping got: ${PING:-<empty>}"
+    exit 1
+  fi
+
+  PROJECT_CODE=$(curl -s -o /dev/null -w '%{http_code}' -u "admin:$HARBOR_ADMIN_PASSWORD" \
+    "$HARBOR_URL/api/v2.0/projects?name=boatbooking")
+  if [ "$PROJECT_CODE" != "200" ]; then
+    echo "FAIL harbor-project boatbooking missing (HTTP $PROJECT_CODE)"
+    exit 1
+  fi
+
+  if [ -n "${EXPECT_TAG:-}" ]; then
+    ARTIFACTS=$(curl -fsS -u "admin:$HARBOR_ADMIN_PASSWORD" -g \
+      "$HARBOR_URL/api/v2.0/projects/boatbooking/repositories/gateway/artifacts?with_tag=true")
+    if ! echo "$ARTIFACTS" | grep -q "\"name\":\"$EXPECT_TAG\""; then
+      echo "FAIL harbor-artifact gateway:$EXPECT_TAG not found"
+      exit 1
+    fi
+  fi
+
+  echo "PASS harbor-ping Pong"
+  exit 0
+fi
 
 JENKINS_URL=http://localhost:8080
 ADMIN_USER=admin
