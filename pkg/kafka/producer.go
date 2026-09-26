@@ -63,6 +63,15 @@ func (p *Producer) Publish(ctx context.Context, topic, aggregateID string, env *
 		},
 	}
 
+	return p.produceRecord(ctx, rec)
+}
+
+// produceRecord synchronously produces rec exactly as given. Used internally
+// for records that are not domain envelopes built via Publish — e.g. the
+// Consumer's DLQ path, which passes a failed record through verbatim
+// (original key/value/headers plus failure metadata) rather than building a
+// new envelope (D-12).
+func (p *Producer) produceRecord(ctx context.Context, rec *kgo.Record) error {
 	if err := p.cl.ProduceSync(ctx, rec).FirstErr(); err != nil {
 		return fmt.Errorf("kafka: produce: %w", err)
 	}
