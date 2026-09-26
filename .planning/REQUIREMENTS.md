@@ -9,7 +9,7 @@ Milestone 1 = seed Phase 0–4: platform foundation → identity + catalog → s
 
 ### Platform Foundation
 
-- [ ] **PLAT-01**: Developer can scaffold a service with `make new-service <name>` producing `cmd/`, `internal/{domain,app,adapters}`, `migrations/`, `CLAUDE.md`, `/healthz` + `/readyz`, wired to shared `pkg/*`; images build from the single root `Dockerfile` (`ARG SERVICE`, per D-37)
+- [x] **PLAT-01**: Developer can scaffold a service with `make new-service <name>` producing `cmd/`, `internal/{domain,app,adapters}`, `migrations/`, `CLAUDE.md`, `/healthz` + `/readyz`, wired to shared `pkg/*`; images build from the single root `Dockerfile` (`ARG SERVICE`, per D-37)
 - [x] **PLAT-02**: Shared `pkg/{events,kafka,outbox,httpx,auth,pgx}` exist and are the only way services touch Kafka, outbox, auth, and Postgres
 - [ ] **PLAT-03**: Developer can run `make up` to start Redpanda + Postgres 17 (one instance, DB per service via DSN; D-18) + Valkey + Kong 3.9.1 (DB-less) + Grafana Tempo/Loki/Prometheus + all services via Docker Compose
 - [ ] **PLAT-04**: Developer can run `make proto-gen` (buf) to generate Go + TS from `proto/events/` and `proto/services/` (connect-go); generated code is committed
@@ -144,7 +144,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLAT-01 | Phase 1 | Pending |
+| PLAT-01 | Phase 1 | Complete |
 | PLAT-02 | Phase 1 | Complete |
 | PLAT-03 | Phase 1 | Pending |
 | PLAT-04 | Phase 1 | Pending |

@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Platform Foundation
 status: executing
-stopped_at: Completed 01-10-PLAN.md
-last_updated: "2026-09-26T06:13:19.986Z"
+stopped_at: Completed 01-11-PLAN.md
+last_updated: "2026-09-26T06:32:17.751Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 01 execution started
-state_head: 0249d94803c85842656cc3bb2eb13162e0f0995b
+state_head: 3f59d7b3427f601cc907eafc448bfb12daa7b476
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 13
-  completed_plans: 10
+  completed_plans: 11
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 01 (Platform Foundation) — EXECUTING
-Plan: 11 of 13
+Plan: 12 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 01 execution started
 
@@ -68,6 +68,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P08 | 32min | 2 tasks | 11 files |
 | Phase 01 P09 | 45min | 2 tasks | 28 files |
 | Phase 01 P10 | 27min | 2 tasks | 28 files |
+| Phase 01 P11 | ~30min | 2 tasks | 25 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,7 @@ Recent decisions affecting current work:
 - [Phase 01]: [Phase 01] sqlc's pgx/v5 codegen maps postgres uuid columns to pgtype.UUID; internal/app owns small toPgUUID/fromPgUUID converters so pgx-specific types never leak into domain/app signatures
 - [Phase 01]: [Phase 01] otelconnect pinned to v0.10.0; GOWORK=off go mod tidy re-run for pkg/services/_template/services/catalog/services/gateway after pkg gained an otelconnect dependency
 - [Phase 01]: [Phase 01] Kafka-consume proof for TestUpsertBoatPublishesBoatUpserted reuses pkg/kafka.Consumer (fresh consumer group reads from earliest offset by default) instead of new raw-consumer test infra
+- [Phase 01]: gateway re-scaffolded onto the exact template run(ctx) shape (no DB special-casing needed) with routes mounted directly, not behind httpx.RequireInternal — gateway is the origin of the internal-token trust boundary, not a consumer of it (D-29, D-30)
 
 ### Pending Todos
 
@@ -114,6 +116,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T06:13:19.939Z
-Stopped at: Completed 01-10-PLAN.md
+Last session: 2026-09-26T06:32:17.701Z
+Stopped at: Completed 01-11-PLAN.md
 Resume file: None
