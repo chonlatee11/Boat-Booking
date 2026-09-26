@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Platform Foundation
 status: executing
-stopped_at: Completed 01-06-PLAN.md
-last_updated: "2026-09-26T04:05:20.656Z"
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-09-26T04:31:30.752Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 01 execution started
-state_head: 0f13b0be6c8623b8bcbb42fa2ecfb9d5d2606a62
+state_head: 7af93143803c7145fa6ae18a17a54a3a0ab2f1a3
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 13
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 01 (Platform Foundation) — EXECUTING
-Plan: 6 of 13
+Plan: 7 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 01 execution started
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P03 | 8min | 2 tasks | 4 files |
 | Phase 01 P04 | 45min | 2 tasks | 9 files |
 | Phase 01 P06 | 71min | 2 tasks | 14 files |
+| Phase 01 P05 | 55min | 3 tasks | 21 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Recent decisions affecting current work:
 - [Phase 01]: franz-go pinned to v1.21.7 and goose to v3.27.3 instead of the plan's illustrative v1.22.0/v3.28.0 (both require go1.26.0, breaking the Go 1.25.x pin).
 - [Phase 01]: deploy/redpanda/topics.sh default RPK_BROKERS changed to 127.0.0.1:9093 (Redpanda's internal listener) instead of localhost:9092 — the external listener advertises the host-mapped port, unreachable from inside the same container.
 - [Phase 01]: JCasC config kept outside JENKINS_HOME (/usr/local/jenkins-casc.yaml) to survive image rebuilds; agent docker-group membership fixed in ENTRYPOINT against the live docker.sock GID since compose group_add doesn't survive sshd's PAM user switch (Pitfall 12)
+- [Phase 01]: Rejected unaudited 'cn' npm package; replaced with hand-written clsx+tailwind-merge cn() helper — shadcn init/add commands template components to import a separate 'cn' package not covered by the legitimacy audit; developer rejected it at the blocking-human checkpoint
+- [Phase 01]: Approved radix-ui, pinned exact at 1.6.7 — Legitimate shadcn dependency with strong download/repo signals; pinned exact to match Task 2's --save-exact convention
 
 ### Pending Todos
 
@@ -100,6 +103,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T04:05:20.602Z
-Stopped at: Completed 01-06-PLAN.md
+Last session: 2026-09-26T04:31:30.678Z
+Stopped at: Completed 01-05-PLAN.md
 Resume file: None
