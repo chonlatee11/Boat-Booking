@@ -88,6 +88,17 @@ func cmdKeys() error {
 		env.set("INTERNAL_TOKEN", internalToken)
 	}
 
+	// Independent of the RSA branch above: an existing .env from before
+	// identity's OTP_HASH_SECRET existed gains it on the next `make
+	// dev-keys` without rotating the JWT keys or INTERNAL_TOKEN.
+	if env.values["OTP_HASH_SECRET"] == "" {
+		otpHashSecret, err := generateHexToken(32)
+		if err != nil {
+			return fmt.Errorf("devtoken keys: generate otp hash secret: %w", err)
+		}
+		env.set("OTP_HASH_SECRET", otpHashSecret)
+	}
+
 	if err := env.writeFile(envPath, 0o600); err != nil {
 		return fmt.Errorf("devtoken keys: write .env: %w", err)
 	}
