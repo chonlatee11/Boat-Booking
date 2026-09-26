@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file services/catalog/v1/catalog.proto.
  */
 export const file_services_catalog_v1_catalog: GenFile = /*@__PURE__*/
-  fileDesc("CiFzZXJ2aWNlcy9jYXRhbG9nL3YxL2NhdGFsb2cucHJvdG8SFmJvYXRib29raW5nLmNhdGFsb2cudjEitwEKBEJvYXQSDwoHYm9hdF9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYBCABKAUSOQoGc3RhdHVzGAUgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cxIUCgxob21lX3BpZXJfaWQYBiABKAkSEAoIYXJjaGl2ZWQYByABKAginQEKEVVwc2VydEJvYXRSZXF1ZXN0Eg8KB2JvYXRfaWQYASABKAkSDAoEbmFtZRgCIAEoCRIYChBkZWZhdWx0X2NhcGFjaXR5GAMgASgFEjkKBnN0YXR1cxgEIAEoDjIpLmJvYXRib29raW5nLmNhdGFsb2cuZXZlbnRzLnYxLkJvYXRTdGF0dXMSFAoMaG9tZV9waWVyX2lkGAUgASgJIkAKElVwc2VydEJvYXRSZXNwb25zZRIqCgRib2F0GAEgASgLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0IhIKEExpc3RCb2F0c1JlcXVlc3QiQAoRTGlzdEJvYXRzUmVzcG9uc2USKwoFYm9hdHMYASADKAsyHC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkJvYXQiJQoSQXJjaGl2ZUJvYXRSZXF1ZXN0Eg8KB2JvYXRfaWQYASABKAkiQQoTQXJjaGl2ZUJvYXRSZXNwb25zZRIqCgRib2F0GAEgASgLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0Ij8KCE9wZXJhdG9yEhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkSEAoIYXJjaGl2ZWQYAyABKAgiOgoVVXBzZXJ0T3BlcmF0b3JSZXF1ZXN0EhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkiTAoWVXBzZXJ0T3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiFgoUTGlzdE9wZXJhdG9yc1JlcXVlc3QiTAoVTGlzdE9wZXJhdG9yc1Jlc3BvbnNlEjMKCW9wZXJhdG9ycxgBIAMoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiLQoWQXJjaGl2ZU9wZXJhdG9yUmVxdWVzdBITCgtvcGVyYXRvcl9pZBgBIAEoCSJNChdBcmNoaXZlT3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IisAEKBFBpZXISDwoHcGllcl9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIPCgduYW1lX3RoGAMgASgJEg8KB25hbWVfZW4YBCABKAkSCwoDbGF0GAUgASgBEgsKA2xuZxgGIAEoARIPCgdhZGRyZXNzGAcgASgJEhAKCG9wZW5zX2F0GAggASgJEhEKCWNsb3Nlc19hdBgJIAEoCRIQCghhcmNoaXZlZBgKIAEoCCKrAQoRVXBzZXJ0UGllclJlcXVlc3QSDwoHcGllcl9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIPCgduYW1lX3RoGAMgASgJEg8KB25hbWVfZW4YBCABKAkSCwoDbGF0GAUgASgBEgsKA2xuZxgGIAEoARIPCgdhZGRyZXNzGAcgASgJEhAKCG9wZW5zX2F0GAggASgJEhEKCWNsb3Nlc19hdBgJIAEoCSJAChJVcHNlcnRQaWVyUmVzcG9uc2USKgoEcGllchgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuUGllciInChBMaXN0UGllcnNSZXF1ZXN0EhMKC29wZXJhdG9yX2lkGAEgASgJIkAKEUxpc3RQaWVyc1Jlc3BvbnNlEisKBXBpZXJzGAEgAygLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5QaWVyIkQKEENhbmNlbGxhdGlvblRpZXISGAoQbWluX2hvdXJzX2JlZm9yZRgBIAEoBRIWCg5yZWZ1bmRfcGVyY2VudBgCIAEoBSJ7CgpSb3V0ZVByaWNlEj4KC3RpY2tldF90eXBlGAEgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuVGlja2V0VHlwZRIVCg1hbW91bnRfc2F0YW5nGAIgASgDEhYKDmVmZmVjdGl2ZV9mcm9tGAMgASgJIocCCgVSb3V0ZRIQCghyb3V0ZV9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIUCgxwaWVyX2Zyb21faWQYAyABKAkSEgoKcGllcl90b19pZBgEIAEoCRIYChBkdXJhdGlvbl9taW51dGVzGAUgASgFEkUKE2NhbmNlbGxhdGlvbl9wb2xpY3kYBiADKAsyKC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkNhbmNlbGxhdGlvblRpZXISEAoIYXJjaGl2ZWQYByABKAgSOgoOY3VycmVudF9wcmljZXMYCCADKAsyIi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlJvdXRlUHJpY2UisQEKElVwc2VydFJvdXRlUmVxdWVzdBIQCghyb3V0ZV9pZBgBIAEoCRIUCgxwaWVyX2Zyb21faWQYAiABKAkSEgoKcGllcl90b19pZBgDIAEoCRIYChBkdXJhdGlvbl9taW51dGVzGAQgASgFEkUKE2NhbmNlbGxhdGlvbl9wb2xpY3kYBSADKAsyKC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkNhbmNlbGxhdGlvblRpZXIiQwoTVXBzZXJ0Um91dGVSZXNwb25zZRIsCgVyb3V0ZRgBIAEoCzIdLmJvYXRib29raW5nLmNhdGFsb2cudjEuUm91dGUiKAoRTGlzdFJvdXRlc1JlcXVlc3QSEwoLb3BlcmF0b3JfaWQYASABKAkiQwoSTGlzdFJvdXRlc1Jlc3BvbnNlEi0KBnJvdXRlcxgBIAMoCzIdLmJvYXRib29raW5nLmNhdGFsb2cudjEuUm91dGUiJwoTQXJjaGl2ZVJvdXRlUmVxdWVzdBIQCghyb3V0ZV9pZBgBIAEoCSJEChRBcmNoaXZlUm91dGVSZXNwb25zZRIsCgVyb3V0ZRgBIAEoCzIdLmJvYXRib29raW5nLmNhdGFsb2cudjEuUm91dGUiJQoSQXJjaGl2ZVBpZXJSZXF1ZXN0Eg8KB3BpZXJfaWQYASABKAkiQQoTQXJjaGl2ZVBpZXJSZXNwb25zZRIqCgRwaWVyGAEgASgLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5QaWVyIpcBChRBZGRSb3V0ZVByaWNlUmVxdWVzdBIQCghyb3V0ZV9pZBgBIAEoCRI+Cgt0aWNrZXRfdHlwZRgCIAEoDjIpLmJvYXRib29raW5nLmNhdGFsb2cuZXZlbnRzLnYxLlRpY2tldFR5cGUSFQoNYW1vdW50X3NhdGFuZxgDIAEoAxIWCg5lZmZlY3RpdmVfZnJvbRgEIAEoCSJKChVBZGRSb3V0ZVByaWNlUmVzcG9uc2USMQoFcHJpY2UYASABKAsyIi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlJvdXRlUHJpY2UiKgoWTGlzdFJvdXRlUHJpY2VzUmVxdWVzdBIQCghyb3V0ZV9pZBgBIAEoCSJNChdMaXN0Um91dGVQcmljZXNSZXNwb25zZRIyCgZwcmljZXMYASADKAsyIi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlJvdXRlUHJpY2Uy2wsKDkNhdGFsb2dTZXJ2aWNlEmMKClVwc2VydEJvYXQSKS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydEJvYXRSZXF1ZXN0GiouYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRCb2F0UmVzcG9uc2USYAoJTGlzdEJvYXRzEiguYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Qm9hdHNSZXF1ZXN0GikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Qm9hdHNSZXNwb25zZRJmCgtBcmNoaXZlQm9hdBIqLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZUJvYXRSZXF1ZXN0GisuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BcmNoaXZlQm9hdFJlc3BvbnNlEm8KDlVwc2VydE9wZXJhdG9yEi0uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRPcGVyYXRvclJlcXVlc3QaLi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydE9wZXJhdG9yUmVzcG9uc2USbAoNTGlzdE9wZXJhdG9ycxIsLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdE9wZXJhdG9yc1JlcXVlc3QaLS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RPcGVyYXRvcnNSZXNwb25zZRJyCg9BcmNoaXZlT3BlcmF0b3ISLi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkFyY2hpdmVPcGVyYXRvclJlcXVlc3QaLy5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkFyY2hpdmVPcGVyYXRvclJlc3BvbnNlEmMKClVwc2VydFBpZXISKS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydFBpZXJSZXF1ZXN0GiouYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRQaWVyUmVzcG9uc2USYAoJTGlzdFBpZXJzEiguYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0UGllcnNSZXF1ZXN0GikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0UGllcnNSZXNwb25zZRJmCgtVcHNlcnRSb3V0ZRIqLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0Um91dGVSZXF1ZXN0GisuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRSb3V0ZVJlc3BvbnNlEmMKCkxpc3RSb3V0ZXMSKS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RSb3V0ZXNSZXF1ZXN0GiouYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Um91dGVzUmVzcG9uc2USaQoMQXJjaGl2ZVJvdXRlEisuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BcmNoaXZlUm91dGVSZXF1ZXN0GiwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BcmNoaXZlUm91dGVSZXNwb25zZRJmCgtBcmNoaXZlUGllchIqLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZVBpZXJSZXF1ZXN0GisuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BcmNoaXZlUGllclJlc3BvbnNlEmwKDUFkZFJvdXRlUHJpY2USLC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkFkZFJvdXRlUHJpY2VSZXF1ZXN0Gi0uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BZGRSb3V0ZVByaWNlUmVzcG9uc2UScgoPTGlzdFJvdXRlUHJpY2VzEi4uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Um91dGVQcmljZXNSZXF1ZXN0Gi8uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Um91dGVQcmljZXNSZXNwb25zZUJBWj9naXRodWIuY29tL2Nob25sYXRlZTExL2JvYXQtYm9va2luZy9nZW4vZ28vY2F0YWxvZy92MTtjYXRhbG9ndjFiBnByb3RvMw", [file_events_catalog_v1_boat, file_events_catalog_v1_price]);
+  fileDesc("CiFzZXJ2aWNlcy9jYXRhbG9nL3YxL2NhdGFsb2cucHJvdG8SFmJvYXRib29raW5nLmNhdGFsb2cudjEitwEKBEJvYXQSDwoHYm9hdF9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYBCABKAUSOQoGc3RhdHVzGAUgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cxIUCgxob21lX3BpZXJfaWQYBiABKAkSEAoIYXJjaGl2ZWQYByABKAginQEKEVVwc2VydEJvYXRSZXF1ZXN0Eg8KB2JvYXRfaWQYASABKAkSDAoEbmFtZRgCIAEoCRIYChBkZWZhdWx0X2NhcGFjaXR5GAMgASgFEjkKBnN0YXR1cxgEIAEoDjIpLmJvYXRib29raW5nLmNhdGFsb2cuZXZlbnRzLnYxLkJvYXRTdGF0dXMSFAoMaG9tZV9waWVyX2lkGAUgASgJIkAKElVwc2VydEJvYXRSZXNwb25zZRIqCgRib2F0GAEgASgLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0IhIKEExpc3RCb2F0c1JlcXVlc3QiQAoRTGlzdEJvYXRzUmVzcG9uc2USKwoFYm9hdHMYASADKAsyHC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkJvYXQiJQoSQXJjaGl2ZUJvYXRSZXF1ZXN0Eg8KB2JvYXRfaWQYASABKAkiQQoTQXJjaGl2ZUJvYXRSZXNwb25zZRIqCgRib2F0GAEgASgLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0Ij8KCE9wZXJhdG9yEhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkSEAoIYXJjaGl2ZWQYAyABKAgiOgoVVXBzZXJ0T3BlcmF0b3JSZXF1ZXN0EhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkiTAoWVXBzZXJ0T3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiFgoUTGlzdE9wZXJhdG9yc1JlcXVlc3QiTAoVTGlzdE9wZXJhdG9yc1Jlc3BvbnNlEjMKCW9wZXJhdG9ycxgBIAMoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiLQoWQXJjaGl2ZU9wZXJhdG9yUmVxdWVzdBITCgtvcGVyYXRvcl9pZBgBIAEoCSJNChdBcmNoaXZlT3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3Ii1gEKBFBpZXISDwoHcGllcl9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIPCgduYW1lX3RoGAMgASgJEg8KB25hbWVfZW4YBCABKAkSCwoDbGF0GAUgASgBEgsKA2xuZxgGIAEoARIPCgdhZGRyZXNzGAcgASgJEhAKCG9wZW5zX2F0GAggASgJEhEKCWNsb3Nlc19hdBgJIAEoCRIQCghhcmNoaXZlZBgKIAEoCBIRCglwaG90b19rZXkYCyABKAkSEQoJcGhvdG9fdXJsGAwgASgJIr4BChFVcHNlcnRQaWVyUmVxdWVzdBIPCgdwaWVyX2lkGAEgASgJEhMKC29wZXJhdG9yX2lkGAIgASgJEg8KB25hbWVfdGgYAyABKAkSDwoHbmFtZV9lbhgEIAEoCRILCgNsYXQYBSABKAESCwoDbG5nGAYgASgBEg8KB2FkZHJlc3MYByABKAkSEAoIb3BlbnNfYXQYCCABKAkSEQoJY2xvc2VzX2F0GAkgASgJEhEKCXBob3RvX2tleRgKIAEoCSJAChJVcHNlcnRQaWVyUmVzcG9uc2USKgoEcGllchgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuUGllciJDChdQcmVzaWduUGllclBob3RvUmVxdWVzdBIUCgxjb250ZW50X3R5cGUYASABKAkSEgoKc2l6ZV9ieXRlcxgCIAEoAyJXChhQcmVzaWduUGllclBob3RvUmVzcG9uc2USEgoKdXBsb2FkX3VybBgBIAEoCRIRCglwaG90b19rZXkYAiABKAkSFAoMY29udGVudF90eXBlGAMgASgJIicKEExpc3RQaWVyc1JlcXVlc3QSEwoLb3BlcmF0b3JfaWQYASABKAkiQAoRTGlzdFBpZXJzUmVzcG9uc2USKwoFcGllcnMYASADKAsyHC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlBpZXIiRAoQQ2FuY2VsbGF0aW9uVGllchIYChBtaW5faG91cnNfYmVmb3JlGAEgASgFEhYKDnJlZnVuZF9wZXJjZW50GAIgASgFInsKClJvdXRlUHJpY2USPgoLdGlja2V0X3R5cGUYASABKA4yKS5ib2F0Ym9va2luZy5jYXRhbG9nLmV2ZW50cy52MS5UaWNrZXRUeXBlEhUKDWFtb3VudF9zYXRhbmcYAiABKAMSFgoOZWZmZWN0aXZlX2Zyb20YAyABKAkihwIKBVJvdXRlEhAKCHJvdXRlX2lkGAEgASgJEhMKC29wZXJhdG9yX2lkGAIgASgJEhQKDHBpZXJfZnJvbV9pZBgDIAEoCRISCgpwaWVyX3RvX2lkGAQgASgJEhgKEGR1cmF0aW9uX21pbnV0ZXMYBSABKAUSRQoTY2FuY2VsbGF0aW9uX3BvbGljeRgGIAMoCzIoLmJvYXRib29raW5nLmNhdGFsb2cudjEuQ2FuY2VsbGF0aW9uVGllchIQCghhcmNoaXZlZBgHIAEoCBI6Cg5jdXJyZW50X3ByaWNlcxgIIAMoCzIiLmJvYXRib29raW5nLmNhdGFsb2cudjEuUm91dGVQcmljZSKxAQoSVXBzZXJ0Um91dGVSZXF1ZXN0EhAKCHJvdXRlX2lkGAEgASgJEhQKDHBpZXJfZnJvbV9pZBgCIAEoCRISCgpwaWVyX3RvX2lkGAMgASgJEhgKEGR1cmF0aW9uX21pbnV0ZXMYBCABKAUSRQoTY2FuY2VsbGF0aW9uX3BvbGljeRgFIAMoCzIoLmJvYXRib29raW5nLmNhdGFsb2cudjEuQ2FuY2VsbGF0aW9uVGllciJDChNVcHNlcnRSb3V0ZVJlc3BvbnNlEiwKBXJvdXRlGAEgASgLMh0uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Sb3V0ZSIoChFMaXN0Um91dGVzUmVxdWVzdBITCgtvcGVyYXRvcl9pZBgBIAEoCSJDChJMaXN0Um91dGVzUmVzcG9uc2USLQoGcm91dGVzGAEgAygLMh0uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Sb3V0ZSInChNBcmNoaXZlUm91dGVSZXF1ZXN0EhAKCHJvdXRlX2lkGAEgASgJIkQKFEFyY2hpdmVSb3V0ZVJlc3BvbnNlEiwKBXJvdXRlGAEgASgLMh0uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Sb3V0ZSIlChJBcmNoaXZlUGllclJlcXVlc3QSDwoHcGllcl9pZBgBIAEoCSJBChNBcmNoaXZlUGllclJlc3BvbnNlEioKBHBpZXIYASABKAsyHC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlBpZXIilwEKFEFkZFJvdXRlUHJpY2VSZXF1ZXN0EhAKCHJvdXRlX2lkGAEgASgJEj4KC3RpY2tldF90eXBlGAIgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuVGlja2V0VHlwZRIVCg1hbW91bnRfc2F0YW5nGAMgASgDEhYKDmVmZmVjdGl2ZV9mcm9tGAQgASgJIkoKFUFkZFJvdXRlUHJpY2VSZXNwb25zZRIxCgVwcmljZRgBIAEoCzIiLmJvYXRib29raW5nLmNhdGFsb2cudjEuUm91dGVQcmljZSIqChZMaXN0Um91dGVQcmljZXNSZXF1ZXN0EhAKCHJvdXRlX2lkGAEgASgJIk0KF0xpc3RSb3V0ZVByaWNlc1Jlc3BvbnNlEjIKBnByaWNlcxgBIAMoCzIiLmJvYXRib29raW5nLmNhdGFsb2cudjEuUm91dGVQcmljZTLSDAoOQ2F0YWxvZ1NlcnZpY2USYwoKVXBzZXJ0Qm9hdBIpLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0Qm9hdFJlcXVlc3QaKi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydEJvYXRSZXNwb25zZRJgCglMaXN0Qm9hdHMSKC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RCb2F0c1JlcXVlc3QaKS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RCb2F0c1Jlc3BvbnNlEmYKC0FyY2hpdmVCb2F0EiouYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BcmNoaXZlQm9hdFJlcXVlc3QaKy5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkFyY2hpdmVCb2F0UmVzcG9uc2USbwoOVXBzZXJ0T3BlcmF0b3ISLS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydE9wZXJhdG9yUmVxdWVzdBouLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0T3BlcmF0b3JSZXNwb25zZRJsCg1MaXN0T3BlcmF0b3JzEiwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0T3BlcmF0b3JzUmVxdWVzdBotLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdE9wZXJhdG9yc1Jlc3BvbnNlEnIKD0FyY2hpdmVPcGVyYXRvchIuLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZU9wZXJhdG9yUmVxdWVzdBovLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZU9wZXJhdG9yUmVzcG9uc2USYwoKVXBzZXJ0UGllchIpLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0UGllclJlcXVlc3QaKi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydFBpZXJSZXNwb25zZRJgCglMaXN0UGllcnMSKC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RQaWVyc1JlcXVlc3QaKS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RQaWVyc1Jlc3BvbnNlEnUKEFByZXNpZ25QaWVyUGhvdG8SLy5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlByZXNpZ25QaWVyUGhvdG9SZXF1ZXN0GjAuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5QcmVzaWduUGllclBob3RvUmVzcG9uc2USZgoLVXBzZXJ0Um91dGUSKi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydFJvdXRlUmVxdWVzdBorLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0Um91dGVSZXNwb25zZRJjCgpMaXN0Um91dGVzEikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Um91dGVzUmVxdWVzdBoqLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdFJvdXRlc1Jlc3BvbnNlEmkKDEFyY2hpdmVSb3V0ZRIrLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZVJvdXRlUmVxdWVzdBosLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZVJvdXRlUmVzcG9uc2USZgoLQXJjaGl2ZVBpZXISKi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkFyY2hpdmVQaWVyUmVxdWVzdBorLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZVBpZXJSZXNwb25zZRJsCg1BZGRSb3V0ZVByaWNlEiwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BZGRSb3V0ZVByaWNlUmVxdWVzdBotLmJvYXRib29raW5nLmNhdGFsb2cudjEuQWRkUm91dGVQcmljZVJlc3BvbnNlEnIKD0xpc3RSb3V0ZVByaWNlcxIuLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdFJvdXRlUHJpY2VzUmVxdWVzdBovLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdFJvdXRlUHJpY2VzUmVzcG9uc2VCQVo/Z2l0aHViLmNvbS9jaG9ubGF0ZWUxMS9ib2F0LWJvb2tpbmcvZ2VuL2dvL2NhdGFsb2cvdjE7Y2F0YWxvZ3YxYgZwcm90bzM", [file_events_catalog_v1_boat, file_events_catalog_v1_price]);
 
 /**
  * home_pier_id and archived are additive fields (D-07): the boat's operator
@@ -531,6 +531,11 @@ export const ArchiveOperatorResponseSchema: GenMessage<ArchiveOperatorResponse, 
   messageDesc(file_services_catalog_v1_catalog, 13);
 
 /**
+ * photo_key/photo_url are additive fields (D-19): photo_key is the
+ * server-generated object key ("piers/<uuidv7>.<ext>"), photo_url is the
+ * public browser-usable URL (PHOTO_PUBLIC_BASE_URL + "/" + photo_key),
+ * empty when no photo has been uploaded or no storage is configured.
+ *
  * @generated from message boatbooking.catalog.v1.Pier
  */
 export type Pier = Message<"boatbooking.catalog.v1.Pier"> & {
@@ -583,9 +588,24 @@ export type Pier = Message<"boatbooking.catalog.v1.Pier"> & {
    * @generated from field: bool archived = 10;
    */
   archived: boolean;
+
+  /**
+   * @generated from field: string photo_key = 11;
+   */
+  photoKey: string;
+
+  /**
+   * @generated from field: string photo_url = 12;
+   */
+  photoUrl: string;
 };
 
 /**
+ * photo_key/photo_url are additive fields (D-19): photo_key is the
+ * server-generated object key ("piers/<uuidv7>.<ext>"), photo_url is the
+ * public browser-usable URL (PHOTO_PUBLIC_BASE_URL + "/" + photo_key),
+ * empty when no photo has been uploaded or no storage is configured.
+ *
  * @generated from message boatbooking.catalog.v1.Pier
  */
 export type PierJson = {
@@ -638,6 +658,16 @@ export type PierJson = {
    * @generated from field: bool archived = 10;
    */
   archived?: boolean;
+
+  /**
+   * @generated from field: string photo_key = 11;
+   */
+  photoKey?: string;
+
+  /**
+   * @generated from field: string photo_url = 12;
+   */
+  photoUrl?: string;
 };
 
 /**
@@ -652,6 +682,9 @@ export const PierSchema: GenMessage<Pier, {jsonType: PierJson}> = /*@__PURE__*/
  * the request); a non-empty pier_id means update (pier_admin/staff scoped
  * to their own operator/pier_ids) and the stored operator_id is kept
  * unchanged regardless of what the request sends (D-30).
+ * photo_key must be either empty (no photo) or an exact key previously
+ * returned by PresignPierPhoto ("piers/<uuidv7>.jpg|png|webp") — never a
+ * browser-chosen value (D-19).
  *
  * @generated from message boatbooking.catalog.v1.UpsertPierRequest
  */
@@ -700,6 +733,11 @@ export type UpsertPierRequest = Message<"boatbooking.catalog.v1.UpsertPierReques
    * @generated from field: string closes_at = 9;
    */
   closesAt: string;
+
+  /**
+   * @generated from field: string photo_key = 10;
+   */
+  photoKey: string;
 };
 
 /**
@@ -707,6 +745,9 @@ export type UpsertPierRequest = Message<"boatbooking.catalog.v1.UpsertPierReques
  * the request); a non-empty pier_id means update (pier_admin/staff scoped
  * to their own operator/pier_ids) and the stored operator_id is kept
  * unchanged regardless of what the request sends (D-30).
+ * photo_key must be either empty (no photo) or an exact key previously
+ * returned by PresignPierPhoto ("piers/<uuidv7>.jpg|png|webp") — never a
+ * browser-chosen value (D-19).
  *
  * @generated from message boatbooking.catalog.v1.UpsertPierRequest
  */
@@ -755,6 +796,11 @@ export type UpsertPierRequestJson = {
    * @generated from field: string closes_at = 9;
    */
   closesAt?: string;
+
+  /**
+   * @generated from field: string photo_key = 10;
+   */
+  photoKey?: string;
 };
 
 /**
@@ -792,6 +838,108 @@ export const UpsertPierResponseSchema: GenMessage<UpsertPierResponse, {jsonType:
   messageDesc(file_services_catalog_v1_catalog, 16);
 
 /**
+ * content_type must be image/jpeg, image/png, or image/webp; size_bytes
+ * must be 1..5,242,880 (5 MB, D-19). Requires pier_admin or super_admin
+ * claims.
+ *
+ * @generated from message boatbooking.catalog.v1.PresignPierPhotoRequest
+ */
+export type PresignPierPhotoRequest = Message<"boatbooking.catalog.v1.PresignPierPhotoRequest"> & {
+  /**
+   * @generated from field: string content_type = 1;
+   */
+  contentType: string;
+
+  /**
+   * @generated from field: int64 size_bytes = 2;
+   */
+  sizeBytes: bigint;
+};
+
+/**
+ * content_type must be image/jpeg, image/png, or image/webp; size_bytes
+ * must be 1..5,242,880 (5 MB, D-19). Requires pier_admin or super_admin
+ * claims.
+ *
+ * @generated from message boatbooking.catalog.v1.PresignPierPhotoRequest
+ */
+export type PresignPierPhotoRequestJson = {
+  /**
+   * @generated from field: string content_type = 1;
+   */
+  contentType?: string;
+
+  /**
+   * @generated from field: int64 size_bytes = 2;
+   */
+  sizeBytes?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.PresignPierPhotoRequest.
+ * Use `create(PresignPierPhotoRequestSchema)` to create a new message.
+ */
+export const PresignPierPhotoRequestSchema: GenMessage<PresignPierPhotoRequest, {jsonType: PresignPierPhotoRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 17);
+
+/**
+ * upload_url is a PUT URL valid for 10 minutes whose signature covers
+ * Content-Type and Content-Length; the caller must send both headers
+ * exactly as declared in the request. photo_key is the server-generated
+ * object key to pass back to UpsertPier once the upload succeeds.
+ *
+ * @generated from message boatbooking.catalog.v1.PresignPierPhotoResponse
+ */
+export type PresignPierPhotoResponse = Message<"boatbooking.catalog.v1.PresignPierPhotoResponse"> & {
+  /**
+   * @generated from field: string upload_url = 1;
+   */
+  uploadUrl: string;
+
+  /**
+   * @generated from field: string photo_key = 2;
+   */
+  photoKey: string;
+
+  /**
+   * @generated from field: string content_type = 3;
+   */
+  contentType: string;
+};
+
+/**
+ * upload_url is a PUT URL valid for 10 minutes whose signature covers
+ * Content-Type and Content-Length; the caller must send both headers
+ * exactly as declared in the request. photo_key is the server-generated
+ * object key to pass back to UpsertPier once the upload succeeds.
+ *
+ * @generated from message boatbooking.catalog.v1.PresignPierPhotoResponse
+ */
+export type PresignPierPhotoResponseJson = {
+  /**
+   * @generated from field: string upload_url = 1;
+   */
+  uploadUrl?: string;
+
+  /**
+   * @generated from field: string photo_key = 2;
+   */
+  photoKey?: string;
+
+  /**
+   * @generated from field: string content_type = 3;
+   */
+  contentType?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.PresignPierPhotoResponse.
+ * Use `create(PresignPierPhotoResponseSchema)` to create a new message.
+ */
+export const PresignPierPhotoResponseSchema: GenMessage<PresignPierPhotoResponse, {jsonType: PresignPierPhotoResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 18);
+
+/**
  * operator_id is honoured only for super_admin callers (CAT-06/AUTH-05); it
  * is ignored for scoped roles and for the public (no-claims) call.
  *
@@ -822,7 +970,7 @@ export type ListPiersRequestJson = {
  * Use `create(ListPiersRequestSchema)` to create a new message.
  */
 export const ListPiersRequestSchema: GenMessage<ListPiersRequest, {jsonType: ListPiersRequestJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 17);
+  messageDesc(file_services_catalog_v1_catalog, 19);
 
 /**
  * @generated from message boatbooking.catalog.v1.ListPiersResponse
@@ -849,7 +997,7 @@ export type ListPiersResponseJson = {
  * Use `create(ListPiersResponseSchema)` to create a new message.
  */
 export const ListPiersResponseSchema: GenMessage<ListPiersResponse, {jsonType: ListPiersResponseJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 18);
+  messageDesc(file_services_catalog_v1_catalog, 20);
 
 /**
  * CancellationTier is one row of a route's refund schedule (D-13):
@@ -892,7 +1040,7 @@ export type CancellationTierJson = {
  * Use `create(CancellationTierSchema)` to create a new message.
  */
 export const CancellationTierSchema: GenMessage<CancellationTier, {jsonType: CancellationTierJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 19);
+  messageDesc(file_services_catalog_v1_catalog, 21);
 
 /**
  * RoutePrice is one effective-dated fare row (D-14): the price in effect on
@@ -949,7 +1097,7 @@ export type RoutePriceJson = {
  * Use `create(RoutePriceSchema)` to create a new message.
  */
 export const RoutePriceSchema: GenMessage<RoutePrice, {jsonType: RoutePriceJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 20);
+  messageDesc(file_services_catalog_v1_catalog, 22);
 
 /**
  * Route is one-way (D-11): pier_from -> pier_to. Route display name is
@@ -1056,7 +1204,7 @@ export type RouteJson = {
  * Use `create(RouteSchema)` to create a new message.
  */
 export const RouteSchema: GenMessage<Route, {jsonType: RouteJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 21);
+  messageDesc(file_services_catalog_v1_catalog, 23);
 
 /**
  * An empty route_id means create; a non-empty route_id means update. An
@@ -1133,7 +1281,7 @@ export type UpsertRouteRequestJson = {
  * Use `create(UpsertRouteRequestSchema)` to create a new message.
  */
 export const UpsertRouteRequestSchema: GenMessage<UpsertRouteRequest, {jsonType: UpsertRouteRequestJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 22);
+  messageDesc(file_services_catalog_v1_catalog, 24);
 
 /**
  * @generated from message boatbooking.catalog.v1.UpsertRouteResponse
@@ -1160,7 +1308,7 @@ export type UpsertRouteResponseJson = {
  * Use `create(UpsertRouteResponseSchema)` to create a new message.
  */
 export const UpsertRouteResponseSchema: GenMessage<UpsertRouteResponse, {jsonType: UpsertRouteResponseJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 23);
+  messageDesc(file_services_catalog_v1_catalog, 25);
 
 /**
  * operator_id is honoured only for super_admin callers; it is ignored for
@@ -1193,7 +1341,7 @@ export type ListRoutesRequestJson = {
  * Use `create(ListRoutesRequestSchema)` to create a new message.
  */
 export const ListRoutesRequestSchema: GenMessage<ListRoutesRequest, {jsonType: ListRoutesRequestJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 24);
+  messageDesc(file_services_catalog_v1_catalog, 26);
 
 /**
  * @generated from message boatbooking.catalog.v1.ListRoutesResponse
@@ -1220,7 +1368,7 @@ export type ListRoutesResponseJson = {
  * Use `create(ListRoutesResponseSchema)` to create a new message.
  */
 export const ListRoutesResponseSchema: GenMessage<ListRoutesResponse, {jsonType: ListRoutesResponseJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 25);
+  messageDesc(file_services_catalog_v1_catalog, 27);
 
 /**
  * @generated from message boatbooking.catalog.v1.ArchiveRouteRequest
@@ -1247,7 +1395,7 @@ export type ArchiveRouteRequestJson = {
  * Use `create(ArchiveRouteRequestSchema)` to create a new message.
  */
 export const ArchiveRouteRequestSchema: GenMessage<ArchiveRouteRequest, {jsonType: ArchiveRouteRequestJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 26);
+  messageDesc(file_services_catalog_v1_catalog, 28);
 
 /**
  * @generated from message boatbooking.catalog.v1.ArchiveRouteResponse
@@ -1274,7 +1422,7 @@ export type ArchiveRouteResponseJson = {
  * Use `create(ArchiveRouteResponseSchema)` to create a new message.
  */
 export const ArchiveRouteResponseSchema: GenMessage<ArchiveRouteResponse, {jsonType: ArchiveRouteResponseJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 27);
+  messageDesc(file_services_catalog_v1_catalog, 29);
 
 /**
  * @generated from message boatbooking.catalog.v1.ArchivePierRequest
@@ -1301,7 +1449,7 @@ export type ArchivePierRequestJson = {
  * Use `create(ArchivePierRequestSchema)` to create a new message.
  */
 export const ArchivePierRequestSchema: GenMessage<ArchivePierRequest, {jsonType: ArchivePierRequestJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 28);
+  messageDesc(file_services_catalog_v1_catalog, 30);
 
 /**
  * @generated from message boatbooking.catalog.v1.ArchivePierResponse
@@ -1328,7 +1476,7 @@ export type ArchivePierResponseJson = {
  * Use `create(ArchivePierResponseSchema)` to create a new message.
  */
 export const ArchivePierResponseSchema: GenMessage<ArchivePierResponse, {jsonType: ArchivePierResponseJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 29);
+  messageDesc(file_services_catalog_v1_catalog, 31);
 
 /**
  * Re-adding the same (route, ticket_type, effective_from) replaces the
@@ -1395,7 +1543,7 @@ export type AddRoutePriceRequestJson = {
  * Use `create(AddRoutePriceRequestSchema)` to create a new message.
  */
 export const AddRoutePriceRequestSchema: GenMessage<AddRoutePriceRequest, {jsonType: AddRoutePriceRequestJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 30);
+  messageDesc(file_services_catalog_v1_catalog, 32);
 
 /**
  * @generated from message boatbooking.catalog.v1.AddRoutePriceResponse
@@ -1422,7 +1570,7 @@ export type AddRoutePriceResponseJson = {
  * Use `create(AddRoutePriceResponseSchema)` to create a new message.
  */
 export const AddRoutePriceResponseSchema: GenMessage<AddRoutePriceResponse, {jsonType: AddRoutePriceResponseJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 31);
+  messageDesc(file_services_catalog_v1_catalog, 33);
 
 /**
  * @generated from message boatbooking.catalog.v1.ListRoutePricesRequest
@@ -1449,7 +1597,7 @@ export type ListRoutePricesRequestJson = {
  * Use `create(ListRoutePricesRequestSchema)` to create a new message.
  */
 export const ListRoutePricesRequestSchema: GenMessage<ListRoutePricesRequest, {jsonType: ListRoutePricesRequestJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 32);
+  messageDesc(file_services_catalog_v1_catalog, 34);
 
 /**
  * @generated from message boatbooking.catalog.v1.ListRoutePricesResponse
@@ -1476,7 +1624,7 @@ export type ListRoutePricesResponseJson = {
  * Use `create(ListRoutePricesResponseSchema)` to create a new message.
  */
 export const ListRoutePricesResponseSchema: GenMessage<ListRoutePricesResponse, {jsonType: ListRoutePricesResponseJson}> = /*@__PURE__*/
-  messageDesc(file_services_catalog_v1_catalog, 33);
+  messageDesc(file_services_catalog_v1_catalog, 35);
 
 /**
  * CatalogService is the sync API for catalog-owned boats. Reused by the
@@ -1555,6 +1703,17 @@ export const CatalogService: GenService<{
     methodKind: "unary";
     input: typeof ListPiersRequestSchema;
     output: typeof ListPiersResponseSchema;
+  },
+  /**
+   * PresignPierPhoto issues a short-lived, size- and type-bound presigned
+   * PUT URL for a pier photo upload (D-19); pier_admin or super_admin only.
+   *
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.PresignPierPhoto
+   */
+  presignPierPhoto: {
+    methodKind: "unary";
+    input: typeof PresignPierPhotoRequestSchema;
+    output: typeof PresignPierPhotoResponseSchema;
   },
   /**
    * Routes are one-way (D-11); pier_from must be in the caller's scope,

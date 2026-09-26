@@ -12,8 +12,10 @@ and layout this service still follows.
 ## Publishes
 
 - `catalog.BoatUpserted` on the `catalog.events` topic, keyed by `boat_id` —
-  emitted whenever `CatalogService.UpsertBoat` creates or updates a boat
-  (D-01).
+  emitted whenever `CatalogService.UpsertBoat`/`ArchiveBoat` creates,
+  updates, or archives a boat (D-01). `home_pier_id` and `archived` are
+  additive fields (D-07) — schedule's existing consumer ignores them and
+  keeps applying the event unchanged.
 - `catalog.OperatorUpserted`, keyed by `operator_id` — emitted whenever
   `UpsertOperator`/`ArchiveOperator` creates, renames, or archives an
   operator.
@@ -34,14 +36,28 @@ and layout this service still follows.
 
 ## Sync API
 
-- `CatalogService.UpsertBoat` — requires verified claims; `operator_id`
-  always comes from the claims, never the request body (D-30). An empty
-  `boat_id` creates a new boat; a non-empty `boat_id` updates one, but only
-  when it belongs to the calling operator (cross-operator reuse of an
-  existing `boat_id` returns `NotFound`, and the stored row is left
-  unchanged).
-- `CatalogService.ListBoats` — needs only the internal token, no claims.
-  Returns every boat ordered by `name`, then `id`.
+- `CatalogService.UpsertBoat` — requires verified claims and
+  `scope.CanWrite()` (`pier_admin`/`super_admin`; `staff`/`customer` get
+  `PermissionDenied`). Every boat is scoped to a `home_pier_id` (D-07):
+  the home pier must be in the caller's scope (same
+  `GetPierForShareScoped` rule as pier writes) and non-archived —
+  missing/out-of-scope is `NotFound`, archived is `FailedPrecondition`, no
+  `home_pier_id` at all is `InvalidArgument`. `operator_id` is always
+  derived from the home pier's stored operator, never the request body
+  (D-30). An empty `boat_id` creates a new boat; a non-empty `boat_id`
+  updates one, but only when its home pier is in the caller's scope
+  (cross-scope reuse of an existing `boat_id` returns `NotFound`, and the
+  stored row is left unchanged); editing an already-archived boat is
+  `FailedPrecondition`.
+- `CatalogService.ListBoats` — no claims returns the public projection
+  (every non-archived boat, needs only the internal token); with claims the
+  same `Scope` rule as `ListPiers` applies (AUTH-05, CAT-04) — a
+  `pier_admin` with no assigned piers gets an empty list, `super_admin` sees
+  every boat. Ordered by `name`, then `id`.
+- `CatalogService.ArchiveBoat` — requires verified claims and
+  `scope.CanWrite()`; same home-pier scope rule as `UpsertBoat`. Idempotent:
+  archiving an already-archived boat is a successful no-op that publishes
+  no new event.
 - `CatalogService.UpsertOperator`/`ListOperators`/`ArchiveOperator` —
   require verified claims; only `super_admin` may create, rename, or
   archive an operator (D-08) — every other role gets `PermissionDenied`, no
@@ -57,12 +73,32 @@ and layout this service still follows.
   claims (AUTH-05) — an out-of-scope or missing `pier_id` returns
   `NotFound`, never `PermissionDenied`, never revealing the row. The stored
   `operator_id` is always kept on update; the request body's `operator_id`
-  is ignored (D-30).
+  is ignored (D-30). `photo_key` must be either empty or exactly the shape
+  `piers/<uuidv7>.(jpg|png|webp)` (D-19) — anything else is
+  `InvalidArgument`; a client can only ever supply a key it previously got
+  back from `PresignPierPhoto`, never an arbitrary path.
 - `CatalogService.ListPiers` — **no claims at all is the public projection**
-  (CAT-06): every non-archived pier, ids/names/coordinates/address/hours,
-  needs only the internal token. With claims, the same `app.Scope` rule as
-  `UpsertPier` applies; the request's `operator_id` filter is honoured only
-  for `super_admin`.
+  (CAT-06): every non-archived pier, ids/names/coordinates/address/hours/
+  `photo_url`, needs only the internal token. With claims, the same
+  `app.Scope` rule as `UpsertPier` applies; the request's `operator_id`
+  filter is honoured only for `super_admin`. Every returned `Pier` carries
+  `photo_key` (stored key or `""`) and `photo_url` (`PHOTO_PUBLIC_BASE_URL`
+  `+ "/" + photo_key`, or `""` when no photo/no base URL configured, D-19).
+- `CatalogService.PresignPierPhoto` — requires verified claims and
+  `scope.CanWrite()` (`pier_admin`/`super_admin`); `staff`/`customer` get
+  `PermissionDenied`. Validates `content_type` against the
+  `image/jpeg|image/png|image/webp` allow-list and `size_bytes` against
+  `1..5,242,880` (5 MB) before minting anything (`InvalidArgument`
+  otherwise); returns `FailedPrecondition` when no object storage is
+  configured (`S3_PUBLIC_ENDPOINT` unset) so catalog still starts without
+  it. The object key is always server-generated
+  (`piers/<uuidv7>.<jpg|png|webp>`) — the browser never chooses it
+  (T-02-08-03) — and the returned PUT URL is valid for 10 minutes with its
+  signature covering `Content-Type` and `Content-Length`, so a mismatched
+  upload is rejected by storage itself (T-02-08-02). **catalog never
+  proxies file bytes** — the browser PUTs directly to object storage with
+  this URL; catalog only issues it and later stores the resulting key via
+  `UpsertPier`.
 - The one scoping rule every operator/pier/route RPC shares lives in
   `internal/app/scope.go` (`Scope.All`/`CanWrite`/`PierIDArray`) and
   `internal/adapters/http/scope.go` (`scopeFrom`/`toConnectErr`) — new
@@ -121,12 +157,18 @@ and layout this service still follows.
 - `internal/domain/{boat,operator,pier,route,price}.go` — types and
   `Validate()` rules only, no persistence or transport concerns.
   `route.go` also holds `CancellationTier`/`DefaultCancellationPolicy`/
-  `ValidateCancellationPolicy` (D-13).
+  `ValidateCancellationPolicy` (D-13). `pier.go`'s `photoKeyPattern` is the
+  one regexp `photo_key` must match (D-19).
 - `internal/app/{boat,operator,pier,route,price}.go` —
   `Upsert*`/`List*`/`Archive*` use-case functions taking
   `pgx.Tx`/`*postgres.Queries` directly. No repository interfaces, no
   mocks. `route.go`'s `ListRoutes` calls `price.go`'s `attachCurrentPrices`
-  to populate `CurrentPrices` (D-14).
+  to populate `CurrentPrices` (D-14). `boat.go`'s `UpsertBoat`/`ListBoats`/
+  `ArchiveBoat` apply the home-pier scope rule (D-07).
+- `internal/app/photo.go` — `Photos{Client, Bucket, PublicBaseURL}`
+  (`PresignPierPhoto`, `URL`, D-19); a nil `Client` (no
+  `S3_PUBLIC_ENDPOINT` configured) makes `PresignPierPhoto` return
+  `FailedPrecondition` instead of panicking.
 - `internal/app/scope.go` — `Scope{Role, OperatorID, PierIDs}`, the one
   operator/pier/route scoping rule (`All`/`CanWrite`/`PierIDArray`) every
   entity's use-case functions apply.
@@ -146,7 +188,22 @@ and layout this service still follows.
   consumes nothing yet).
 - `migrations/` — `00001_platform.sql` (outbox + processed_events, copied
   verbatim from the template), `00002_boats.sql`, `00003_operators.sql`,
-  `00004_piers.sql`, `00005_routes.sql`, `00006_route_prices.sql`.
+  `00004_piers.sql`, `00005_routes.sql`, `00006_route_prices.sql`,
+  `00007_boats_home_pier.sql` (D-07), `00008_pier_photo.sql` (D-19).
+
+## Environment (D-19)
+
+Object storage for pier photos is optional — catalog starts without it and
+`PresignPierPhoto` returns `FailedPrecondition` until it's configured:
+
+- `S3_PUBLIC_ENDPOINT` — host:port the **browser** uses (e.g.
+  `localhost:8333`); presigning is a local computation with a fixed
+  `S3_REGION`, so catalog itself never needs to reach storage.
+- `S3_REGION` (default `us-east-1`), `S3_BUCKET` (default `pier-photos`),
+  `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_USE_SSL` (default `false`) — never
+  logged.
+- `PHOTO_PUBLIC_BASE_URL` (e.g. `http://localhost:8333/pier-photos`) — used
+  to build `Pier.photo_url`; empty when unset, even if `photo_key` is set.
 
 ## Commands
 

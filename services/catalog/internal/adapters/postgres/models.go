@@ -53,6 +53,7 @@ type Pier struct {
 	ArchivedAt pgtype.Timestamptz
 	CreatedAt  pgtype.Timestamptz
 	UpdatedAt  pgtype.Timestamptz
+	PhotoKey   string
 }
 
 type ProcessedEvent struct {

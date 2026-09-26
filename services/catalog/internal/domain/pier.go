@@ -3,6 +3,7 @@ package domain
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -10,9 +11,15 @@ import (
 	"github.com/google/uuid"
 )
 
+// photoKeyPattern is the exact shape a pier photo object key must take
+// (D-19): server-generated only, never a browser-chosen value. Compiled
+// once and reused by Validate.
+var photoKeyPattern = regexp.MustCompile(`^piers/[0-9a-f-]{36}\.(jpg|png|webp)$`)
+
 // Pier is a physical departure/arrival point owned by an operator (D-07,
 // D-17). OpensAt/ClosesAt are "HH:MM" 24h local time, or both empty when the
-// pier has no posted hours (display-only, D-16).
+// pier has no posted hours (display-only, D-16). PhotoKey is either empty
+// (no photo) or a key previously returned by PresignPierPhoto (D-19).
 type Pier struct {
 	ID         uuid.UUID
 	OperatorID uuid.UUID
@@ -24,6 +31,7 @@ type Pier struct {
 	OpensAt    string
 	ClosesAt   string
 	Archived   bool
+	PhotoKey   string
 }
 
 // Validate enforces the pier's field invariants (also enforced by the piers
@@ -49,6 +57,10 @@ func (p Pier) Validate() error {
 	}
 	if p.Lat == 0 && p.Lng == 0 {
 		return fmt.Errorf("%w: lat/lng (0,0) means location not set", ErrInvalidArgument)
+	}
+
+	if p.PhotoKey != "" && !photoKeyPattern.MatchString(p.PhotoKey) {
+		return fmt.Errorf("%w: photo_key must be empty or piers/<uuid>.(jpg|png|webp), got %q", ErrInvalidArgument, p.PhotoKey)
 	}
 
 	if (p.OpensAt == "") != (p.ClosesAt == "") {

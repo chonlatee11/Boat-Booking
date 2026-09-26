@@ -16,7 +16,7 @@ update piers
 set archived_at = coalesce(archived_at, now()),
     updated_at = now()
 where id = $1
-returning id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at
+returning id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at, photo_key
 `
 
 func (q *Queries) ArchivePier(ctx context.Context, id pgtype.UUID) (Pier, error) {
@@ -35,12 +35,13 @@ func (q *Queries) ArchivePier(ctx context.Context, id pgtype.UUID) (Pier, error)
 		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PhotoKey,
 	)
 	return i, err
 }
 
 const getPierForShare = `-- name: GetPierForShare :one
-select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at from piers
+select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at, photo_key from piers
 where id = $1
 for share
 `
@@ -61,12 +62,13 @@ func (q *Queries) GetPierForShare(ctx context.Context, id pgtype.UUID) (Pier, er
 		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PhotoKey,
 	)
 	return i, err
 }
 
 const getPierForShareScoped = `-- name: GetPierForShareScoped :one
-select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at from piers
+select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at, photo_key from piers
 where id = $1
   and ($2::bool or (operator_id = $3 and id = any($4::uuid[])))
 for share
@@ -100,12 +102,13 @@ func (q *Queries) GetPierForShareScoped(ctx context.Context, arg GetPierForShare
 		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PhotoKey,
 	)
 	return i, err
 }
 
 const getPierForUpdateScoped = `-- name: GetPierForUpdateScoped :one
-select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at from piers
+select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at, photo_key from piers
 where id = $1
   and ($2::bool or (operator_id = $3 and id = any($4::uuid[])))
 for update
@@ -139,14 +142,15 @@ func (q *Queries) GetPierForUpdateScoped(ctx context.Context, arg GetPierForUpda
 		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PhotoKey,
 	)
 	return i, err
 }
 
 const insertPier = `-- name: InsertPier :one
-insert into piers (id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at)
-values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-returning id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at
+insert into piers (id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, photo_key)
+values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+returning id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at, photo_key
 `
 
 type InsertPierParams struct {
@@ -159,6 +163,7 @@ type InsertPierParams struct {
 	Address    string
 	OpensAt    pgtype.Time
 	ClosesAt   pgtype.Time
+	PhotoKey   string
 }
 
 func (q *Queries) InsertPier(ctx context.Context, arg InsertPierParams) (Pier, error) {
@@ -172,6 +177,7 @@ func (q *Queries) InsertPier(ctx context.Context, arg InsertPierParams) (Pier, e
 		arg.Address,
 		arg.OpensAt,
 		arg.ClosesAt,
+		arg.PhotoKey,
 	)
 	var i Pier
 	err := row.Scan(
@@ -187,12 +193,13 @@ func (q *Queries) InsertPier(ctx context.Context, arg InsertPierParams) (Pier, e
 		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PhotoKey,
 	)
 	return i, err
 }
 
 const listPiersAdmin = `-- name: ListPiersAdmin :many
-select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at from piers
+select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at, photo_key from piers
 where ($1::bool and ($2::uuid is null or operator_id = $2::uuid))
    or (not $1::bool and operator_id = $3 and id = any($4::uuid[]))
 order by name_th, id
@@ -232,6 +239,7 @@ func (q *Queries) ListPiersAdmin(ctx context.Context, arg ListPiersAdminParams) 
 			&i.ArchivedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.PhotoKey,
 		); err != nil {
 			return nil, err
 		}
@@ -244,7 +252,7 @@ func (q *Queries) ListPiersAdmin(ctx context.Context, arg ListPiersAdminParams) 
 }
 
 const listPiersPublic = `-- name: ListPiersPublic :many
-select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at from piers
+select id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at, photo_key from piers
 where archived_at is null
 order by name_th, id
 `
@@ -271,6 +279,7 @@ func (q *Queries) ListPiersPublic(ctx context.Context) ([]Pier, error) {
 			&i.ArchivedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.PhotoKey,
 		); err != nil {
 			return nil, err
 		}
@@ -291,9 +300,10 @@ set name_th = $2,
     address = $6,
     opens_at = $7,
     closes_at = $8,
+    photo_key = $9,
     updated_at = now()
 where id = $1
-returning id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at
+returning id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, archived_at, created_at, updated_at, photo_key
 `
 
 type UpdatePierParams struct {
@@ -305,6 +315,7 @@ type UpdatePierParams struct {
 	Address  string
 	OpensAt  pgtype.Time
 	ClosesAt pgtype.Time
+	PhotoKey string
 }
 
 func (q *Queries) UpdatePier(ctx context.Context, arg UpdatePierParams) (Pier, error) {
@@ -317,6 +328,7 @@ func (q *Queries) UpdatePier(ctx context.Context, arg UpdatePierParams) (Pier, e
 		arg.Address,
 		arg.OpensAt,
 		arg.ClosesAt,
+		arg.PhotoKey,
 	)
 	var i Pier
 	err := row.Scan(
@@ -332,6 +344,7 @@ func (q *Queries) UpdatePier(ctx context.Context, arg UpdatePierParams) (Pier, e
 		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PhotoKey,
 	)
 	return i, err
 }

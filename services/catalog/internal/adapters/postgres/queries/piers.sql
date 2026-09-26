@@ -1,6 +1,6 @@
 -- name: InsertPier :one
-insert into piers (id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at)
-values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+insert into piers (id, operator_id, name_th, name_en, lat, lng, address, opens_at, closes_at, photo_key)
+values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 returning *;
 
 -- name: UpdatePier :one
@@ -12,6 +12,7 @@ set name_th = $2,
     address = $6,
     opens_at = $7,
     closes_at = $8,
+    photo_key = $9,
     updated_at = now()
 where id = $1
 returning *;

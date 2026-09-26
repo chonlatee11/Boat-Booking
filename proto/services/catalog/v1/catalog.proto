@@ -26,6 +26,10 @@ service CatalogService {
   rpc UpsertPier(UpsertPierRequest) returns (UpsertPierResponse);
   rpc ListPiers(ListPiersRequest) returns (ListPiersResponse);
 
+  // PresignPierPhoto issues a short-lived, size- and type-bound presigned
+  // PUT URL for a pier photo upload (D-19); pier_admin or super_admin only.
+  rpc PresignPierPhoto(PresignPierPhotoRequest) returns (PresignPierPhotoResponse);
+
   // Routes are one-way (D-11); pier_from must be in the caller's scope,
   // pier_to may be any non-archived pier of any operator (D-12). ListRoutes
   // with no claims returns the public projection (CAT-06).
@@ -113,6 +117,10 @@ message ArchiveOperatorResponse {
   Operator operator = 1;
 }
 
+// photo_key/photo_url are additive fields (D-19): photo_key is the
+// server-generated object key ("piers/<uuidv7>.<ext>"), photo_url is the
+// public browser-usable URL (PHOTO_PUBLIC_BASE_URL + "/" + photo_key),
+// empty when no photo has been uploaded or no storage is configured.
 message Pier {
   string pier_id = 1;
   string operator_id = 2;
@@ -124,12 +132,17 @@ message Pier {
   string opens_at = 8;
   string closes_at = 9;
   bool archived = 10;
+  string photo_key = 11;
+  string photo_url = 12;
 }
 
 // An empty pier_id means create (super_admin only, operator_id taken from
 // the request); a non-empty pier_id means update (pier_admin/staff scoped
 // to their own operator/pier_ids) and the stored operator_id is kept
 // unchanged regardless of what the request sends (D-30).
+// photo_key must be either empty (no photo) or an exact key previously
+// returned by PresignPierPhoto ("piers/<uuidv7>.jpg|png|webp") — never a
+// browser-chosen value (D-19).
 message UpsertPierRequest {
   string pier_id = 1;
   string operator_id = 2;
@@ -140,10 +153,29 @@ message UpsertPierRequest {
   string address = 7;
   string opens_at = 8;
   string closes_at = 9;
+  string photo_key = 10;
 }
 
 message UpsertPierResponse {
   Pier pier = 1;
+}
+
+// content_type must be image/jpeg, image/png, or image/webp; size_bytes
+// must be 1..5,242,880 (5 MB, D-19). Requires pier_admin or super_admin
+// claims.
+message PresignPierPhotoRequest {
+  string content_type = 1;
+  int64 size_bytes = 2;
+}
+
+// upload_url is a PUT URL valid for 10 minutes whose signature covers
+// Content-Type and Content-Length; the caller must send both headers
+// exactly as declared in the request. photo_key is the server-generated
+// object key to pass back to UpsertPier once the upload succeeds.
+message PresignPierPhotoResponse {
+  string upload_url = 1;
+  string photo_key = 2;
+  string content_type = 3;
 }
 
 // operator_id is honoured only for super_admin callers (CAT-06/AUTH-05); it

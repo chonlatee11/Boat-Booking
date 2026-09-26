@@ -57,6 +57,9 @@ const (
 	// CatalogServiceListPiersProcedure is the fully-qualified name of the CatalogService's ListPiers
 	// RPC.
 	CatalogServiceListPiersProcedure = "/boatbooking.catalog.v1.CatalogService/ListPiers"
+	// CatalogServicePresignPierPhotoProcedure is the fully-qualified name of the CatalogService's
+	// PresignPierPhoto RPC.
+	CatalogServicePresignPierPhotoProcedure = "/boatbooking.catalog.v1.CatalogService/PresignPierPhoto"
 	// CatalogServiceUpsertRouteProcedure is the fully-qualified name of the CatalogService's
 	// UpsertRoute RPC.
 	CatalogServiceUpsertRouteProcedure = "/boatbooking.catalog.v1.CatalogService/UpsertRoute"
@@ -91,6 +94,9 @@ type CatalogServiceClient interface {
 	// returns the public projection (CAT-06).
 	UpsertPier(context.Context, *connect.Request[v1.UpsertPierRequest]) (*connect.Response[v1.UpsertPierResponse], error)
 	ListPiers(context.Context, *connect.Request[v1.ListPiersRequest]) (*connect.Response[v1.ListPiersResponse], error)
+	// PresignPierPhoto issues a short-lived, size- and type-bound presigned
+	// PUT URL for a pier photo upload (D-19); pier_admin or super_admin only.
+	PresignPierPhoto(context.Context, *connect.Request[v1.PresignPierPhotoRequest]) (*connect.Response[v1.PresignPierPhotoResponse], error)
 	// Routes are one-way (D-11); pier_from must be in the caller's scope,
 	// pier_to may be any non-archived pier of any operator (D-12). ListRoutes
 	// with no claims returns the public projection (CAT-06).
@@ -163,6 +169,12 @@ func NewCatalogServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(catalogServiceMethods.ByName("ListPiers")),
 			connect.WithClientOptions(opts...),
 		),
+		presignPierPhoto: connect.NewClient[v1.PresignPierPhotoRequest, v1.PresignPierPhotoResponse](
+			httpClient,
+			baseURL+CatalogServicePresignPierPhotoProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("PresignPierPhoto")),
+			connect.WithClientOptions(opts...),
+		),
 		upsertRoute: connect.NewClient[v1.UpsertRouteRequest, v1.UpsertRouteResponse](
 			httpClient,
 			baseURL+CatalogServiceUpsertRouteProcedure,
@@ -204,20 +216,21 @@ func NewCatalogServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // catalogServiceClient implements CatalogServiceClient.
 type catalogServiceClient struct {
-	upsertBoat      *connect.Client[v1.UpsertBoatRequest, v1.UpsertBoatResponse]
-	listBoats       *connect.Client[v1.ListBoatsRequest, v1.ListBoatsResponse]
-	archiveBoat     *connect.Client[v1.ArchiveBoatRequest, v1.ArchiveBoatResponse]
-	upsertOperator  *connect.Client[v1.UpsertOperatorRequest, v1.UpsertOperatorResponse]
-	listOperators   *connect.Client[v1.ListOperatorsRequest, v1.ListOperatorsResponse]
-	archiveOperator *connect.Client[v1.ArchiveOperatorRequest, v1.ArchiveOperatorResponse]
-	upsertPier      *connect.Client[v1.UpsertPierRequest, v1.UpsertPierResponse]
-	listPiers       *connect.Client[v1.ListPiersRequest, v1.ListPiersResponse]
-	upsertRoute     *connect.Client[v1.UpsertRouteRequest, v1.UpsertRouteResponse]
-	listRoutes      *connect.Client[v1.ListRoutesRequest, v1.ListRoutesResponse]
-	archiveRoute    *connect.Client[v1.ArchiveRouteRequest, v1.ArchiveRouteResponse]
-	archivePier     *connect.Client[v1.ArchivePierRequest, v1.ArchivePierResponse]
-	addRoutePrice   *connect.Client[v1.AddRoutePriceRequest, v1.AddRoutePriceResponse]
-	listRoutePrices *connect.Client[v1.ListRoutePricesRequest, v1.ListRoutePricesResponse]
+	upsertBoat       *connect.Client[v1.UpsertBoatRequest, v1.UpsertBoatResponse]
+	listBoats        *connect.Client[v1.ListBoatsRequest, v1.ListBoatsResponse]
+	archiveBoat      *connect.Client[v1.ArchiveBoatRequest, v1.ArchiveBoatResponse]
+	upsertOperator   *connect.Client[v1.UpsertOperatorRequest, v1.UpsertOperatorResponse]
+	listOperators    *connect.Client[v1.ListOperatorsRequest, v1.ListOperatorsResponse]
+	archiveOperator  *connect.Client[v1.ArchiveOperatorRequest, v1.ArchiveOperatorResponse]
+	upsertPier       *connect.Client[v1.UpsertPierRequest, v1.UpsertPierResponse]
+	listPiers        *connect.Client[v1.ListPiersRequest, v1.ListPiersResponse]
+	presignPierPhoto *connect.Client[v1.PresignPierPhotoRequest, v1.PresignPierPhotoResponse]
+	upsertRoute      *connect.Client[v1.UpsertRouteRequest, v1.UpsertRouteResponse]
+	listRoutes       *connect.Client[v1.ListRoutesRequest, v1.ListRoutesResponse]
+	archiveRoute     *connect.Client[v1.ArchiveRouteRequest, v1.ArchiveRouteResponse]
+	archivePier      *connect.Client[v1.ArchivePierRequest, v1.ArchivePierResponse]
+	addRoutePrice    *connect.Client[v1.AddRoutePriceRequest, v1.AddRoutePriceResponse]
+	listRoutePrices  *connect.Client[v1.ListRoutePricesRequest, v1.ListRoutePricesResponse]
 }
 
 // UpsertBoat calls boatbooking.catalog.v1.CatalogService.UpsertBoat.
@@ -258,6 +271,11 @@ func (c *catalogServiceClient) UpsertPier(ctx context.Context, req *connect.Requ
 // ListPiers calls boatbooking.catalog.v1.CatalogService.ListPiers.
 func (c *catalogServiceClient) ListPiers(ctx context.Context, req *connect.Request[v1.ListPiersRequest]) (*connect.Response[v1.ListPiersResponse], error) {
 	return c.listPiers.CallUnary(ctx, req)
+}
+
+// PresignPierPhoto calls boatbooking.catalog.v1.CatalogService.PresignPierPhoto.
+func (c *catalogServiceClient) PresignPierPhoto(ctx context.Context, req *connect.Request[v1.PresignPierPhotoRequest]) (*connect.Response[v1.PresignPierPhotoResponse], error) {
+	return c.presignPierPhoto.CallUnary(ctx, req)
 }
 
 // UpsertRoute calls boatbooking.catalog.v1.CatalogService.UpsertRoute.
@@ -304,6 +322,9 @@ type CatalogServiceHandler interface {
 	// returns the public projection (CAT-06).
 	UpsertPier(context.Context, *connect.Request[v1.UpsertPierRequest]) (*connect.Response[v1.UpsertPierResponse], error)
 	ListPiers(context.Context, *connect.Request[v1.ListPiersRequest]) (*connect.Response[v1.ListPiersResponse], error)
+	// PresignPierPhoto issues a short-lived, size- and type-bound presigned
+	// PUT URL for a pier photo upload (D-19); pier_admin or super_admin only.
+	PresignPierPhoto(context.Context, *connect.Request[v1.PresignPierPhotoRequest]) (*connect.Response[v1.PresignPierPhotoResponse], error)
 	// Routes are one-way (D-11); pier_from must be in the caller's scope,
 	// pier_to may be any non-archived pier of any operator (D-12). ListRoutes
 	// with no claims returns the public projection (CAT-06).
@@ -372,6 +393,12 @@ func NewCatalogServiceHandler(svc CatalogServiceHandler, opts ...connect.Handler
 		connect.WithSchema(catalogServiceMethods.ByName("ListPiers")),
 		connect.WithHandlerOptions(opts...),
 	)
+	catalogServicePresignPierPhotoHandler := connect.NewUnaryHandler(
+		CatalogServicePresignPierPhotoProcedure,
+		svc.PresignPierPhoto,
+		connect.WithSchema(catalogServiceMethods.ByName("PresignPierPhoto")),
+		connect.WithHandlerOptions(opts...),
+	)
 	catalogServiceUpsertRouteHandler := connect.NewUnaryHandler(
 		CatalogServiceUpsertRouteProcedure,
 		svc.UpsertRoute,
@@ -426,6 +453,8 @@ func NewCatalogServiceHandler(svc CatalogServiceHandler, opts ...connect.Handler
 			catalogServiceUpsertPierHandler.ServeHTTP(w, r)
 		case CatalogServiceListPiersProcedure:
 			catalogServiceListPiersHandler.ServeHTTP(w, r)
+		case CatalogServicePresignPierPhotoProcedure:
+			catalogServicePresignPierPhotoHandler.ServeHTTP(w, r)
 		case CatalogServiceUpsertRouteProcedure:
 			catalogServiceUpsertRouteHandler.ServeHTTP(w, r)
 		case CatalogServiceListRoutesProcedure:
@@ -477,6 +506,10 @@ func (UnimplementedCatalogServiceHandler) UpsertPier(context.Context, *connect.R
 
 func (UnimplementedCatalogServiceHandler) ListPiers(context.Context, *connect.Request[v1.ListPiersRequest]) (*connect.Response[v1.ListPiersResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ListPiers is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) PresignPierPhoto(context.Context, *connect.Request[v1.PresignPierPhotoRequest]) (*connect.Response[v1.PresignPierPhotoResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.PresignPierPhoto is not implemented"))
 }
 
 func (UnimplementedCatalogServiceHandler) UpsertRoute(context.Context, *connect.Request[v1.UpsertRouteRequest]) (*connect.Response[v1.UpsertRouteResponse], error) {

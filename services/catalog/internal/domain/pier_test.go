@@ -34,6 +34,11 @@ func TestPierValidate(t *testing.T) {
 		{"invalid hour rejected", setHours("25:00", "26:00"), true},
 		{"address over 500 code points rejected", setAddress(strings.Repeat("a", 501)), true},
 		{"address exactly 500 code points ok", setAddress(strings.Repeat("a", 500)), false},
+		{"photo_key empty ok", setPhotoKey(""), false},
+		{"photo_key valid webp ok", setPhotoKey("piers/01998f3e-2b3a-7f1e-9c3a-0123456789ab.webp"), false},
+		{"photo_key path traversal rejected", setPhotoKey("../etc/passwd"), true},
+		{"photo_key non-uuid segment rejected", setPhotoKey("piers/x.png"), true},
+		{"photo_key disallowed extension rejected", setPhotoKey("piers/01998f3e-2b3a-7f1e-9c3a-0123456789ab.gif"), true},
 	}
 
 	for _, c := range cases {
@@ -78,5 +83,11 @@ func setHours(opens, closes string) Pier {
 	p := validPier()
 	p.OpensAt = opens
 	p.ClosesAt = closes
+	return p
+}
+
+func setPhotoKey(photoKey string) Pier {
+	p := validPier()
+	p.PhotoKey = photoKey
 	return p
 }

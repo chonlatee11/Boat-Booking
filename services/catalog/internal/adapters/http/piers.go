@@ -54,6 +54,7 @@ func (s *server) UpsertPier(ctx context.Context, req *connect.Request[catalogv1.
 			Address:    req.Msg.Address,
 			OpensAt:    req.Msg.OpensAt,
 			ClosesAt:   req.Msg.ClosesAt,
+			PhotoKey:   req.Msg.PhotoKey,
 		})
 		return txErr
 	})
@@ -62,7 +63,7 @@ func (s *server) UpsertPier(ctx context.Context, req *connect.Request[catalogv1.
 	}
 	s.nudge()
 
-	return connect.NewResponse(&catalogv1.UpsertPierResponse{Pier: toProtoPier(stored)}), nil
+	return connect.NewResponse(&catalogv1.UpsertPierResponse{Pier: s.toProtoPier(stored)}), nil
 }
 
 // ListPiers with no claims returns the public projection (CAT-06); with
@@ -89,7 +90,7 @@ func (s *server) ListPiers(ctx context.Context, req *connect.Request[catalogv1.L
 	}
 	resp := &catalogv1.ListPiersResponse{Piers: make([]*catalogv1.Pier, len(piers))}
 	for i, p := range piers {
-		resp.Piers[i] = toProtoPier(p)
+		resp.Piers[i] = s.toProtoPier(p)
 	}
 	return connect.NewResponse(resp), nil
 }
@@ -121,10 +122,13 @@ func (s *server) ArchivePier(ctx context.Context, req *connect.Request[catalogv1
 	}
 	s.nudge()
 
-	return connect.NewResponse(&catalogv1.ArchivePierResponse{Pier: toProtoPier(stored)}), nil
+	return connect.NewResponse(&catalogv1.ArchivePierResponse{Pier: s.toProtoPier(stored)}), nil
 }
 
-func toProtoPier(p domain.Pier) *catalogv1.Pier {
+// toProtoPier fills photo_url from s.photos.URL(p.PhotoKey) — the public
+// browser-usable URL, empty when no photo is set or storage isn't
+// configured (D-19).
+func (s *server) toProtoPier(p domain.Pier) *catalogv1.Pier {
 	return &catalogv1.Pier{
 		PierId:     p.ID.String(),
 		OperatorId: p.OperatorID.String(),
@@ -136,5 +140,30 @@ func toProtoPier(p domain.Pier) *catalogv1.Pier {
 		OpensAt:    p.OpensAt,
 		ClosesAt:   p.ClosesAt,
 		Archived:   p.Archived,
+		PhotoKey:   p.PhotoKey,
+		PhotoUrl:   s.photos.URL(p.PhotoKey),
 	}
+}
+
+// PresignPierPhoto requires verified claims; app.Photos.PresignPierPhoto
+// enforces scope.CanWrite() and the content-type/size allow-list (D-19).
+func (s *server) PresignPierPhoto(ctx context.Context, req *connect.Request[catalogv1.PresignPierPhotoRequest]) (*connect.Response[catalogv1.PresignPierPhotoResponse], error) {
+	scope, hasClaims, err := scopeFrom(ctx)
+	if !hasClaims {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing claims"))
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	uploadURL, key, err := s.photos.PresignPierPhoto(ctx, scope, req.Msg.ContentType, req.Msg.SizeBytes)
+	if err != nil {
+		return nil, toConnectErr(err)
+	}
+
+	return connect.NewResponse(&catalogv1.PresignPierPhotoResponse{
+		UploadUrl:   uploadURL,
+		PhotoKey:    key,
+		ContentType: req.Msg.ContentType,
+	}), nil
 }

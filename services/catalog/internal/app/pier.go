@@ -79,6 +79,7 @@ func createPier(ctx context.Context, tx pgx.Tx, q *postgres.Queries, scope Scope
 		Address:    p.Address,
 		OpensAt:    toPgTime(p.OpensAt),
 		ClosesAt:   toPgTime(p.ClosesAt),
+		PhotoKey:   p.PhotoKey,
 	})
 	if err != nil {
 		return domain.Pier{}, fmt.Errorf("app: insert pier: %w", err)
@@ -125,6 +126,7 @@ func updatePier(ctx context.Context, tx pgx.Tx, q *postgres.Queries, scope Scope
 		Address:  p.Address,
 		OpensAt:  toPgTime(p.OpensAt),
 		ClosesAt: toPgTime(p.ClosesAt),
+		PhotoKey: p.PhotoKey,
 	})
 	if err != nil {
 		return domain.Pier{}, fmt.Errorf("app: update pier: %w", err)
@@ -268,6 +270,7 @@ func pierFromRow(row postgres.Pier) domain.Pier {
 		OpensAt:    fromPgTime(row.OpensAt),
 		ClosesAt:   fromPgTime(row.ClosesAt),
 		Archived:   row.ArchivedAt.Valid,
+		PhotoKey:   row.PhotoKey,
 	}
 }
 

@@ -26,21 +26,24 @@ import (
 // Routes mounts CatalogService's connect handler onto r. pool is the
 // service's Postgres pool; nudge wakes the outbox relay immediately after a
 // write instead of waiting for its next poll tick (a no-op when the relay is
-// disabled).
-func Routes(r chi.Router, pool *pgxpool.Pool, nudge func()) {
+// disabled). photos issues presigned pier photo upload URLs and builds
+// their public URL (nil Photos.Client when object storage isn't
+// configured, D-19).
+func Routes(r chi.Router, pool *pgxpool.Pool, nudge func(), photos app.Photos) {
 	otelOpt, err := httpx.ConnectOtel()
 	if err != nil {
 		panic(fmt.Errorf("catalog: %w", err))
 	}
-	path, handler := catalogv1connect.NewCatalogServiceHandler(&server{pool: pool, nudge: nudge}, otelOpt)
+	path, handler := catalogv1connect.NewCatalogServiceHandler(&server{pool: pool, nudge: nudge, photos: photos}, otelOpt)
 	r.Mount(path, handler)
 }
 
 // server implements catalogv1connect.CatalogServiceHandler.
 type server struct {
 	catalogv1connect.UnimplementedCatalogServiceHandler
-	pool  *pgxpool.Pool
-	nudge func()
+	pool   *pgxpool.Pool
+	nudge  func()
+	photos app.Photos
 }
 
 // UpsertBoat requires verified claims; app.UpsertBoat enforces the
