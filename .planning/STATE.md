@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Platform Foundation
 status: executing
-stopped_at: Completed 01-05-PLAN.md
-last_updated: "2026-09-26T04:31:30.752Z"
+stopped_at: Completed 01-07-PLAN.md
+last_updated: "2026-09-26T04:57:29.172Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 01 execution started
-state_head: 7af93143803c7145fa6ae18a17a54a3a0ab2f1a3
+state_head: 0484cd1f79d919c87f1fd078b516c09e8abec77c
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 13
-  completed_plans: 6
+  completed_plans: 7
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 01 (Platform Foundation) — EXECUTING
-Plan: 7 of 13
+Plan: 8 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 01 execution started
 
@@ -64,6 +64,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P04 | 45min | 2 tasks | 9 files |
 | Phase 01 P06 | 71min | 2 tasks | 14 files |
 | Phase 01 P05 | 55min | 3 tasks | 21 files |
+| Phase 01 P07 | 24min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,7 @@ Recent decisions affecting current work:
 - [Phase 01]: JCasC config kept outside JENKINS_HOME (/usr/local/jenkins-casc.yaml) to survive image rebuilds; agent docker-group membership fixed in ENTRYPOINT against the live docker.sock GID since compose group_add doesn't survive sshd's PAM user switch (Pitfall 12)
 - [Phase 01]: Rejected unaudited 'cn' npm package; replaced with hand-written clsx+tailwind-merge cn() helper — shadcn init/add commands template components to import a separate 'cn' package not covered by the legitimacy audit; developer rejected it at the blocking-human checkpoint
 - [Phase 01]: Approved radix-ui, pinned exact at 1.6.7 — Legitimate shadcn dependency with strong download/repo signals; pinned exact to match Task 2's --save-exact convention
+- [Phase 01]: kgo BlockRebalanceOnPoll requires AllowRebalance() on every PollFetches iteration, including the ctx-cancelled fake-fetch path — Skipping AllowRebalance on early ctx-done return left the poller count non-zero, deadlocking Client.Close()'s graceful group-leave forever - found and fixed before the first commit
 
 ### Pending Todos
 
@@ -103,6 +105,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T04:31:30.678Z
-Stopped at: Completed 01-05-PLAN.md
+Last session: 2026-09-26T04:57:13.377Z
+Stopped at: Completed 01-07-PLAN.md
 Resume file: None
