@@ -244,6 +244,7 @@ func (r *Relay) publishOnce(ctx context.Context) error {
 				// the symmetric case (see processRecord).
 				r.log.Error("outbox: unmarshal failed, skipping poison row",
 					"id", row.id, "event_id", row.eventID, "event_type", row.eventType, "error", err)
+				r.publishErrors.Add(ctx, 1)
 				published = append(published, row.id)
 				continue
 			}
