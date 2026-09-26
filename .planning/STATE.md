@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Platform Foundation
 status: executing
-stopped_at: Completed 01-04-PLAN.md
-last_updated: "2026-09-26T02:52:50.414Z"
+stopped_at: Completed 01-06-PLAN.md
+last_updated: "2026-09-26T04:05:20.656Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 01 execution started
-state_head: 8f07306f33b23eaed94a570858643ac92a1e78ed
+state_head: 0f13b0be6c8623b8bcbb42fa2ecfb9d5d2606a62
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 13
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 01 (Platform Foundation) — EXECUTING
-Plan: 5 of 13
+Plan: 6 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 01 execution started
 
@@ -62,6 +62,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P02 | 18min | 2 tasks | 20 files |
 | Phase 01 P03 | 8min | 2 tasks | 4 files |
 | Phase 01 P04 | 45min | 2 tasks | 9 files |
+| Phase 01 P06 | 71min | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,7 @@ Recent decisions affecting current work:
 - [Phase 01]: pkg/clock/pkg/money TDD RED phase used a genuine Go build failure (undefined symbols) for a brand-new package, not a compiling-but-wrong stub — Idiomatic Go TDD for greenfield packages; confirmed intentional (target symbols only, no unrelated errors) before GREEN
 - [Phase 01]: franz-go pinned to v1.21.7 and goose to v3.27.3 instead of the plan's illustrative v1.22.0/v3.28.0 (both require go1.26.0, breaking the Go 1.25.x pin).
 - [Phase 01]: deploy/redpanda/topics.sh default RPK_BROKERS changed to 127.0.0.1:9093 (Redpanda's internal listener) instead of localhost:9092 — the external listener advertises the host-mapped port, unreachable from inside the same container.
+- [Phase 01]: JCasC config kept outside JENKINS_HOME (/usr/local/jenkins-casc.yaml) to survive image rebuilds; agent docker-group membership fixed in ENTRYPOINT against the live docker.sock GID since compose group_add doesn't survive sshd's PAM user switch (Pitfall 12)
 
 ### Pending Todos
 
@@ -98,6 +100,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T02:52:50.367Z
-Stopped at: Completed 01-04-PLAN.md
+Last session: 2026-09-26T04:05:20.602Z
+Stopped at: Completed 01-06-PLAN.md
 Resume file: None
