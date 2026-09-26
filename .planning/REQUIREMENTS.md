@@ -26,7 +26,7 @@ Milestone 1 = seed Phase 0–4: platform foundation → identity + catalog → s
 - [ ] **AUTH-02**: staff / pier_admin / super_admin can log in and receive `role` + `operator_id` claims
 - [x] **AUTH-03**: Kong verifies the JWT; BFF forwards claims as trusted `X-*` headers; services reject requests lacking gateway headers (network-isolated from public)
 - [ ] **AUTH-04**: super_admin can create pier_admin / staff users and assign them to an operator and pier
-- [ ] **AUTH-05**: Every admin query is scoped by `operator_id` — a pier_admin never sees another operator's data
+- [x] **AUTH-05**: Every admin query is scoped by `operator_id` — a pier_admin never sees another operator's data
 
 ### Catalog
 
@@ -158,7 +158,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-02 | Phase 2 | Pending |
 | AUTH-03 | Phase 2 | Complete |
 | AUTH-04 | Phase 2 | Pending |
-| AUTH-05 | Phase 2 | Pending |
+| AUTH-05 | Phase 2 | Complete |
 | CAT-01 | Phase 2 | Pending |
 | CAT-02 | Phase 2 | Pending |
 | CAT-03 | Phase 2 | Pending |

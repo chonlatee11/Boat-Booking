@@ -95,7 +95,7 @@ Plans:
   4. super_admin creates/edits operators and creates piers; pier_admin edits/archives the piers assigned to them (with map picker) and creates/edits/archives routes (with tiered cancellation policy), boats, and per-route ticket prices (adult/child, integer satang) via the admin UI (wording corrected per 02-CONTEXT D-08)
   5. Public search lists piers and routes with coordinates for the map, without authentication
 
-**Plans**: 7/13 plans executed
+**Plans**: 8/13 plans executed
 **UI hint**: yes
 
 Plans:
@@ -117,7 +117,7 @@ Plans:
 **Wave 4** *(blocked on Wave 3 completion)*
 
 - [x] 02-07-PLAN.md — identity UserService: super_admin manages staff/pier_admin users with catalog-validated piers, disable/re-enable
-- [ ] 02-08-PLAN.md — catalog boats under home-pier scope + archive, pier photo presign (D-19), proof/roundtrip updated
+- [x] 02-08-PLAN.md — catalog boats under home-pier scope + archive, pier photo presign (D-19), proof/roundtrip updated
 - [ ] 02-09-PLAN.md — apps/admin scaffold (Thai, :3002): OTP login, role-aware shell, shared DataTable, operators CRUD, CI/Compose wiring
 - [ ] 02-10-PLAN.md — apps/web customer OTP login (TH/EN), signed-in header, silent refresh
 
@@ -198,7 +198,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Platform Foundation | 14/14 | In Progress|  |
-| 2. Identity + Catalog | 7/13 | In Progress|  |
+| 2. Identity + Catalog | 8/13 | In Progress|  |
 | 3. Schedule | 0/? | Not started | - |
 | 4. Booking Core | 0/? | Not started | - |
 | 5. Payment + Ticket + Notification | 0/? | Not started | - |

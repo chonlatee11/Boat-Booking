@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 02
 current_phase_name: Identity + Catalog
 status: executing
-stopped_at: Completed 02-07-PLAN.md
-last_updated: "2026-09-26T19:13:11.420Z"
+stopped_at: Completed 02-08-PLAN.md
+last_updated: "2026-09-26T19:47:26.366Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 02 execution started
-state_head: f9d58bb0d936370775e06b22f50cdb4b2075ea32
+state_head: 45f55316ea41ecf126a459443e26a177d31e5319
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 27
-  completed_plans: 21
+  completed_plans: 22
   percent: 20
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 02 (Identity + Catalog) — EXECUTING
-Plan: 8 of 13
+Plan: 9 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 02 execution started
 
@@ -79,6 +79,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 02 P05 | 30min | 3 tasks | 27 files |
 | Phase 02 P06 | 33min | 3 tasks | 23 files |
 | Phase 02 P07 | 20min | 2 tasks | 15 files |
+| Phase 02 P08 | 48min | 2 tasks | 32 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,9 @@ Recent decisions affecting current work:
 - [Phase 02]: [Phase 02] identity EnsureSuperAdmin promote-existing-row path publishes no identity.UserCreated -- only a fresh insert announces the identity; promotion's next refresh re-reads the new role via D-10
 - [Phase 02]: All Task 1-3 proto (route/price events + catalog.proto RPCs) generated in one buf generate pass during Task 1 to keep gen/ internally consistent, since price.proto's TicketType is imported by catalog.proto's Route.current_prices field added in Task 2. — Avoids a partial/inconsistent intermediate proto generation; each task's commit still adds only that task's Go implementation.
 - [Phase 02]: [Phase 02] identity's UserService validates pier ownership via a synchronous catalog.ListPiers call (forwarding caller claims + internal token) instead of a foreign key -- database-per-service forbids cross-service FKs; ForwardClaims reused for service-to-service calls, not just gateway-to-service
+- [Phase 02]: [Phase 02] Boats reuse routes' exact GetPierForShareScoped/GetBoatForUpdateScoped scope pattern (D-07) instead of a boat-specific variant -- one scoping shape applied consistently across entities
+- [Phase 02]: [Phase 02] app.Photos.PresignPierPhoto uses minio-go's PresignHeader (not PresignedPutObject) since only PresignHeader can sign extra headers -- required to bind Content-Type and Content-Length into the URL signature (T-02-08-02)
+- [Phase 02]: [Phase 02] catalog's newPhotos() treats an unset S3_PUBLIC_ENDPOINT as optional dev infrastructure (nil Client, no startup error) rather than a required config -- PresignPierPhoto returns FailedPrecondition instead, matching the existing outbox-relay/consumer optionality pattern
 
 ### Pending Todos
 
@@ -145,6 +149,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T19:13:11.336Z
-Stopped at: Completed 02-07-PLAN.md
+Last session: 2026-09-26T19:47:26.275Z
+Stopped at: Completed 02-08-PLAN.md
 Resume file: None
