@@ -39,11 +39,17 @@ for svc in $services; do
     exit 1
   }
 
+  # Escape embedded single quotes (WR-03) before interpolating into the
+  # single-quoted SQL literal below — SERVICE_DB_PASSWORD is
+  # operator-controlled (.env), so this is a robustness fix, not a
+  # security boundary, but an unescaped ' breaks the generated SQL.
+  escaped_password=$(printf '%s' "$SERVICE_DB_PASSWORD" | sed "s/'/''/g")
+
   psql_admin <<SQL
 DO \$\$
 BEGIN
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$svc') THEN
-    CREATE ROLE $svc LOGIN PASSWORD '$SERVICE_DB_PASSWORD';
+    CREATE ROLE $svc LOGIN PASSWORD '$escaped_password';
   END IF;
 END
 \$\$;
