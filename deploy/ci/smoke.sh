@@ -100,9 +100,14 @@ RESULT=""
 while [ "$SECONDS" -lt "$DEADLINE" ]; do
   RESP=$(auth_curl "$JOB_URL/lastBuild/api/json?tree=result,building,actions[lastBuiltRevision[SHA1]]" 2>/dev/null || echo "")
   if [ -n "$RESP" ]; then
-    SHA=$(echo "$RESP" | grep -o '"SHA1":"[a-f0-9]*"' | head -1 | cut -d'"' -f4)
-    BUILDING=$(echo "$RESP" | grep -o '"building":[a-z]*' | head -1 | cut -d: -f2)
-    RESULT=$(echo "$RESP" | grep -o '"result":"[A-Z]*"' | head -1 | cut -d'"' -f4)
+    # `|| true` on each: under `set -o pipefail`, grep finding no match (e.g.
+    # "result":null while a build is still in progress) makes the whole pipe
+    # fail even though head/cut succeed, silently killing the script via
+    # `set -e` on the very first in-progress poll. The empty capture is the
+    # correct/expected value in that case, not an error.
+    SHA=$(echo "$RESP" | grep -o '"SHA1":"[a-f0-9]*"' | head -1 | cut -d'"' -f4 || true)
+    BUILDING=$(echo "$RESP" | grep -o '"building":[a-z]*' | head -1 | cut -d: -f2 || true)
+    RESULT=$(echo "$RESP" | grep -o '"result":"[A-Z]*"' | head -1 | cut -d'"' -f4 || true)
     if [ "$SHA" = "$HEAD_SHA" ]; then
       if [ "$BUILDING" = "false" ] && [ -n "$RESULT" ]; then
         break
@@ -118,10 +123,18 @@ done
 if [ "$RESULT" = "SUCCESS" ] && [ "$SHA" = "$HEAD_SHA" ]; then
   # A green build must have actually run the integration suite and the
   # template smoke test -- not just skipped straight to SUCCESS (T-13-02).
-  CONSOLE=$(auth_curl "$JOB_URL/lastBuild/consoleText")
+  # Jenkins can report the build's `result` as terminal via the API a beat
+  # before /consoleText reflects the fully-flushed log, so retry a few times
+  # rather than trusting a single fetch right at the SUCCESS transition.
   MISSING=""
-  echo "$CONSOLE" | grep -q "make test-integration" || MISSING="$MISSING make-test-integration"
-  echo "$CONSOLE" | grep -q "PASS template-smoke" || MISSING="$MISSING PASS-template-smoke"
+  for _ in 1 2 3 4 5; do
+    CONSOLE=$(auth_curl "$JOB_URL/lastBuild/consoleText")
+    MISSING=""
+    echo "$CONSOLE" | grep -q "make test-integration" || MISSING="$MISSING make-test-integration"
+    echo "$CONSOLE" | grep -q "PASS template-smoke" || MISSING="$MISSING PASS-template-smoke"
+    [ -z "$MISSING" ] && break
+    sleep 3
+  done
   if [ -n "$MISSING" ]; then
     echo "FAIL jenkins-build-console missing:$MISSING"
     exit 1
