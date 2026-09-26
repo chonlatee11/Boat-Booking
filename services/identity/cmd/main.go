@@ -151,6 +151,14 @@ func run(ctx context.Context) error {
 		Nudge:  nudge,
 	}
 
+	// D-09: the operator-controlled SUPER_ADMIN_EMAIL is the only way a
+	// super_admin ever comes to exist — no API or CLI path creates one.
+	// Runs before the HTTP server starts accepting traffic; a failure here
+	// aborts startup rather than serving without the guaranteed super_admin.
+	if err := app.EnsureSuperAdmin(ctx, pool, httpx.MustEnv("SUPER_ADMIN_EMAIL")); err != nil {
+		return fmt.Errorf("%s: ensure super admin: %w", serviceName, err)
+	}
+
 	checks := map[string]func(context.Context) error{}
 	if pool != nil {
 		checks["db"] = pool.Ping

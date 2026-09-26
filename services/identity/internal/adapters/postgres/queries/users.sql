@@ -18,3 +18,10 @@ insert into users (id, phone, role)
 values ($1, $2, 'customer')
 on conflict (phone) do nothing
 returning *;
+
+-- name: UpsertSuperAdmin :one
+insert into users (id, email, role)
+values ($1, $2, 'super_admin')
+on conflict (email) do update set
+  role = 'super_admin', operator_id = null, pier_ids = '{}', disabled_at = null, updated_at = now()
+returning id, (xmax = 0) as inserted;

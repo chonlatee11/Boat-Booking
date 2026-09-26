@@ -132,6 +132,7 @@ services:
       VALKEY_ADDR: valkey:6379
       OTP_HASH_SECRET: ${OTP_HASH_SECRET}
       SMTP_ADDR: mailpit:1025
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL}
     depends_on:
       valkey:
         condition: service_healthy

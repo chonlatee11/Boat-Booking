@@ -136,3 +136,28 @@ func (q *Queries) InsertCustomerByPhone(ctx context.Context, arg InsertCustomerB
 	)
 	return i, err
 }
+
+const upsertSuperAdmin = `-- name: UpsertSuperAdmin :one
+insert into users (id, email, role)
+values ($1, $2, 'super_admin')
+on conflict (email) do update set
+  role = 'super_admin', operator_id = null, pier_ids = '{}', disabled_at = null, updated_at = now()
+returning id, (xmax = 0) as inserted
+`
+
+type UpsertSuperAdminParams struct {
+	ID    pgtype.UUID
+	Email pgtype.Text
+}
+
+type UpsertSuperAdminRow struct {
+	ID       pgtype.UUID
+	Inserted bool
+}
+
+func (q *Queries) UpsertSuperAdmin(ctx context.Context, arg UpsertSuperAdminParams) (UpsertSuperAdminRow, error) {
+	row := q.db.QueryRow(ctx, upsertSuperAdmin, arg.ID, arg.Email)
+	var i UpsertSuperAdminRow
+	err := row.Scan(&i.ID, &i.Inserted)
+	return i, err
+}

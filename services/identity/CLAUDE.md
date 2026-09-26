@@ -28,6 +28,23 @@ and layout this service still follows.
 - `AuthService.VerifyOtp` — needs only the internal token. Returns a signed
   access JWT (role/operator_id/pier_ids from the matched or newly-created
   user) plus an opaque refresh token on success.
+- `AuthService.Refresh` — rotates the presented refresh token: revokes it and
+  issues a fresh access+refresh pair, re-reading role/operator_id/pier_ids/
+  disabled from the `users` row every time (D-10) — a role/pier change or
+  disable takes effect at the next refresh, at most one access-token TTL
+  later. Presenting an already-rotated token revokes every refresh token for
+  that user (reuse detection, T-02-05-02).
+- `AuthService.Logout` — revokes the presented refresh token. Idempotent: an
+  unknown or already-revoked token is not an error.
+
+## Startup bootstrap (D-09)
+
+`cmd/main.go` calls `app.EnsureSuperAdmin(ctx, pool, SUPER_ADMIN_EMAIL)` after
+the pool is created and before the HTTP server starts accepting traffic — a
+failure aborts startup. It idempotently makes that email a non-disabled
+`super_admin`: inserts a fresh row (and publishes `identity.UserCreated`), or
+promotes/re-enables an existing row (no second event). There is no API or CLI
+path that can mint a `super_admin` — this env var is the only way.
 
 ## Rules
 
@@ -59,9 +76,10 @@ and layout this service still follows.
 - `internal/domain/{user,destination,errors}.go` — `User`, `Destination`,
   `NormalizeDestination`, and the sentinel/`CodeMismatchError` errors —
   types and validation rules only, no persistence or transport concerns.
-- `internal/app/{otp,session,convert}.go` — `Auth.RequestOtp`/`VerifyOtp` use-case
-  methods taking a `*pgxpool.Pool`/`*redis.Client` directly, plus `issueSession`
-  and sqlc row <-> domain converters. No repository interfaces, no mocks.
+- `internal/app/{otp,session,bootstrap,convert}.go` — `Auth.RequestOtp`/
+  `VerifyOtp`/`Refresh`/`Logout` use-case methods taking a `*pgxpool.Pool`/
+  `*redis.Client` directly, `issueSession`, `EnsureSuperAdmin` (D-09), and
+  sqlc row <-> domain converters. No repository interfaces, no mocks.
 - `internal/adapters/http/routes.go` — the `AuthService` connect handler,
   mounted behind the internal-token trust boundary set up in `cmd/main.go`.
 - `internal/adapters/notify/notify.go` — `Sender` interface (`SendOtp`) plus
@@ -83,6 +101,8 @@ and layout this service still follows.
   a Postgres/Valkey dump alone can never brute-force a code offline).
 - `SMTP_ADDR`, `OTP_EMAIL_FROM` — dev/CI email transport (SMTP to Mailpit).
 - `RESEND_API_KEY` — prod email transport (REST, no SDK dependency).
+- `SUPER_ADMIN_EMAIL` — the only email the startup bootstrap (D-09) ever
+  promotes to `super_admin`.
 
 ## Valkey key scheme
 

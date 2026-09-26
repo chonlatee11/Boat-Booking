@@ -145,4 +145,28 @@ else
 fi
 rm -f "$LOGOUT_JAR"
 
+# (l) SUPER_ADMIN_EMAIL always signs in as super_admin with no piers (D-09,
+# AUTH-02). $SUPER_ADMIN_EMAIL comes from the Makefile's `-include .env` +
+# `export`, never read directly by this script.
+if [ -n "${SUPER_ADMIN_EMAIL:-}" ]; then
+	ADMIN_JAR="$(mktemp)"
+	curl -s -o /dev/null -X POST -H 'Content-Type: application/json' \
+		-d "{\"destination\":\"$SUPER_ADMIN_EMAIL\"}" "$BASE/api/v1/auth/otp/request"
+	if ADMIN_CODE=$(mailpit_code "$SUPER_ADMIN_EMAIL"); then
+		curl -s -o /dev/null -c "$ADMIN_JAR" -X POST -H 'Content-Type: application/json' \
+			-d "{\"destination\":\"$SUPER_ADMIN_EMAIL\",\"code\":\"$ADMIN_CODE\"}" "$BASE/api/v1/auth/otp/verify"
+		admin_whoami=$(curl -s -b "$ADMIN_JAR" "$BASE/api/v1/whoami")
+		if echo "$admin_whoami" | jq -e '.role == "super_admin" and .pier_ids == []' >/dev/null 2>&1; then
+			check "super-admin-login" 1
+		else
+			check "super-admin-login" 0
+		fi
+	else
+		check "super-admin-login" 0
+	fi
+	rm -f "$ADMIN_JAR"
+else
+	check "super-admin-login" 0
+fi
+
 exit $failed

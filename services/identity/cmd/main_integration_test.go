@@ -140,6 +140,7 @@ func setIdentityEnv(t *testing.T) (addr string, verifier *auth.Verifier, dsn str
 	t.Setenv("JWT_ISSUER", issuer)
 	t.Setenv("OTP_HASH_SECRET", strings.Repeat("p", 32))
 	t.Setenv("SMTP_ADDR", mailpitSMTPAddr)
+	t.Setenv("SUPER_ADMIN_EMAIL", "super-admin-default@example.com")
 
 	return addr, auth.NewVerifier(pub, issuer), dsn
 }
@@ -433,12 +434,16 @@ func TestExistingStaffLoginGetsClaims(t *testing.T) {
 		t.Fatalf("users count for %s = %d, want 1 (no duplicate created)", email, userCount)
 	}
 
+	// Scoped to this user's own aggregate_id, not a global count: since D-09
+	// every test's identity instance also bootstraps SUPER_ADMIN_EMAIL at
+	// startup, which legitimately publishes its own identity.UserCreated.
 	var eventCount int
-	if err := pool.QueryRow(ctx, `select count(*) from outbox where event_type = $1`, "identity.UserCreated").Scan(&eventCount); err != nil {
+	if err := pool.QueryRow(ctx, `select count(*) from outbox where event_type = $1 and aggregate_id = $2`,
+		"identity.UserCreated", userID.String()).Scan(&eventCount); err != nil {
 		t.Fatalf("count outbox: %v", err)
 	}
 	if eventCount != 0 {
-		t.Errorf("outbox UserCreated count = %d, want 0 (existing user login must not publish)", eventCount)
+		t.Errorf("outbox UserCreated count for %s = %d, want 0 (existing user login must not publish)", userID, eventCount)
 	}
 }
 

@@ -20,6 +20,23 @@ Kafka consumer are disabled by env (D-04, D-29).
 
 ## Sync API
 
+- `POST /api/v1/auth/otp/request`, `POST /api/v1/auth/otp/verify` — public,
+  unauthenticated OTP login (AUTH-01), reachable through Kong's dedicated
+  `api-auth` route (no JWT plugin, 20/min rate limit). Proxies to identity's
+  `AuthService` with only `X-Internal-Token` set — never a claim header, the
+  caller isn't authenticated yet. On success, `otp/verify` sets `access_token`
+  and `refresh_token` as httpOnly/Secure/SameSite=Lax cookies and returns
+  `{userId, role, operatorId, pierIds}` — a token never appears in the JSON
+  body. A wrong code returns 400 `{code, message, attemptsLeft}` (from the
+  connect error's `Attempts-Left` metadata); every other identity error goes
+  through `httpx.WriteError`.
+- `POST /api/v1/auth/refresh` — reads the `refresh_token` cookie, calls
+  `AuthService.Refresh`, and re-sets both cookies from the fresh pair. A
+  missing cookie or any identity error (expired/reused/disabled) clears both
+  cookies and fails — the browser never holds a half-valid session.
+- `POST /api/v1/auth/logout` — calls `AuthService.Logout` with the cookie
+  value if present (ignoring its error) and always clears both cookies with
+  204 — from the browser's point of view the session is gone either way.
 - `GET /api/v1/whoami` — verified claims only (reads the `access_token`
   cookie itself; not a proxy call).
 - `POST /api/v1/admin/{service}/{method}` — generic allow-listed reverse
@@ -69,6 +86,8 @@ Kafka consumer are disabled by env (D-04, D-29).
 - `internal/adapters/http/bff.go` — `Routes` and `whoamiHandler`.
 - `internal/adapters/http/proxy.go` — `adminProxy` and `publicHandler` (calls
   `httpx.ForwardClaims`, which lives in `pkg/httpx`).
+- `internal/adapters/http/auth.go` — `AuthRoutes`: the OTP request/verify/
+  refresh/logout cookie routes (AUTH-01).
 - `internal/adapters/kafka/handlers.go` — empty `Register` (template
   parity; gateway consumes nothing).
 
