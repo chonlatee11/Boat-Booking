@@ -1,19 +1,19 @@
 ---
 gsd_state_version: "1.0"
 current_phase: 02
-current_phase_name: identity-catalog
-status: "Phase 01 shipped — PR #2"
-stopped_at: Phase 2 UI-SPEC approved
-last_updated: "2026-09-26T16:07:50.042Z"
+current_phase_name: Identity + Catalog
+status: executing
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-09-26T16:24:04.325Z"
 last_activity: 2026-09-26
-last_activity_desc: Phase 02 planning complete
-state_head: 2c302d96901faba8edcd35e816d2654cfbac41c2
+last_activity_desc: Phase 02 execution started
+state_head: e51cb759cc7cc03c6b5c261478a5575ebe075c7f
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 27
-  completed_plans: 14
-  percent: 0
+  completed_plans: 15
+  percent: 20
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-25)
 
 **Core value:** ลูกค้าจองจากมือถือ → จ่าย → โชว์ QR ที่ท่าได้ โดยระบบไม่ overbook เด็ดขาด
-**Current focus:** Phase 01 — Platform Foundation
+**Current focus:** Phase 02 — Identity + Catalog
 
 ## Current Position
 
-Phase: 02 (identity-catalog) — READY TO EXECUTE
-Plan: 2 of 14
-Status: Phase 01 shipped — PR #2
-Last activity: 2026-09-26 — Phase 02 planning complete
+Phase: 02 (Identity + Catalog) — EXECUTING
+Plan: 2 of 13
+Status: Ready to execute
+Last activity: 2026-09-26 — Phase 02 execution started
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
@@ -72,6 +72,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P12 | 32min | 2 tasks | 12 files |
 | Phase 01 P13 | 25min | 2 tasks | 5 files |
 | Phase 01 P14 | 5min | 1 tasks | 1 files |
+| Phase 02 P01 | 11min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,9 @@ Recent decisions affecting current work:
 - [Phase 01]: LC_ALL=C pinned on every sort in changed-services.sh for cross-locale determinism between dev host and CI agent
 - [Phase 01]: smoke.sh fixed for two Rule 1 bugs found during Task 2 verification: pipefail killing the poll loop on any in-progress build, and a Jenkins result-vs-console-flush race in the new test-integration/template-smoke console assertion
 - [Phase 01]: [Phase 01] Widened Tempo's tracesToLogsV2 window by spanStartTimeShift: '-1m' / spanEndTimeShift: '1m' (D-51) instead of moving request-log emission, closing UAT gap G-01-7 while filterByTraceID keeps results scoped to one trace
+- [Phase 02]: SeaweedFS chrislusf/seaweedfs:4.47 chosen for dev object storage (D-19 detail) — MinIO unpullable from Docker Hub (404, archived) — Task 1 checkpoint:decision resolved before dispatch
+- [Phase 02]: go-redis v9.22.0, minio-go v7.3.0, maplibre-gl 6.11.2 approved by developer at Task 2 package-legitimacy checkpoint — Task 2 checkpoint:human-verify (gate=blocking-human) resolved before dispatch
+- [Phase 02]: ForwardClaims moved from gateway package into pkg/httpx — single implementation shared by every future internal caller — Task 3 GREEN phase implementation choice
 
 ### Pending Todos
 
@@ -125,6 +129,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T15:10:09.756Z
-Stopped at: Phase 2 UI-SPEC approved
-Resume file: .planning/phases/02-identity-catalog/02-UI-SPEC.md
+Last session: 2026-09-26T16:24:04.224Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None

@@ -95,13 +95,13 @@ Plans:
   4. super_admin creates/edits operators and creates piers; pier_admin edits/archives the piers assigned to them (with map picker) and creates/edits/archives routes (with tiered cancellation policy), boats, and per-route ticket prices (adult/child, integer satang) via the admin UI (wording corrected per 02-CONTEXT D-08)
   5. Public search lists piers and routes with coordinates for the map, without authentication
 
-**Plans**: 13 plans
+**Plans**: 1/13 plans executed
 **UI hint**: yes
 
 Plans:
 **Wave 1**
 
-- [ ] 02-01-PLAN.md — Storage + package decisions (checkpoints) and pier_ids claim end-to-end through Kong/BFF/RequireInternal (D-06)
+- [x] 02-01-PLAN.md — Storage + package decisions (checkpoints) and pier_ids claim end-to-end through Kong/BFF/RequireInternal (D-06)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -198,7 +198,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Platform Foundation | 14/14 | In Progress|  |
-| 2. Identity + Catalog | 0/13 | Planned | - |
+| 2. Identity + Catalog | 1/13 | In Progress|  |
 | 3. Schedule | 0/? | Not started | - |
 | 4. Booking Core | 0/? | Not started | - |
 | 5. Payment + Ticket + Notification | 0/? | Not started | - |
