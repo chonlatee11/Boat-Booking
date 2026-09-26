@@ -104,7 +104,7 @@ func TestUpsertBoatForwardsVerifiedClaimsAndStripsSpoofedHeaders(t *testing.T) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set(httpx.HeaderOperatorID, "attacker-op") // spoofed client-supplied header
-	req.AddCookie(&http.Cookie{Name: auth.AccessCookie, Value: tok})
+	req.AddCookie(auth.Cookie(auth.KindAccess, tok))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -159,8 +159,8 @@ func TestUpsertBoatRequiresValidAccessToken(t *testing.T) {
 		cookie *http.Cookie
 	}{
 		{name: "no cookie", cookie: nil},
-		{name: "expired token", cookie: &http.Cookie{Name: auth.AccessCookie, Value: expiredTok}},
-		{name: "refresh-kind token", cookie: &http.Cookie{Name: auth.AccessCookie, Value: refreshTok}},
+		{name: "expired token", cookie: auth.Cookie(auth.KindAccess, expiredTok)},
+		{name: "refresh-kind token", cookie: auth.Cookie(auth.KindAccess, refreshTok)},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -244,7 +244,7 @@ func TestUpsertBoatMapsCatalogErrorCodes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request: %v", err)
 	}
-	req.AddCookie(&http.Cookie{Name: auth.AccessCookie, Value: tok})
+	req.AddCookie(auth.Cookie(auth.KindAccess, tok))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -282,7 +282,7 @@ func TestWhoamiUnchanged(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request: %v", err)
 	}
-	req.AddCookie(&http.Cookie{Name: auth.AccessCookie, Value: tok})
+	req.AddCookie(auth.Cookie(auth.KindAccess, tok))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
