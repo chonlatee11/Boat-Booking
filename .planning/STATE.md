@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Platform Foundation
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-09-26T01:49:06.792Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-09-26T01:59:32.085Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 01 execution started
-state_head: 933c27cffd6995d63aa02a058fd919e95c9e3f98
+state_head: f68ab94d44456e237dde79deb860c2f91cf668fe
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 13
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 01 (Platform Foundation) — EXECUTING
-Plan: 2 of 13
+Plan: 3 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 01 execution started
 
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 01 P01 | 40min | 3 tasks | 23 files |
+| Phase 01 P02 | 18min | 2 tasks | 20 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,7 @@ Recent decisions affecting current work:
 - Payment provider (Opn vs 2C2P) deferred to a sandbox spike at Phase 5 planning
 - Kong 3.9.1 DB-less JWT sufficiency deferred to a spike at Phase 1 planning (Traefik fallback if it fails)
 - [Phase 01]: Kong 3.9.1 DB-less passed the D-28 spike on the first attempt (all 8 roundtrip checks) — no Traefik fallback needed
+- [Phase 01]: buf toolchain: pinned protocolbuffers/go v1.36.12, connectrpc/go v1.18.1, bufbuild/es v2.15.0 remote plugins; gen/go and gen/ts committed — Exact tags verified against proxy.golang.org rather than trusting illustrative versions from planning
 
 ### Pending Todos
 
@@ -91,6 +93,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T01:49:06.753Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-09-26T01:59:04.747Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
