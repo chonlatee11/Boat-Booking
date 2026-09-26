@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 02
 current_phase_name: Identity + Catalog
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-09-26T16:24:04.325Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-09-26T17:03:31.164Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 02 execution started
-state_head: e51cb759cc7cc03c6b5c261478a5575ebe075c7f
+state_head: 8815cd49160749c33da3444f0a9774f1ed9747d0
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 27
-  completed_plans: 15
+  completed_plans: 16
   percent: 20
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 02 (Identity + Catalog) — EXECUTING
-Plan: 2 of 13
+Plan: 3 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 02 execution started
 
@@ -73,6 +73,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 01 P13 | 25min | 2 tasks | 5 files |
 | Phase 01 P14 | 5min | 1 tasks | 1 files |
 | Phase 02 P01 | 11min | 3 tasks | 9 files |
+| Phase 02 P02 | 35min | 3 tasks | 42 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,8 @@ Recent decisions affecting current work:
 - [Phase 02]: SeaweedFS chrislusf/seaweedfs:4.47 chosen for dev object storage (D-19 detail) — MinIO unpullable from Docker Hub (404, archived) — Task 1 checkpoint:decision resolved before dispatch
 - [Phase 02]: go-redis v9.22.0, minio-go v7.3.0, maplibre-gl 6.11.2 approved by developer at Task 2 package-legitimacy checkpoint — Task 2 checkpoint:human-verify (gate=blocking-human) resolved before dispatch
 - [Phase 02]: ForwardClaims moved from gateway package into pkg/httpx — single implementation shared by every future internal caller — Task 3 GREEN phase implementation choice
+- [Phase 02]: [Phase 02] identity's OTP hashing (HMAC-SHA256 pepper for both destination and code) implemented exactly as the plan's Context block specified — no deviation
+- [Phase 02]: [Phase 02] services/identity/go.mod needed its own standalone GOWORK=off go mod tidy beyond a workspace-mode go get — the Dockerfile builds each service as an isolated module, which needs every transitive dep's go.sum entry (golang-jwt/jwt/v5 via pkg/auth) that workspace-mode go get does not populate
 
 ### Pending Todos
 
@@ -129,6 +132,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T16:24:04.224Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-09-26T17:03:31.086Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
