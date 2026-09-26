@@ -12,7 +12,7 @@ COMPOSE_CI := docker compose --env-file .env -f deploy/ci/docker-compose.yml
 SERVICES ?= $(shell for d in services/*/; do n=$$(basename "$$d"); [ -f "$${d}cmd/main.go" ] && echo "$$n"; done)
 TAG ?= $(shell git rev-parse --short HEAD)
 
-.PHONY: dev-keys dev-token up down kong-roundtrip test test-integration dev-tools lint hooks proto-gen proto-check ci-keys ci-up ci-down images
+.PHONY: dev-keys dev-token up up-infra obs-check down kong-roundtrip test test-integration dev-tools lint hooks proto-gen proto-check ci-keys ci-up ci-down images
 
 dev-keys:
 	go run $(M)/pkg/auth/cmd/devtoken keys
@@ -25,6 +25,12 @@ dev-token:
 
 up: dev-keys deploy/kong/kong.yml
 	$(COMPOSE) --profile app --profile web up -d --build --wait
+
+up-infra: dev-keys
+	$(COMPOSE) up -d --wait
+
+obs-check:
+	deploy/observability/check.sh all
 
 down:
 	$(COMPOSE) --profile app --profile web --profile tools down
