@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package boatbooking.catalog.v1;
+
+import "events/catalog/v1/boat.proto";
+
+option go_package = "github.com/chonlatee11/boat-booking/gen/go/catalog/v1;catalogv1";
+
+// CatalogService is the sync API for catalog-owned boats. Reused by the
+// gateway BFF and by other services that need boat data without waiting on
+// the async BoatUpserted projection.
+service CatalogService {
+  rpc UpsertBoat(UpsertBoatRequest) returns (UpsertBoatResponse);
+  rpc ListBoats(ListBoatsRequest) returns (ListBoatsResponse);
+}
+
+message Boat {
+  string boat_id = 1;
+  string operator_id = 2;
+  string name = 3;
+  int32 default_capacity = 4;
+  boatbooking.catalog.events.v1.BoatStatus status = 5;
+}
+
+// An empty boat_id means create; a non-empty boat_id means update.
+// operator_id always comes from the trusted gateway claims, never from the
+// request body (D-30).
+message UpsertBoatRequest {
+  string boat_id = 1;
+  string name = 2;
+  int32 default_capacity = 3;
+  boatbooking.catalog.events.v1.BoatStatus status = 4;
+}
+
+message UpsertBoatResponse {
+  Boat boat = 1;
+}
+
+message ListBoatsRequest {}
+
+message ListBoatsResponse {
+  repeated Boat boats = 1;
+}

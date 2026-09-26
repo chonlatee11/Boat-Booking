@@ -9,16 +9,16 @@ Milestone 1 = seed Phase 0–4: platform foundation → identity + catalog → s
 
 ### Platform Foundation
 
-- [ ] **PLAT-01**: Developer can scaffold a service with `make new-service <name>` producing `cmd/`, `internal/{domain,app,adapters}`, `migrations/`, `Dockerfile`, `CLAUDE.md`, `/healthz` + `/readyz`, wired to shared `pkg/*`
-- [ ] **PLAT-02**: Shared `pkg/{events,kafka,outbox,httpx,auth,pgx}` exist and are the only way services touch Kafka, outbox, auth, and Postgres
-- [ ] **PLAT-03**: Developer can run `make up` to start Redpanda + Postgres 16 (one instance, DB per service via DSN) + Redis/Valkey + Kong 3.9.1 (DB-less) + Grafana Tempo/Loki/Prometheus + all services via Docker Compose
-- [ ] **PLAT-04**: Developer can run `make proto-gen` (buf) to generate Go + TS from `proto/events/` and `proto/services/` (connect-go); generated code is committed
-- [ ] **PLAT-05**: A state change written in one service reaches another service via transactional outbox relay (ordered per `aggregate_id`, at-least-once) and is applied exactly once via `processed_events` in the same tx — proven with one real end-to-end event in Phase 0
-- [ ] **PLAT-06**: A `trace_id` propagates HTTP → outbox row → Kafka headers → consumer and shows as a single trace in Tempo; logs are structured slog JSON with `trace_id`
-- [ ] **PLAT-07**: Failed event processing retries 3× with backoff then lands in `<topic>.dlq` with error metadata; consumer offsets commit only after successful apply
-- [ ] **PLAT-08**: Jenkins CI builds every service image and runs unit + integration tests (testcontainers Postgres + Redpanda) on every push
-- [ ] **PLAT-09**: Next.js (App Router, TS, Tailwind, shadcn/ui) skeleton with Thai/English i18n routing, Thai-friendly font, mobile-first layout, calling backend only through Kong
-- [ ] **PLAT-10**: Kong 3.9.1 DB-less + JWT plugin round-trip (curl → Kong → BFF → stub service) verified in Phase 0; Traefik fallback decided if it fails
+- [x] **PLAT-01**: Developer can scaffold a service with `make new-service <name>` producing `cmd/`, `internal/{domain,app,adapters}`, `migrations/`, `CLAUDE.md`, `/healthz` + `/readyz`, wired to shared `pkg/*`; images build from the single root `Dockerfile` (`ARG SERVICE`, per D-37)
+- [x] **PLAT-02**: Shared `pkg/{events,kafka,outbox,httpx,auth,pgx}` exist and are the only way services touch Kafka, outbox, auth, and Postgres
+- [x] **PLAT-03**: Developer can run `make up` to start Redpanda + Postgres 17 (one instance, DB per service via DSN; D-18) + Valkey + Kong 3.9.1 (DB-less) + Grafana Tempo/Loki/Prometheus + all services via Docker Compose
+- [x] **PLAT-04**: Developer can run `make proto-gen` (buf) to generate Go + TS from `proto/events/` and `proto/services/` (connect-go); generated code is committed
+- [x] **PLAT-05**: A state change written in one service reaches another service via transactional outbox relay (ordered per `aggregate_id`, at-least-once) and is applied exactly once via `processed_events` in the same tx — proven with one real end-to-end event in Phase 0
+- [x] **PLAT-06**: A `trace_id` propagates HTTP → outbox row → Kafka headers → consumer and shows as a single trace in Tempo; logs are structured slog JSON with `trace_id`
+- [x] **PLAT-07**: Failed event processing retries 3× with backoff then lands in `<topic>.dlq` with error metadata; consumer offsets commit only after successful apply
+- [x] **PLAT-08**: Jenkins CI builds every service image and runs unit + integration tests (testcontainers Postgres + Redpanda) on every push
+- [x] **PLAT-09**: Next.js (App Router, TS, Tailwind, shadcn/ui) skeleton with Thai/English i18n routing, Thai-friendly font, mobile-first layout, calling backend only through Kong
+- [x] **PLAT-10**: Kong 3.9.1 DB-less + JWT plugin round-trip (curl → Kong → BFF → stub service) verified in Phase 0; Traefik fallback decided if it fails
 
 ### Identity & Access
 
@@ -85,7 +85,7 @@ Milestone 1 = seed Phase 0–4: platform foundation → identity + catalog → s
 ### Deployment
 
 - [ ] **DEP-01**: `docker-compose.prod.yml` runs the full stack on one EC2 with production Redpanda settings (no dev fsync flags), retention configured, and a documented Postgres backup step
-- [ ] **DEP-02**: Jenkins pushes images to ECR and deploys to EC2 via `docker compose pull && up -d` at the end of Milestone 1
+- [ ] **DEP-02**: Jenkins pushes images to Harbor (replaces ECR per Phase 1 D-21) and deploys to EC2 via `docker compose pull && up -d` at the end of Milestone 1
 
 ## v2 Requirements
 
@@ -144,16 +144,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLAT-01 | Phase 1 | Pending |
-| PLAT-02 | Phase 1 | Pending |
-| PLAT-03 | Phase 1 | Pending |
-| PLAT-04 | Phase 1 | Pending |
-| PLAT-05 | Phase 1 | Pending |
-| PLAT-06 | Phase 1 | Pending |
-| PLAT-07 | Phase 1 | Pending |
-| PLAT-08 | Phase 1 | Pending |
-| PLAT-09 | Phase 1 | Pending |
-| PLAT-10 | Phase 1 | Pending |
+| PLAT-01 | Phase 1 | Complete |
+| PLAT-02 | Phase 1 | Complete |
+| PLAT-03 | Phase 1 | Complete |
+| PLAT-04 | Phase 1 | Complete |
+| PLAT-05 | Phase 1 | Complete |
+| PLAT-06 | Phase 1 | Complete |
+| PLAT-07 | Phase 1 | Complete |
+| PLAT-08 | Phase 1 | Complete |
+| PLAT-09 | Phase 1 | Complete |
+| PLAT-10 | Phase 1 | Complete |
 | AUTH-01 | Phase 2 | Pending |
 | AUTH-02 | Phase 2 | Pending |
 | AUTH-03 | Phase 2 | Pending |
@@ -199,6 +199,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEP-02 | Phase 5 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 53 total
 - Mapped to phases: 53
 - Unmapped: 0 ✓

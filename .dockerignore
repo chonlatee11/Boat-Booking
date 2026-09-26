@@ -1,0 +1,6 @@
+.git
+.planning
+.env
+apps
+**/node_modules
+deploy/ci/harbor/installer

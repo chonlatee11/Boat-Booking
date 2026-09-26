@@ -1,0 +1,54 @@
+version: "2"
+
+run:
+  build-tags:
+    - integration
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - gosec
+    - sqlclosecheck
+    - forbidigo
+  settings:
+    forbidigo:
+      forbid:
+        - pattern: '^time\.Now$'
+          msg: "use pkg/clock.Now() — D-42"
+        - pattern: '^fmt\.Print.*$'
+          msg: "use the slog logger"
+        - pattern: '^kgo\.NewClient$'
+          msg: "only pkg/kafka constructs Kafka clients — PLAT-02"
+        - pattern: '^pgxpool\.New(WithConfig)?$'
+          msg: "only pkg/pgx constructs pools — PLAT-02"
+  exclusions:
+    paths:
+      - gen/
+    rules:
+      - linters:
+          - forbidigo
+        path: '_test\.go'
+      - linters:
+          - forbidigo
+        path: 'pkg/clock/'
+      - linters:
+          - forbidigo
+        path: 'pkg/auth/cmd/devtoken/'
+      - linters:
+          - forbidigo
+        path: 'pkg/kafka/'
+        text: 'kgo\.NewClient'
+      - linters:
+          - forbidigo
+        path: 'pkg/testenv/'
+        text: 'kgo\.NewClient'
+      - linters:
+          - forbidigo
+        path: 'pkg/pgx/'
+        text: 'pgxpool\.New'
+      - linters:
+          - forbidigo
+        path: 'pkg/testenv/'
+        text: 'pgxpool\.New'

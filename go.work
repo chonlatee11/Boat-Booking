@@ -1,0 +1,10 @@
+go 1.25.7
+
+use (
+	./gen/go
+	./pkg
+	./services/_template
+	./services/catalog
+	./services/gateway
+	./services/schedule
+)

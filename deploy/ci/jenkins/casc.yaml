@@ -1,0 +1,62 @@
+jenkins:
+  numExecutors: 0
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  nodes:
+    - permanent:
+        name: "docker-agent"
+        labelString: "docker"
+        remoteFS: "/home/jenkins/agent"
+        numExecutors: 2
+        launcher:
+          sSHLauncher:
+            host: "jenkins-agent"
+            port: 22
+            credentialsId: "agent-ssh"
+            sshHostKeyVerificationStrategy:
+              nonVerifyingKeyVerificationStrategy: {}
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - basicSSHUserPrivateKey:
+              scope: SYSTEM
+              id: "agent-ssh"
+              username: "jenkins"
+              privateKeySource:
+                directEntry:
+                  privateKey: "${decodeBase64:${JENKINS_AGENT_SSH_PRIVATE_KEY_B64}}"
+          - usernamePassword:
+              scope: SYSTEM
+              id: "harbor"
+              username: "admin"
+              password: "${HARBOR_ADMIN_PASSWORD}"
+
+jobs:
+  - script: >
+      multibranchPipelineJob('boat-booking') {
+        branchSources {
+          git {
+            id('boat-booking-git')
+            remote('${CI_REPO_URL}')
+          }
+        }
+        orphanedItemStrategy {
+          discardOldItems {
+            numToKeep(20)
+          }
+        }
+        triggers {
+          periodicFolderTrigger {
+            interval('2m')
+          }
+        }
+      }
