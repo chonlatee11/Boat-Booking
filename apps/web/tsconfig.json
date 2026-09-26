@@ -21,7 +21,9 @@
     "paths": {
       "@/*": ["./src/*"],
       "@gen/*": ["../../gen/ts/*"],
-      "@bufbuild/protobuf": ["./node_modules/@bufbuild/protobuf/dist/esm/index"],
+      "@bufbuild/protobuf": [
+        "./node_modules/@bufbuild/protobuf/dist/esm/index"
+      ],
       "@bufbuild/protobuf/*": ["./node_modules/@bufbuild/protobuf/dist/esm/*"]
     }
   },

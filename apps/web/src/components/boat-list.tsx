@@ -4,6 +4,8 @@ import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api';
 import type { ListBoatsResponseJson } from '@gen/services/catalog/v1/catalog_pb';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function BoatList() {
   const t = useTranslations('boats');
@@ -20,15 +22,11 @@ export function BoatList() {
   if (isError) {
     const status = (error as Error & { status?: number }).status ?? '—';
     return (
-      <div>
+      <div className="flex flex-col gap-3">
         <p>{t('error', { status })}</p>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="min-h-11 rounded-xl bg-[#0B6E99] px-4 py-2 text-white"
-        >
+        <Button className="h-11" onClick={() => refetch()}>
           {t('retry')}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -42,19 +40,21 @@ export function BoatList() {
   return (
     <div className="flex flex-col gap-3">
       {boats.map((boat) => (
-        <div key={boat.boatId} className="rounded-xl border border-black/10 p-4">
-          <p className="text-lg font-semibold">{boat.name}</p>
-          <p>{t('capacity', { count: boat.defaultCapacity ?? 0 })}</p>
-          <p>{boat.status}</p>
-        </div>
+        <Card key={boat.boatId}>
+          <CardHeader>
+            <CardTitle className="text-lg">{boat.name}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between text-sm">
+            <span>{t('capacity', { count: boat.defaultCapacity ?? 0 })}</span>
+            <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium">
+              {boat.status}
+            </span>
+          </CardContent>
+        </Card>
       ))}
-      <button
-        type="button"
-        onClick={() => refetch()}
-        className="min-h-11 rounded-xl bg-[#0B6E99] px-4 py-2 text-white"
-      >
+      <Button className="h-11" onClick={() => refetch()}>
         {t('retry')}
-      </button>
+      </Button>
     </div>
   );
 }

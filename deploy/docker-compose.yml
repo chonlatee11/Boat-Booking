@@ -38,3 +38,17 @@ services:
     depends_on:
       gateway:
         condition: service_healthy
+
+  web:
+    profiles: [web]
+    image: node:24-alpine
+    working_dir: /app
+    volumes:
+      - ../apps/web:/app
+      - /app/node_modules
+      - ../gen:/gen:ro
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    command: sh -c "npm ci && npm run dev -- -H 0.0.0.0"
+    ports:
+      - "127.0.0.1:3001:3001"
