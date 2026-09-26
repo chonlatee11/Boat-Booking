@@ -21,6 +21,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/chonlatee11/boat-booking/gen/go/catalog/v1/catalogv1connect"
 	"github.com/chonlatee11/boat-booking/pkg/auth"
 	"github.com/chonlatee11/boat-booking/pkg/httpx"
 	"github.com/chonlatee11/boat-booking/pkg/kafka"
@@ -151,6 +152,18 @@ func run(ctx context.Context) error {
 		Nudge:  nudge,
 	}
 
+	otelOpt, err := httpx.ConnectOtel()
+	if err != nil {
+		return fmt.Errorf("%s: %w", serviceName, err)
+	}
+	catalogURL := httpx.EnvOr("CATALOG_URL", "http://catalog:8080")
+	usersSvc := &app.Users{
+		Pool:          pool,
+		Catalog:       catalogv1connect.NewCatalogServiceClient(httpx.NewHTTPClient(5*time.Second), catalogURL, otelOpt),
+		InternalToken: token,
+		Nudge:         nudge,
+	}
+
 	// D-09: the operator-controlled SUPER_ADMIN_EMAIL is the only way a
 	// super_admin ever comes to exist — no API or CLI path creates one.
 	// Runs before the HTTP server starts accepting traffic; a failure here
@@ -174,7 +187,7 @@ func run(ctx context.Context) error {
 	r.Get("/readyz", ready.Handler)
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.RequireInternal(token))
-		httpadapter.Routes(pr, authSvc)
+		httpadapter.Routes(pr, authSvc, usersSvc)
 	})
 
 	srv := &http.Server{

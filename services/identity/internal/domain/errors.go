@@ -16,6 +16,10 @@ var (
 	ErrDisabled            = errors.New("user disabled")
 	ErrDeliveryUnavailable = errors.New("delivery channel unavailable")
 	ErrSessionInvalid      = errors.New("session invalid, expired, or reused")
+	ErrPermissionDenied    = errors.New("permission denied")
+	ErrAlreadyExists       = errors.New("already exists")
+	ErrUnavailable         = errors.New("dependency unavailable")
+	ErrFailedPrecondition  = errors.New("failed precondition")
 )
 
 // CodeMismatchError is returned when a wrong OTP code is presented, and

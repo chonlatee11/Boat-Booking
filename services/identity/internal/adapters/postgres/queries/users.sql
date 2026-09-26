@@ -25,3 +25,15 @@ values ($1, $2, 'super_admin')
 on conflict (email) do update set
   role = 'super_admin', operator_id = null, pier_ids = '{}', disabled_at = null, updated_at = now()
 returning id, (xmax = 0) as inserted;
+
+-- name: InsertStaffUser :one
+insert into users (id, email, name, role, operator_id, pier_ids)
+values ($1, $2, $3, $4, $5, $6)
+on conflict (email) do nothing
+returning *;
+
+-- name: PromoteCustomerToStaff :one
+update users
+set role = $2, operator_id = $3, pier_ids = $4, name = $5, updated_at = now()
+where email = $1 and role = 'customer'
+returning *;

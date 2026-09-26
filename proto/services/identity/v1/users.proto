@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package boatbooking.identity.v1;
+
+option go_package = "github.com/chonlatee11/boat-booking/gen/go/identity/v1;identityv1";
+
+// UserService is super_admin's staff-management API (D-08, AUTH-04):
+// create/update, list, and disable/re-enable staff and pier_admin users
+// bound to one operator and a validated set of piers. Every RPC requires
+// verified claims (no claims -> Unauthenticated); only super_admin may call
+// any of them (any other role -> PermissionDenied).
+service UserService {
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  rpc UpsertUser(UpsertUserRequest) returns (UpsertUserResponse);
+  rpc SetUserDisabled(SetUserDisabledRequest) returns (SetUserDisabledResponse);
+}
+
+// StaffUser is a non-customer user as seen by super_admin management —
+// customers are never returned here (PDPA minimal exposure).
+message StaffUser {
+  string user_id = 1;
+  string email = 2;
+  string name = 3;
+  string role = 4;
+  string operator_id = 5;
+  repeated string pier_ids = 6;
+  bool disabled = 7;
+}
+
+// operator_id filters the result to one operator; empty returns every
+// non-customer user.
+message ListUsersRequest {
+  string operator_id = 1;
+}
+
+message ListUsersResponse {
+  repeated StaffUser users = 1;
+}
+
+// An empty user_id means create; a non-empty user_id means update. email is
+// immutable on update — a value that differs from the stored row is
+// rejected. role must be "staff" or "pier_admin"; "customer" and
+// "super_admin" can never be assigned through this API (D-09).
+message UpsertUserRequest {
+  string user_id = 1;
+  string email = 2;
+  string name = 3;
+  string role = 4;
+  string operator_id = 5;
+  repeated string pier_ids = 6;
+}
+
+message UpsertUserResponse {
+  StaffUser user = 1;
+}
+
+message SetUserDisabledRequest {
+  string user_id = 1;
+  bool disabled = 2;
+}
+
+message SetUserDisabledResponse {
+  StaffUser user = 1;
+}

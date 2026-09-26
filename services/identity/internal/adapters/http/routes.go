@@ -21,15 +21,20 @@ import (
 	"github.com/chonlatee11/boat-booking/services/identity/internal/domain"
 )
 
-// Routes mounts AuthService's connect handler onto r. a already carries the
-// Postgres pool, Valkey client, and outbox nudge it needs.
-func Routes(r chi.Router, a *app.Auth) {
+// Routes mounts AuthService's and UserService's connect handlers onto r. a
+// already carries the Postgres pool, Valkey client, and outbox nudge it
+// needs; u carries the catalog client UserService needs for pier validation
+// (research Pattern 3).
+func Routes(r chi.Router, a *app.Auth, u *app.Users) {
 	otelOpt, err := httpx.ConnectOtel()
 	if err != nil {
 		panic(fmt.Errorf("identity: %w", err))
 	}
-	path, handler := identityv1connect.NewAuthServiceHandler(&server{auth: a}, otelOpt)
-	r.Mount(path, handler)
+	authPath, authHandler := identityv1connect.NewAuthServiceHandler(&server{auth: a}, otelOpt)
+	r.Mount(authPath, authHandler)
+
+	userPath, userHandler := identityv1connect.NewUserServiceHandler(&userServer{users: u}, otelOpt)
+	r.Mount(userPath, userHandler)
 }
 
 // server implements identityv1connect.AuthServiceHandler.

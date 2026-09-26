@@ -137,6 +137,86 @@ func (q *Queries) InsertCustomerByPhone(ctx context.Context, arg InsertCustomerB
 	return i, err
 }
 
+const insertStaffUser = `-- name: InsertStaffUser :one
+insert into users (id, email, name, role, operator_id, pier_ids)
+values ($1, $2, $3, $4, $5, $6)
+on conflict (email) do nothing
+returning id, email, phone, name, role, operator_id, pier_ids, disabled_at, created_at, updated_at
+`
+
+type InsertStaffUserParams struct {
+	ID         pgtype.UUID
+	Email      pgtype.Text
+	Name       string
+	Role       string
+	OperatorID pgtype.UUID
+	PierIds    []pgtype.UUID
+}
+
+func (q *Queries) InsertStaffUser(ctx context.Context, arg InsertStaffUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, insertStaffUser,
+		arg.ID,
+		arg.Email,
+		arg.Name,
+		arg.Role,
+		arg.OperatorID,
+		arg.PierIds,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Phone,
+		&i.Name,
+		&i.Role,
+		&i.OperatorID,
+		&i.PierIds,
+		&i.DisabledAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const promoteCustomerToStaff = `-- name: PromoteCustomerToStaff :one
+update users
+set role = $2, operator_id = $3, pier_ids = $4, name = $5, updated_at = now()
+where email = $1 and role = 'customer'
+returning id, email, phone, name, role, operator_id, pier_ids, disabled_at, created_at, updated_at
+`
+
+type PromoteCustomerToStaffParams struct {
+	Email      pgtype.Text
+	Role       string
+	OperatorID pgtype.UUID
+	PierIds    []pgtype.UUID
+	Name       string
+}
+
+func (q *Queries) PromoteCustomerToStaff(ctx context.Context, arg PromoteCustomerToStaffParams) (User, error) {
+	row := q.db.QueryRow(ctx, promoteCustomerToStaff,
+		arg.Email,
+		arg.Role,
+		arg.OperatorID,
+		arg.PierIds,
+		arg.Name,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Phone,
+		&i.Name,
+		&i.Role,
+		&i.OperatorID,
+		&i.PierIds,
+		&i.DisabledAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const upsertSuperAdmin = `-- name: UpsertSuperAdmin :one
 insert into users (id, email, role)
 values ($1, $2, 'super_admin')
