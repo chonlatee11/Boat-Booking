@@ -71,13 +71,7 @@ export function AdminShell({
   );
 }
 
-function NavLinks({
-  items,
-  pathname,
-}: {
-  items: NavItem[];
-  pathname: string;
-}) {
+function NavLinks({ items, pathname }: { items: NavItem[]; pathname: string }) {
   return (
     <>
       {items.map((item) => {

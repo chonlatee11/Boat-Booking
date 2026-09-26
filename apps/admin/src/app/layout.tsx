@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { IBM_Plex_Sans_Thai } from 'next/font/google';
 import { Providers } from './providers';
 import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import './globals.css';
 
 const plexSansThai = IBM_Plex_Sans_Thai({
@@ -23,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="th" className={plexSansThai.variable}>
       <body className="font-sans antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          <TooltipProvider>{children}</TooltipProvider>
+        </Providers>
         <Toaster />
       </body>
     </html>

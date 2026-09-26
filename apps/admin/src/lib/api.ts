@@ -84,9 +84,12 @@ export function rpc<Res>(
   method: string,
   body: object = {},
 ): Promise<Res> {
-  return apiFetch<Res>(`/api/v1/admin/${RPC_SERVICE_NAMES[service]}/${method}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  return apiFetch<Res>(
+    `/api/v1/admin/${RPC_SERVICE_NAMES[service]}/${method}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+  );
 }

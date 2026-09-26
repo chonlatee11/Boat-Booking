@@ -5,12 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useWhoami } from '@/lib/queries';
 import { apiFetch, type ApiError } from '@/lib/api';
 import { AdminShell } from '@/components/admin-shell';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
