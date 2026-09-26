@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 02
 current_phase_name: Identity + Catalog
 status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-09-26T17:52:29.110Z"
+stopped_at: Completed 02-05-PLAN.md
+last_updated: "2026-09-26T18:25:15.035Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 02 execution started
-state_head: 3b7c02c8496ce3c6ace68844500f6945af399aaa
+state_head: 2c2a8877ec6314f990151ac224331008a11bd536
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 27
-  completed_plans: 18
+  completed_plans: 19
   percent: 20
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 02 (Identity + Catalog) — EXECUTING
-Plan: 5 of 13
+Plan: 6 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 02 execution started
 
@@ -76,6 +76,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 02 P02 | 35min | 3 tasks | 42 files |
 | Phase 02 P03 | 23min | 2 tasks | 32 files |
 | Phase 02 P04 | 21min | 2 tasks | 10 files |
+| Phase 02 P05 | 30min | 3 tasks | 27 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,8 @@ Recent decisions affecting current work:
 - [Phase 02]: UpsertOperator kept boat.go's single ON CONFLICT upsert shape; UpsertPier uses an explicit create/update branch since pier updates need GetPierForUpdateScoped's (operator_id, pier_ids) filter
 - [Phase 02]: Routes takes one shared *http.Client instead of a typed catalog client + separate transport param
 - [Phase 02]: adminProxy buffers the bounded request body upfront (io.ReadAll behind MaxBytesReader) instead of streaming through httputil.ReverseProxy, guaranteeing the upstream is never contacted for an oversized body
+- [Phase 02]: [Phase 02] Kong global cors plugin gained http://localhost:3002 directly (not a second route plugin) for the admin app origin (D-18)
+- [Phase 02]: [Phase 02] identity EnsureSuperAdmin promote-existing-row path publishes no identity.UserCreated -- only a fresh insert announces the identity; promotion's next refresh re-reads the new role via D-10
 
 ### Pending Todos
 
@@ -138,6 +141,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T17:52:29.014Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-09-26T18:25:14.954Z
+Stopped at: Completed 02-05-PLAN.md
 Resume file: None
