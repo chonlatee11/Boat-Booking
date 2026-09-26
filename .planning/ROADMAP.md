@@ -92,15 +92,40 @@ Plans:
   1. Customer requests an OTP via email or phone and receives a session (JWT in httpOnly cookie) without creating a password account
   2. staff / pier_admin / super_admin log in and receive `role` + `operator_id` claims; Kong verifies the JWT and the BFF forwards claims as trusted headers; requests missing those headers are rejected by services
   3. super_admin creates pier_admin / staff users assigned to an operator and pier; every admin query is scoped by `operator_id` so a pier_admin never sees another operator's data
-  4. pier_admin creates/edits/archives operators, piers (with map picker), routes (with tiered cancellation policy), boats, and per-route ticket prices (adult/child, integer satang) via the admin UI
+  4. super_admin creates/edits operators and creates piers; pier_admin edits/archives the piers assigned to them (with map picker) and creates/edits/archives routes (with tiered cancellation policy), boats, and per-route ticket prices (adult/child, integer satang) via the admin UI (wording corrected per 02-CONTEXT D-08)
   5. Public search lists piers and routes with coordinates for the map, without authentication
 
-**Plans**: TBD
+**Plans**: 13 plans
 **UI hint**: yes
 
 Plans:
+**Wave 1**
 
-- [ ] 02-01: TBD
+- [ ] 02-01-PLAN.md — Storage + package decisions (checkpoints) and pier_ids claim end-to-end through Kong/BFF/RequireInternal (D-06)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 02-02-PLAN.md — identity service: email/phone OTP (Valkey, Mailpit/Resend), auto-created customers, UserCreated, JWT + refresh token
+- [ ] 02-03-PLAN.md — catalog operators + piers with the shared Scope rule (super_admin / pier_admin / staff) and public pier list
+- [ ] 02-04-PLAN.md — gateway generic admin RPC proxy + claim-less public proxy (replaces per-endpoint BFF handlers)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 02-05-PLAN.md — edge sessions: /api/v1/auth/* cookie routes, Kong api-auth route, refresh rotation + reuse detection, super_admin bootstrap
+- [ ] 02-06-PLAN.md — catalog routes, tiered cancellation policy, effective-dated prices, public routes with current prices, pier/route archive (D-15)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 02-07-PLAN.md — identity UserService: super_admin manages staff/pier_admin users with catalog-validated piers, disable/re-enable
+- [ ] 02-08-PLAN.md — catalog boats under home-pier scope + archive, pier photo presign (D-19), proof/roundtrip updated
+- [ ] 02-09-PLAN.md — apps/admin scaffold (Thai, :3002): OTP login, role-aware shell, shared DataTable, operators CRUD, CI/Compose wiring
+- [ ] 02-10-PLAN.md — apps/web customer OTP login (TH/EN), signed-in header, silent refresh
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [ ] 02-11-PLAN.md — admin Piers page: MapLibre picker, direct-to-storage photo upload (storage container), archive with D-15 blocked state
+- [ ] 02-12-PLAN.md — admin Routes (policy editor, return route, prices) and Boats pages
+- [ ] 02-13-PLAN.md — admin Staff page: create/edit/disable staff users
 
 ### Phase 3: Schedule
 
@@ -173,7 +198,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Platform Foundation | 14/14 | In Progress|  |
-| 2. Identity + Catalog | 0/? | Not started | - |
+| 2. Identity + Catalog | 0/13 | Planned | - |
 | 3. Schedule | 0/? | Not started | - |
 | 4. Booking Core | 0/? | Not started | - |
 | 5. Payment + Ticket + Notification | 0/? | Not started | - |
