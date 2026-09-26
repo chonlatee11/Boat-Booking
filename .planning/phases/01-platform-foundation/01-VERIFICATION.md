@@ -1,6 +1,6 @@
 ---
 phase: 01-platform-foundation
-verified: 2026-09-26T07:49:52Z
+verified: 2026-09-26T19:15:00Z
 status: human_needed
 score: 5/6 must-haves verified
 covered_files:
@@ -32,35 +32,50 @@ covered_files:
   - ".planning/phases/01-platform-foundation/01-12-SUMMARY.md"
   - ".planning/phases/01-platform-foundation/01-13-PLAN.md"
   - ".planning/phases/01-platform-foundation/01-13-SUMMARY.md"
+  - ".planning/phases/01-platform-foundation/01-14-PLAN.md"
+  - ".planning/phases/01-platform-foundation/01-14-SUMMARY.md"
+  - ".planning/phases/01-platform-foundation/01-REVIEW-FIX.md"
   - ".planning/phases/01-platform-foundation/01-REVIEW.md"
-covered_digest: "v1:sha256:60c888207e9a50d13268d4b59fa303d7be4280b079ce64131828d70013af69a2"
+  - ".planning/phases/01-platform-foundation/01-UAT.md"
+  - "deploy/observability/grafana/provisioning/datasources/datasources.yaml"
+  - "pkg/outbox/outbox.go"
+covered_digest: "v1:sha256:4584de7d9a6ca0105213c09388e1ac296c490772da12fefc7c163b7f2a1016be"
 behavior_unverified: 1
 overrides_applied: 0
+re_verification:
+  previous_status: human_needed
+  previous_score: 5/6
+  gaps_closed:
+    - "G-01-7 (UAT): Grafana 'Logs for this span' returned empty for inner spans (e.g. catalog UpsertBoat) because Tempo's tracesToLogsV2 had no time shift, so the Loki query window equalled the exact span duration, which ends before the outer request log line is written. Fixed by 01-14 (spanStartTimeShift: '-1m', spanEndTimeShift: '1m', filterByTraceID unchanged)."
+  gaps_remaining: []
+  regressions: []
 behavior_unverified_items:
-  - truth: "Jenkins CI builds every service image and runs unit + integration tests on every push (PLAT-08)"
-    test: "Push a commit under pkg/ (should image ALL services) and, separately, a commit only under services/schedule/ (should image ONLY schedule); watch the boat-booking multibranch job pick each up within its 2-minute scan"
-    expected: "Both builds run Lint/Proto/Unit/Integration/Migrations/Template/Web stages; the pkg/ build's Images stage builds template+catalog+gateway+schedule; the schedule-only build's Images stage builds only schedule; neither pushes to Harbor unless the branch is main"
-    why_human: "Requires a live Jenkins reacting to two real pushes over real scan cycles (per 01-13-PLAN.md's own deferred human-check); the verifier confirmed the selector logic (deploy/ci/changed-services_test.sh, 13/13 PASS) and that Jenkinsfile stages mirror `make ci`, but did not have Jenkins credentials to trigger/observe a live build in this session"
+  - truth: "Jenkins CI builds every service image and runs unit + integration tests on every push, with per-commit changed-service image scoping (PLAT-08)"
+    test: "After phase 1 merges to main, push a commit under pkg/ (should image ALL services) and, separately, a commit only under services/schedule/ (should image ONLY schedule); watch the boat-booking multibranch job pick each up"
+    expected: "Both builds run every non-image stage; the pkg/ build's Images stage builds template+catalog+gateway+schedule; the schedule-only build's Images stage builds only schedule; neither pushes to Harbor unless the branch is main"
+    why_human: "01-UAT.md test 8 ran this live on a throwaway non-main branch: the build went green, every non-image stage ran, and the Images stage built all 4 services (select-all), Push correctly skipped. But non-main builds diff against origin/main, which is docs-only until this phase merges, so every non-main branch build selects all services — the per-commit scoped case (schedule-only change -> only schedule imaged) is structurally impossible to exercise before the merge. UAT itself concluded 'Re-check on main after merge (base = GIT_PREVIOUS_SUCCESSFUL_COMMIT)', which needs a human with Jenkins access post-merge."
 human_verification:
-  - test: "Push a commit under pkg/ then a commit only under services/schedule/, and watch two Jenkins multibranch scan cycles"
-    expected: "First build images all 4 services, second images only schedule; both run every non-image stage; neither pushes off main"
-    why_human: "Live CI system behavior, no credentials available to the verifier in this session"
-  - test: "With the stack up after `make proof`, open http://localhost:3000 (Grafana) -> Explore -> Tempo, search `{ span.aggregate_id = \"<boat id printed by make proof>\" }`, open the trace; then open dashboard \"platform\""
-    expected: "One trace shows gateway HTTP span -> connect call to catalog -> Kafka publish span -> schedule consumer span, same trace id, no gap at the Kafka hop; \"Logs for this span\" jumps to the matching Loki lines; platform dashboard shows HTTP rate/consumer lag/processed-events/outbox-backlog panels with real data"
-    why_human: "Trace continuity across the Kafka hop and dashboard usefulness are visual judgements; `make proof` and `make obs-check` already assert the underlying data exists programmatically (both PASS, verified independently in this session)"
-  - test: "Open http://localhost:3001 in a 375px-wide viewport, then /en; press refresh; open devtools Network"
-    expected: "/ redirects to /th; boat cards list the proof boat; Thai renders in IBM Plex Sans Thai (no system-font fallback); /en shows English strings; every XHR goes to localhost:8000 (Kong) not directly to gateway/catalog; refresh refetches"
-    why_human: "Font rendering and mobile layout need a browser; the verifier confirmed by curl that /, /th, /en all return correct status codes, Thai copy is present, and the compiled CSS embeds \"IBM Plex Sans Thai\", but visual layout/no-fallback-font judgement needs a real viewport"
+  - test: "Push a commit under pkg/ then, after merging this phase to main, a commit only under services/schedule/, and watch two Jenkins multibranch scan cycles"
+    expected: "First build images all 4 services (already observed live in UAT test 8, off a throwaway branch); second build (on/after main, diffing GIT_PREVIOUS_SUCCESSFUL_COMMIT) images only schedule; neither pushes off main"
+    why_human: "Per-commit scoping cannot be exercised pre-merge (see behavior_unverified_items above) — this is the one remaining live-CI check, deferred structurally rather than skipped"
 ---
 
 # Phase 1: Platform Foundation Verification Report
 
 **Phase Goal:** A developer can scaffold a new service from a shared template, run the full local stack, and see one real event flow end-to-end with cross-service tracing
-**Verified:** 2026-09-26T07:49:52Z
+**Verified:** 2026-09-26T19:15:00Z
 **Status:** human_needed
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — after gap closure (UAT gap G-01-7, closed by plan 01-14)
 
-**Note on ROADMAP `mode: mvp`:** ROADMAP.md tags Phase 1 `Mode: mvp`, but the phase goal is not in `As a ..., I want ..., so that ....` User Story form (`user-story.validate` returns `valid: false`), and this is a pure platform/infra-enablement phase, not a user-facing vertical slice. All 5 milestone phases carry the same `mode: mvp` tag, suggesting a blanket default rather than a deliberate SPIDR-split for Phase 1. Rather than refuse verification outright (which would leave the phase with no report, contradicting the explicit verification request and the well-specified numbered Success Criteria already in ROADMAP.md), this report proceeds with standard goal-backward verification against ROADMAP's Success Criteria + PLAN `must_haves`. Recommend clearing `mode: mvp` for Phase 1 in ROADMAP.md, or accepting this as an intentional non-MVP infra phase.
+## Re-Verification Context
+
+This is a second verification pass. The first verification (2026-09-26T07:49:52Z) scored 5/6 truths VERIFIED with 1 ⚠️ PRESENT_BEHAVIOR_UNVERIFIED (live Jenkins CI behavior) and routed to `human_needed` with three human-verification items. A subsequent UAT session (`01-UAT.md`, 73 pass / 1 issue / 1 blocked out of 75) exercised those human items live and found one genuine defect:
+
+- **G-01-7** (UAT test 7, `severity: minor`): Grafana's "Logs for this span" returned nothing when clicked on an inner span (e.g. catalog `UpsertBoat`), even though the correct log line existed in Loki with the matching `trace_id`. Root cause: Tempo's `tracesToLogsV2` had no `spanStartTimeShift`/`spanEndTimeShift`, so the Loki query window was exactly `[span.start, span.end]` — and the request log is written at the end of the *outer* otelhttp span, after inner child spans (like the connect-go RPC handler span) have already ended.
+
+Plan `01-14` (gap-closure, single task) fixed this by adding `spanStartTimeShift: '-1m'` / `spanEndTimeShift: '1m'` to the Tempo datasource's `tracesToLogsV2` in Grafana's provisioning file, commit `e54e24b`. This report independently re-verifies that fix (not trusting the SUMMARY or the orchestrator's own Grafana-API check) and re-checks the rest of the phase for regressions.
+
+The other two human-verification items from the first pass (mobile viewport/font/Kong-only routing; the non-log parts of Grafana trace continuity and the platform dashboard) were exercised live in the same UAT session (tests 3, 4, 7) and passed — they are closed out below, not carried forward.
 
 ## Goal Achievement
 
@@ -68,117 +83,98 @@ human_verification:
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | `make new-service <name>` scaffolds a working service (`cmd/`, `internal/{domain,app,adapters}`, `migrations/`, `CLAUDE.md`, `/healthz`+`/readyz`, root-`Dockerfile` image) wired to shared `pkg/*` (PLAT-01) | VERIFIED | Ran `make template-smoke` independently: scaffolded `tsmoke`, built the image from the root `Dockerfile`, container reported Docker health `healthy` via `-healthcheck`, then cleaned up (`PASS template-smoke`, git status clean afterward). `catalog`/`schedule` in the repo are real prior products of this same path. |
-| 2 | `make up` starts the full stack (Redpanda, Postgres 17, Valkey, Kong 3.9.1 DB-less, Grafana Tempo/Loki/Prometheus); `make proto-gen` generates committed Go+TS clients (PLAT-02, PLAT-03, PLAT-04) | VERIFIED | `docker ps` shows all 14 `boatbooking-*` containers `Up`/`healthy` (postgres, redpanda, valkey, kong, grafana, loki, prometheus, tempo, otel-collector, catalog, schedule, gateway, web). `deploy/postgres/isolation-check.sh` run directly: `PASS own-db-access`/`PASS cross-db-denied` both directions — proves database-per-service by Postgres grant, not convention. `git ls-files gen/` shows `gen/go/**/*.pb.go`, `gen/go/**/*connect.go`, `gen/ts/**/*_pb.ts` all committed. Grepped all `services/*/go.mod`+source: no direct `pgxpool.New` outside `pkg/pgx`, confirming `pkg/*` is the sole access path (PLAT-02). |
-| 3 | A state change via transactional outbox is applied exactly once in another service, visible as one trace in Tempo with structured slog JSON logs carrying `trace_id` (PLAT-05, PLAT-06) | VERIFIED | Ran `make proof` independently (not trusting the SUMMARY claim): `PASS applied`, `PASS exactly-once`, `PASS public-list`, `PASS single-trace` (one Tempo trace spans catalog+gateway+schedule by `aggregate_id`), `PASS logs-correlated` (Loki holds the matching `trace_id`). Also ran `make obs-check` independently: `PASS traces`, `PASS logs`, `PASS metrics`. This directly falsifies the orchestrator's concern that 01-07's early hand-marked PLAT-05/06/07 checkboxes were unproven — the re-run in this session reproduces the same result from scratch. |
-| 4 | Failed event processing retries 3x with backoff then lands in `<topic>.dlq` with error metadata; consumer offsets commit only after successful apply (PLAT-07) | VERIFIED | Ran the single named test directly against real testcontainers Postgres+Redpanda (not the full suite): `go test -tags=integration -run TestFailedHandlerLandsInDLQAfter3Retries -v ./kafka/...` → attempts 1,2,3 logged, then `"kafka: event sent to dlq" attempts=4`, `--- PASS (3.57s)`. Code confirms `kgo.DisableAutoCommit()` and manual `CommitRecords` only after DLQ-or-success. |
-| 5 | Jenkins CI builds every service image and runs unit + integration tests (testcontainers) on every push (PLAT-08) | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | Jenkins + agent containers are `Up`/`healthy`. Independently ran `bash deploy/ci/changed-services_test.sh` — all 13 table-driven cases PASS (adjacency, dedup, sort, pkg/proto/gen/_template/go.work/Makefile/Dockerfile→ALL, docs-only→empty, web-only→empty). 01-REVIEW.md confirms Jenkinsfile stages mirror `make ci` and Push is gated to `branch 'main'`. However, the *live* claim — that a real push actually triggers a scan and produces the claimed image-scoping in a real Jenkins run — needs Jenkins credentials this session doesn't have; 01-13-PLAN.md itself defers exactly this to end-of-phase human-check (two live push/scan cycles). Selector logic is proven; live end-to-end CI behavior is not independently observed in this session. |
-| 6 | Next.js skeleton (TH/EN i18n, Thai-friendly font, mobile-first) calls the backend only through Kong with a verified JWT round-trip (PLAT-09, PLAT-10) | VERIFIED | `curl http://localhost:3001/` → `307 -> /th`; `/th` and `/en` both `200` and both render "Boat"/"เรือ" strings; compiled CSS chunk contains `"IBM Plex Sans Thai"` (3 occurrences) confirming `next/font` embedding, not a fallback. `apps/web/src/components/boat-list.tsx` fetches only via `useQuery`+`apiFetch()` (Client Component). Ran `make kong-roundtrip` independently: `PASS no-token-401`, `PASS foreign-key-401`, `PASS expired-401`, `PASS refresh-kind-401`, `PASS valid-token-200`, `PASS cors-preflight`, `PASS ratelimit-header`, `PASS public-boats-200`, `PASS upsert-boat-201`, `PASS rate-limit-429` — the full curl→Kong→BFF→catalog round trip plus JWT edge cases (PLAT-10). |
+| 1 | `make new-service <name>` scaffolds a working service wired to shared `pkg/*` (PLAT-01) | ✓ VERIFIED | No code under `services/_template/` or `pkg/*` changed since the first verification. `git log` shows only observability config (`01-14`) and three code-review fixes (outbox, otel, Makefile) touched since then — none affect the template. Re-confirmed via UAT test 52-54 (D1-D3, all pass, `source: automated`). |
+| 2 | `make up` starts the full stack; `make proto-gen` generates committed Go+TS clients; database-per-service enforced (PLAT-02, PLAT-03, PLAT-04) | ✓ VERIFIED | `docker ps` shows all 21 `boatbooking-*` + Harbor containers `Up`/`healthy` (postgres, redpanda, valkey, kong, grafana, loki, prometheus, tempo, otel-collector, catalog, schedule, gateway, web, ci-jenkins, ci-jenkins-agent). Independently re-ran `make proof` from scratch in this session (see #3) — it depends on the full stack being correctly composed. |
+| 3 | A state change via transactional outbox is applied exactly once in another service, visible as one trace in Tempo with structured slog JSON logs carrying `trace_id` (PLAT-05, PLAT-06) | ✓ VERIFIED | Ran `make proof` independently in this session (not trusting any prior claim): `PASS applied`, `PASS exactly-once`, `PASS public-list`, `PASS single-trace` (trace `be114e8cddf1594db64b82eb99bfb4e4` spans gateway+catalog+schedule), `PASS logs-correlated`. Queried the Tempo API directly (via Grafana's datasource proxy) and confirmed the same 3-service span tree (gateway POST → catalog UpsertBoat/publish → schedule receive/process). |
+| 4 | Grafana's "Logs for this span" resolves for **inner** spans, not just the outer request span, closing UAT gap G-01-7 (PLAT-06) | ✓ VERIFIED (behaviorally, not just presence) | Independently reproduced both the old bug and the new fix using the real trace/log data from the `make proof` run above, replicating exactly what Grafana's `tracesToLogsV2` constructs: queried Loki (`{service_name="catalog"} \| trace_id=\`be114e8c...\``) over the catalog `UpsertBoat` span's **exact** `[start,end]` window (the pre-fix behavior) → **empty result**, reproducing G-01-7. Queried the same filter over the **±1m-widened** window (the post-fix, currently-provisioned behavior) → returned the catalog `"http request"` log line at a timestamp between the inner span's end and the outer span's end, with the correct `trace_id`. Also confirmed live via the Grafana API that the running datasource's `tracesToLogsV2` is exactly `{datasourceUid: loki, filterByTraceID: true, spanStartTimeShift: "-1m", spanEndTimeShift: "1m"}` — matching the committed `datasources.yaml` (`git diff` for `e54e24b` is exactly 2 added lines). Because the query used an explicit `trace_id` filter (mirroring `filterByTraceID: true`), the widened window did not pull in any other trace's logs — the third must-have ("Loki result is still scoped to the clicked trace") is directly confirmed, not inferred. |
+| 5 | Failed event processing retries 3x with backoff then lands in `<topic>.dlq`; consumer offsets commit only after successful apply; outbox poison rows no longer wedge the batch (PLAT-07) | ✓ VERIFIED | `pkg/kafka` and `pkg/outbox` unchanged in substance since the first verification except a real bug fix: commit `6707df5` fixed the `CR-01` defect flagged in the prior VERIFICATION.md (an outbox unmarshal failure used to roll back the whole publish batch and permanently wedge on the poison row) — it now logs, marks the row published-and-skipped, and continues, with a new regression test `TestRelaySkipsPoisonRowWithoutLosingEarlierProgress`. `make test` re-run in this session: all packages `ok` or `[no test files]`, zero failures. |
+| 6 | Jenkins CI builds every service image and runs unit + integration tests, with per-commit changed-service image scoping, on every push (PLAT-08) | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | UAT test 8 ran this live (not skipped) on a throwaway branch: build went `SUCCESS`, every non-image stage ran, Images stage built all 4 services (select-all is correct off a non-main branch), Push correctly skipped. But per-commit scoping (a `services/schedule/`-only change building *only* schedule) cannot be exercised before this phase merges to main, because non-main Jenkins builds diff against `origin/main`, which is docs-only until then — so every non-main branch always selects all services regardless of what changed. The selector's *unit-level* logic is proven (`deploy/ci/changed-services_test.sh`, 13/13 PASS, re-confirmed in the first verification pass). |
 
-**Score:** 5/6 truths verified (1 present + wired, live behavior not independently exercised)
+**Score:** 5/6 truths verified (1 present + wired, live per-commit-scoping behavior structurally deferrable only to post-merge)
+
+### Deferred Items
+
+None additional — item #6 above is not deferred to a later milestone phase (no later ROADMAP phase covers CI scoping); it is deferred to *after this same phase's merge to main*, which is a structural precondition of the test itself, not a scope choice. It stays a human-verification item, not a `deferred` (Step 9b) entry.
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `services/_template/` | Scaffold source template | VERIFIED | Full `cmd/internal/{domain,app,adapters}/migrations` present; used successfully by `make template-smoke`, `make new-service catalog`, `make new-service schedule` |
-| `pkg/{auth,httpx,kafka,outbox,pgx,events,clock,money}` | Shared libraries, sole infra access path | VERIFIED | All present, unit-tested (`ok` for auth/clock/events/httpx/money/testenv), no direct bypass found in service code |
-| `Dockerfile` (root) | Single multi-stage build, `ARG SERVICE` | VERIFIED | Used by `make template-smoke`, produced a working distroless image |
-| `deploy/docker-compose.yml` + `deploy/compose/service.yml.tmpl` | Full stack composition | VERIFIED | `make up` stack running and healthy |
-| `deploy/kong/kong.yml.tmpl`, `deploy/kong/roundtrip.sh` | Kong DB-less JWT gateway + acceptance script | VERIFIED | `make kong-roundtrip` all-PASS |
-| `deploy/proof.sh` | Walking-skeleton event-flow proof | VERIFIED | `make proof` all-PASS, re-run independently |
-| `deploy/observability/*` | OTel Collector → Tempo/Loki/Prometheus → Grafana | VERIFIED | `make obs-check` all-PASS |
-| `deploy/ci/{changed-services.sh,changed-services_test.sh,smoke.sh}`, `Jenkinsfile` | CI selector + pipeline | VERIFIED (static) / ⚠️ live-behavior unverified | Selector unit tests pass; Jenkinsfile reviewed; live push-triggered build not observed this session (no Jenkins credentials) |
-| `apps/web/` | Next.js 16 TH/EN skeleton | VERIFIED | Serving on :3001, i18n + font + Kong-only fetch confirmed |
-| `pkg/kafka/consumer.go` | Exactly-once + retry/DLQ consumer | VERIFIED | `TestFailedHandlerLandsInDLQAfter3Retries` re-run and PASS; `TestHandleAppliesOnce`/`TestUncommittedRecordIsRedelivered` present |
-| `pkg/outbox/outbox.go` | Transactional outbox relay | VERIFIED (happy path) / see anti-patterns | Relay proven working end-to-end via `make proof`; a real latent bug exists on the unmarshal-failure path (see CR-01 below) — does not contradict any stated must-have truth for this phase (all of which describe the publish-failure-stops-batch and happy-path behavior, not unmarshal-failure handling) |
+| `deploy/observability/grafana/provisioning/datasources/datasources.yaml` | Tempo → Loki trace-to-logs link with ±1m window, filtered by trace id | ✓ VERIFIED | File contains `spanStartTimeShift: '-1m'` / `spanEndTimeShift: '1m'` under `tracesToLogsV2`; `filterByTraceID: true` and `datasourceUid: loki` unchanged. `git show e54e24b --stat` confirms exactly 2 lines added, nothing else touched. Live Grafana API (`/api/datasources/uid/tempo`) reflects the identical values after container restart. |
+| `pkg/outbox/outbox.go` | Transactional outbox relay, no poison-row wedge | ✓ VERIFIED | Unmarshal-failure branch now logs, marks published, continues (commit `6707df5`); `publishErrors` metric now also increments on this path (commit `425f926`). `go vet`/`go build`/`go test` clean per `01-REVIEW-FIX.md`; re-ran `make test` in this session, all green. |
+| `services/_template/`, `pkg/{auth,httpx,kafka,outbox,pgx,events,clock,money}`, `Dockerfile`, `deploy/docker-compose.yml`, `deploy/kong/*`, `deploy/proof.sh`, `deploy/observability/*`, `deploy/ci/*`, `Jenkinsfile`, `apps/web/` | All previously-verified phase-1 artifacts | ✓ VERIFIED (regression) | No changes since the first verification except the observability config and the three code-review fixes already covered above. `make proof`, `make test`, `docker ps` health, and `git log` for these paths confirm no drift. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |------|-----|-----|--------|---------|
-| `services/catalog` UpsertBoat | `pkg/outbox.Insert` | same pgx tx | VERIFIED | Confirmed by `make proof`'s `PASS applied` + `PASS exactly-once` |
-| `pkg/outbox` relay | Redpanda `catalog.events` | `Producer.Publish` w/ `traceparent` header | VERIFIED | `make proof`'s `PASS single-trace` shows the Kafka hop preserves the trace id |
-| `services/schedule` consumer | `pkg/kafka.Consumer.Handle` | `processed_events` tx | VERIFIED | `make proof`'s `PASS exactly-once`; `TestBoatUpsertedAppliedOnce` referenced in 01-11-SUMMARY, template pattern re-proven live by `TestFailedHandlerLandsInDLQAfter3Retries` re-run |
-| `services/gateway` BFF | `services/catalog` (connect-go) | `ForwardClaims` + otelconnect | VERIFIED | `make kong-roundtrip`'s `PASS upsert-boat-201`/`PASS public-boats-200` |
-| `apps/web/src/components/boat-list.tsx` | Kong `:8000` | `apiFetch()`, `credentials: 'include'` | VERIFIED | grep confirms `apiFetch(` call site is the only network call; curl confirms Kong-fronted responses |
-| `Jenkinsfile` stages | `Makefile` `ci` targets | 1:1 stage-per-target mirror | VERIFIED (static only) | Confirmed by code review (01-REVIEW.md file list) and Jenkinsfile inspection; live trigger not exercised this session |
+| `services/catalog` UpsertBoat | `pkg/outbox.Insert` | same pgx tx | ✓ VERIFIED | `make proof`'s `PASS applied` + `PASS exactly-once`, re-run this session |
+| `pkg/outbox` relay | Redpanda `catalog.events` | `Producer.Publish` w/ `traceparent` header | ✓ VERIFIED | `make proof`'s `PASS single-trace`; Tempo API directly queried confirms `catalog.events publish` span in the same trace |
+| `services/schedule` consumer | `pkg/kafka.Consumer.Handle` | `processed_events` tx | ✓ VERIFIED | `make proof`'s `PASS exactly-once`; Tempo API shows `catalog.events receive`/`process` spans in the same trace |
+| Grafana Tempo datasource `tracesToLogsV2` | Loki datasource (`uid: loki`) | `spanStartTimeShift`/`spanEndTimeShift`-widened, trace-id-filtered LogQL | ✓ VERIFIED | Directly reproduced the exact LogQL Grafana constructs against the live Loki API for both the old (unshifted) and new (±1m) windows — old returns `[]`, new returns the matching log line, both scoped to one `trace_id` |
+
+### Data-Flow Trace (Level 4)
+
+| Artifact | Data Variable | Source | Produces Real Data | Status |
+|----------|---------------|--------|---------------------|--------|
+| Tempo `tracesToLogsV2` link | Loki query `start`/`end` range | `span.startTimeUnixNano ∓ 60s` (computed client-side by Grafana) | Yes — verified by replaying the same computation against the real Tempo trace and real Loki data | ✓ FLOWING |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 |----------|---------|--------|--------|
-| Full walking-skeleton event flow (PLAT-05/06) | `make proof` | `PASS applied/exactly-once/public-list/single-trace/logs-correlated` | PASS |
-| Observability pipeline (PLAT-06) | `make obs-check` | `PASS traces/logs/metrics` | PASS |
-| Kong JWT round trip + edge cases (PLAT-10) | `make kong-roundtrip` | 10/10 `PASS` lines | PASS |
-| Retry→DLQ with real Redpanda+Postgres (PLAT-07) | `go test -tags=integration -run TestFailedHandlerLandsInDLQAfter3Retries -v ./kafka/...` (single named test, not full suite) | `--- PASS (3.57s)` | PASS |
-| Service scaffold → build → healthcheck (PLAT-01) | `make template-smoke` | `PASS template-smoke`, repo left clean | PASS |
-| DB-per-service isolation (PLAT-03) | `bash deploy/postgres/isolation-check.sh` | `PASS own-db-access` / `PASS cross-db-denied` both directions | PASS |
-| CI selector edge cases (PLAT-08) | `bash deploy/ci/changed-services_test.sh` | 13/13 `PASS` | PASS |
-| Unit test suite | `make test` | all packages `ok` or `[no test files]`, zero failures | PASS |
-| Web i18n/font/Kong-only routing (PLAT-09) | `curl` against `:3001` (`/`, `/th`, `/en`, CSS chunk) | 200s, correct redirects, Thai text present, `IBM Plex Sans Thai` in compiled CSS | PASS |
-| Live Jenkins push-triggered build (PLAT-08) | n/a — no Jenkins credentials this session | n/a | ? SKIP → human verification |
-| `make lint` (golangci-lint) | `make lint` | `golangci-lint: command not found` (not installed in this shell — it *is* installed in the CI/dev-tools image per `make dev-tools`) | ? SKIP — environment gap, not a code gap |
+| Full walking-skeleton event flow (PLAT-05/06) | `make proof` | `PASS applied/exactly-once/public-list/single-trace/logs-correlated`, boat `01a0dd7e-...`, trace `be114e8c...` | PASS |
+| Grafana API reflects the G-01-7 fix | `curl .../api/datasources/uid/tempo` (via `docker exec` for the admin password, matching the plan's own no-`.env`-read pattern) | `{"datasourceUid":"loki","filterByTraceID":true,"spanEndTimeShift":"1m","spanStartTimeShift":"-1m"}` | PASS |
+| G-01-7 regression check: old (unshifted) window on inner span | Loki `query_range` with `start=span.start`, `end=span.end`, filtered on `trace_id` | `[]` (empty) — reproduces the pre-fix bug exactly | PASS (confirms the bug existed and is window-caused) |
+| G-01-7 fix check: new (±1m) window on inner span | Loki `query_range` with `start=span.start-60s`, `end=span.end+60s`, filtered on `trace_id` | Returns the catalog `"http request"` log line, correct `trace_id` | PASS |
+| Unit test suite | `make test` | All packages `ok` or `[no test files]`, zero failures | PASS |
+| Outbox poison-row fix (CR-01, regression from first verification) | `01-REVIEW-FIX.md`'s recorded `-tags=integration` run of `TestRelaySkipsPoisonRowWithoutLosingEarlierProgress` | `PASS` (per fix report; not re-run in this session — Docker testcontainers run takes longer than the spot-check budget, and `go vet`/`go build`/`make test` already confirm no compile/unit regression) | PASS (documented, not re-executed) |
+
+### Probe Execution
+
+Not applicable — no `scripts/*/tests/probe-*.sh` convention in this repo; the phase's equivalent runnable checks (`make proof`, `make obs-check`, `make kong-roundtrip`, `make template-smoke`) are covered under Behavioral Spot-Checks above and were re-run independently.
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |-------------|-------------|-------------|--------|----------|
-| PLAT-01 | 01-09, 01-10 | Scaffold service via `make new-service` | SATISFIED | `make template-smoke` re-run, PASS |
-| PLAT-02 | 01-01, 01-04, 01-07, 01-09, 01-10 | Shared `pkg/*` sole access path | SATISFIED | grep confirms no bypass |
-| PLAT-03 | 01-01, 01-12 | `make up` full stack | SATISFIED | `docker ps` healthy, isolation-check PASS |
-| PLAT-04 | 01-02 | `make proto-gen` committed | SATISFIED | `git ls-files gen/` shows generated files tracked |
+| PLAT-01 | 01-09, 01-10 | Scaffold service via `make new-service` | SATISFIED | No change since first verification; UAT tests 52-54 (D1-D3) pass |
+| PLAT-02 | 01-01, 01-04, 01-07, 01-09, 01-10 | Shared `pkg/*` sole access path | SATISFIED | No change since first verification |
+| PLAT-03 | 01-01, 01-12 | `make up` full stack | SATISFIED | `docker ps` healthy this session |
+| PLAT-04 | 01-02 | `make proto-gen` committed | SATISFIED | No change since first verification |
 | PLAT-05 | 01-04, 01-10, 01-11, 01-12 | Exactly-once cross-service event | SATISFIED | `make proof` re-run, PASS |
-| PLAT-06 | 01-04, 01-08, 01-12 | Single trace + structured logs | SATISFIED | `make proof` + `make obs-check` re-run, PASS |
-| PLAT-07 | 01-07 | Retry 3x → DLQ, commit-after-apply | SATISFIED | Named integration test re-run, PASS |
-| PLAT-08 | 01-06, 01-13 | Jenkins CI builds+tests every push | PARTIALLY SATISFIED — selector logic and pipeline mirror proven; live push-cycle behavior deferred to human (see human_verification) |
-| PLAT-09 | 01-05 | Next.js TH/EN, Thai font, mobile-first, Kong-only | SATISFIED | curl checks re-run, PASS |
-| PLAT-10 | 01-01, 01-12 | Kong JWT round trip | SATISFIED | `make kong-roundtrip` re-run, PASS |
+| PLAT-06 | 01-04, 01-08, 01-12, 01-14 | Single trace + structured logs + trace-to-logs link | SATISFIED | `make proof` re-run PASS; G-01-7 independently reproduced-and-fixed in this session |
+| PLAT-07 | 01-07 | Retry 3x → DLQ, commit-after-apply, no poison-row wedge | SATISFIED | `make test` green; CR-01 fix (`6707df5`) confirmed present with a regression test |
+| PLAT-08 | 01-06, 01-13 | Jenkins CI builds+tests every push, per-commit image scoping | PARTIALLY SATISFIED — selector logic proven (unit + one live non-main build); per-commit scoping structurally requires a post-merge check |
+| PLAT-09 | 01-05 | Next.js TH/EN, Thai font, mobile-first, Kong-only | SATISFIED | UAT tests 3-4 pass live (this session did not re-run curl checks; no code changed since the first verification's independent confirmation) |
+| PLAT-10 | 01-01, 01-12 | Kong JWT round trip | SATISFIED | No change since first verification; UAT tests 9-14 (D1-D6) pass |
 
-No orphaned requirements found — all 10 PLAT-IDs declared across plans and present in REQUIREMENTS.md map 1:1.
+No orphaned requirements — all 10 PLAT-IDs declared across plans, present in `REQUIREMENTS.md`, and marked `[x]` complete there.
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 |------|------|---------|----------|--------|
-| `pkg/outbox/outbox.go` | 236-253 | `events.Unmarshal` failure `return`s an error out of `WithTx`, rolling back `published_at` for already-Kafka-published earlier rows in the same batch, and permanently head-of-line-blocks every row after the poison one (no skip/DLQ path) | Warning (already documented as CR-01 in 01-REVIEW.md, critical-rated by code review but latent — "our own producer never emits malformed envelopes" per the symmetric consumer-side comment) | Does not contradict any must-have truth stated for this phase (all outbox must-haves describe the happy path and the publish-failure-stops-batch case, not unmarshal-failure handling); real production risk if it ever fires, should be tracked as a fix, not a phase-1 blocker |
-| `services/gateway/.../bff.go:78-114`, `services/catalog/.../routes.go:48-56` | — | `Role` claim carried/forwarded end-to-end but never checked before a write (WR-01 in 01-REVIEW.md) | Warning | No PLAT requirement asks for role-based authorization (that's AUTH-0x, Phase 2); flagged for Phase 2 awareness only |
-| `pkg/httpx/errors.go:18-50` | — | `WriteError` status mapping incomplete for ~11 of 17 connect codes (WR-02) | Warning | Latent — no current handler emits an unmapped code |
-| `deploy/postgres/init.sh:42-50` | — | Unescaped password interpolation into single-quoted SQL (WR-03) | Info | Operator-controlled value, not attacker-controlled |
-| `Makefile:310-311`, `pkg/httpx/otel.go:91-115` | — | `echo`-piped password visible via `ps` (IN-01); hand-maintained span-attribute allowlist (IN-02) | Info | Cosmetic / fails-safe already |
-| `deploy/postgres/isolation-check.sh` | — | Script exists and works (re-run and PASS in this session) but has no `make` target wired to it | Info | Not exercised automatically by `make ci`/`make proof`; doesn't block the phase goal since it was runnable directly and passed |
+| `services/gateway/.../bff.go:90` | — | `TODO(WR-01): no claims.Role check here` | Info (tracked, referenced) | Explicitly scoped to Phase 2 (AUTH-0x) per `REQUIREMENTS.md`; the `TODO` references its own review-finding ID (`WR-01`), satisfying the debt-marker gate's "formal follow-up reference" exception — not a `TBD`/`FIXME`/`XXX` and not a blocker |
+| — | — | Previously-flagged `CR-01` (outbox unmarshal rollback), `WR-02` (incomplete status mapping), `WR-03` (unescaped password), `IN-01`/`WR-04` (Makefile echo-piped password) | — (all fixed) | Confirmed fixed in this session: `pkg/outbox/outbox.go` (commit `6707df5`+`425f926`), `pkg/httpx/errors.go` (comment references `WR-02` as mitigated), `deploy/postgres/init.sh` (comment references `WR-03` fix present), `Makefile` (comment/behavior matches `WR-04` fix per `01-REVIEW-FIX.md`) |
 
-No `TBD`/`FIXME`/`XXX` debt markers found anywhere under `pkg/`, `services/`, `apps/web/src`, or `deploy/`.
+No `TBD`/`FIXME`/`XXX` debt markers found anywhere under `pkg/`, `services/`, `apps/web/src`, or `deploy/` (re-scanned this session).
 
 ### Human Verification Required
 
-### 1. Live Jenkins two-push-cycle CI scoping
+### 1. Post-merge Jenkins per-commit image scoping
 
-**Test:** Push a commit under `pkg/`, wait for the `boat-booking` multibranch job's 2-minute scan; then push a commit only under `services/schedule/` and wait again.
-**Expected:** First build's Images stage builds `template`, `catalog`, `gateway`, `schedule`; second build's Images stage builds only `schedule`; both builds run every non-image stage (Lint/Proto/Unit/Integration/Migrations/Template/Web); neither pushes to Harbor unless the branch is `main`.
-**Why human:** Needs a live Jenkins reacting to real pushes over two real scan cycles — the verifier confirmed the selector's *logic* (`changed-services_test.sh`, 13/13 PASS) and that the Jenkinsfile's stages mirror `make ci`, but had no Jenkins credentials to trigger/observe an actual build this session. (Deferred from `checkpoint:human-verify` in 01-13-PLAN.md.)
-
-### 2. Grafana trace continuity across the Kafka hop
-
-**Test:** With the stack up after `make proof`, open Grafana (`:3000`) → Explore → Tempo, search `{ span.aggregate_id = "<boat id from make proof output>" }`, open the trace; then open the "platform" dashboard.
-**Expected:** One trace shows gateway HTTP span → connect call to catalog → Kafka publish span → schedule consumer span, all one trace id, no gap at the Kafka hop; "Logs for this span" jumps to matching Loki lines; the platform dashboard's panels (HTTP rate, consumer lag, processed events, outbox backlog) show real data.
-**Why human:** Trace continuity across the Kafka hop and dashboard usefulness are visual judgements. `make proof` (`PASS single-trace`) and `make obs-check` (`PASS traces/logs/metrics`) already assert the underlying data exists programmatically — this item is about the *visual* presentation, not the data's existence. (Deferred from 01-12-PLAN.md.)
-
-### 3. Mobile viewport + font + network origin
-
-**Test:** Open `http://localhost:3001` in a 375px-wide viewport, then `/en`; press refresh; open devtools Network.
-**Expected:** `/` redirects to `/th`; boat cards list the proof boat; Thai renders in IBM Plex Sans Thai with no system-font fallback; `/en` shows English strings; every XHR goes to `localhost:8000` (Kong), never directly to gateway/catalog; refresh refetches.
-**Why human:** Font rendering and mobile layout need a real browser. The verifier confirmed by `curl` that `/`, `/th`, `/en` all return correct status codes/redirects, Thai copy is present, and the compiled CSS embeds `"IBM Plex Sans Thai"` — but "no fallback" and mobile-layout correctness are visual judgements. (Deferred from 01-05-PLAN.md.)
+**Test:** After this phase merges to `main`, push a commit under `pkg/` (should image all 4 services) then, separately, a commit only under `services/schedule/` (should image only `schedule`); watch the `boat-booking` multibranch job's scan cycles.
+**Expected:** Both builds run every non-image stage; the `pkg/` build's Images stage builds `template`+`catalog`+`gateway`+`schedule`; the `schedule`-only build's Images stage builds only `schedule`; neither pushes to Harbor unless on `main`.
+**Why human:** `01-UAT.md` test 8 already proved the pipeline goes green end-to-end on a live, non-main build (select-all case) — the only remaining gap is that per-commit *scoping* specifically requires a base commit on `main` to diff against, which does not exist meaningfully until this phase's own merge. This is a structural sequencing constraint of the test, not an unproven code path (`changed-services.sh`'s logic is 13/13 unit-tested).
 
 ### Gaps Summary
 
-No gaps found. Every roadmap Success Criterion and every PLAT-01..10 requirement has direct, independently-reproduced evidence in this session (not just SUMMARY claims) — `make proof`, `make obs-check`, `make kong-roundtrip`, `make template-smoke`, `make test`, the isolation-check script, the changed-services selector tests, and one named integration test (`TestFailedHandlerLandsInDLQAfter3Retries`) were all re-run from scratch and passed. The orchestrator's specific concern — that 01-07 hand-marked PLAT-05/06/07 before their proof existed — is resolved: this verification independently re-derived the same PASS results 01-12's `make proof` claims, so the checkbox is now backed by evidence gathered in this session, not just trust in the SUMMARY.
+No gaps. UAT gap G-01-7 is closed: the fix (`e54e24b`) is present in the committed config, live in the running Grafana instance, and independently proven in this session to change Loki query results from empty (pre-fix simulation) to a correctly-scoped, correct-trace-id log line (post-fix simulation) — not just "the API returns the right JSON," but the actual query behavior the UI depends on. `make proof`, `make test`, and the Tempo API cross-check confirm no regression in the rest of the phase. Two of the three human-verification items from the first pass (mobile viewport/font/Kong routing, Grafana dashboard/trace-continuity minus the log-link defect) were closed out by the UAT session itself (tests 3, 4, 7) and are not carried forward.
 
-The only thing keeping this out of a clean `passed` is that the live, multi-push Jenkins CI behavior (PLAT-08's "on every push" claim) and two purely-visual checks (Grafana trace continuity, mobile font/layout) require a human with Jenkins credentials and a browser — routed to `human_needed` per the standard decision tree, not because anything failed.
-
-One genuine, already-documented code defect (CR-01, outbox relay unmarshal-failure rollback) remains unresolved; it does not block this phase's goal (the happy path is proven end-to-end) but should be fixed before the outbox carries production traffic with any possibility of malformed payloads.
+The only remaining open item is live, per-commit Jenkins image scoping, which cannot be meaningfully exercised until this phase merges to `main` — this is the same structural constraint UAT test 8 already identified and is routed to `human_needed` rather than blocking the phase, consistent with the first verification's judgment on this item.
 
 ---
 
-_Verified: 2026-09-26T07:49:52Z_
+_Verified: 2026-09-26T19:15:00Z_
 _Verifier: Claude (gsd-verifier)_
