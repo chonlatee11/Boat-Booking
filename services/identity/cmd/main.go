@@ -220,15 +220,22 @@ func run(ctx context.Context) error {
 }
 
 // buildSenders picks the OTP email/SMS senders from env: SMTP_ADDR set means
-// the dev transport (email via SMTP to Mailpit); production wiring
-// (RESEND_API_KEY, dev SMS) arrives in a later task.
+// the dev/CI transport (email via SMTP to Mailpit, phone via the dev SMS
+// sender to the same Mailpit); otherwise RESEND_API_KEY selects the prod
+// email transport with no SMS sender (phone login unavailable in prod until
+// a real provider is chosen, deferred per CONTEXT). Neither set is a startup
+// error — there is no silent no-op delivery configuration.
 func buildSenders() (email, sms notify.Sender, err error) {
-	smtpAddr := httpx.EnvOr("SMTP_ADDR", "")
-	if smtpAddr == "" {
-		return nil, nil, nil
-	}
 	otpFrom := httpx.EnvOr("OTP_EMAIL_FROM", "Boat Booking <no-reply@boatbooking.local>")
-	return notify.SMTPSender{Addr: smtpAddr, From: otpFrom}, nil, nil
+
+	if smtpAddr := httpx.EnvOr("SMTP_ADDR", ""); smtpAddr != "" {
+		smtpSender := notify.SMTPSender{Addr: smtpAddr, From: otpFrom}
+		return smtpSender, notify.DevSMSSender{SMTP: smtpSender}, nil
+	}
+	if apiKey := httpx.EnvOr("RESEND_API_KEY", ""); apiKey != "" {
+		return notify.ResendSender{APIKey: apiKey, From: otpFrom}, nil, nil
+	}
+	return nil, nil, errors.New("identity: no OTP email sender configured (set SMTP_ADDR or RESEND_API_KEY)")
 }
 
 // parseBoolEnv reads key as a strconv.ParseBool value, defaulting to def

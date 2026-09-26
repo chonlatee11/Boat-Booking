@@ -33,8 +33,15 @@ import (
 // Ids and role only — no personal data (D-45).
 const EventUserCreated = "identity.UserCreated"
 
-// otpCodeTTL is how long an issued code is valid (D-03).
-const otpCodeTTL = 300 * time.Second
+// D-03 tuning: how long an issued code is valid, the resend cooldown, the
+// per-destination hourly send cap, and the wrong-attempt lockout threshold.
+const (
+	otpCodeTTL     = 300 * time.Second
+	otpCooldownTTL = 60 * time.Second
+	otpHourlyTTL   = time.Hour
+	otpHourlyLimit = 5
+	otpMaxAttempts = 5
+)
 
 // Auth implements the OTP login use case (D-01, D-02, D-03). RDB is the
 // Valkey client holding every OTP code/counter — no otps table exists.
@@ -51,11 +58,12 @@ type Auth struct {
 	Nudge  func()
 }
 
-// RequestOtp normalises raw, generates a fresh 6-digit code, stores its HMAC
-// hash in Valkey with a 300s TTL, and sends it over the channel matching the
-// destination's kind. It always returns the same nil (or non-rate-limit)
-// result whether or not a user exists for destination (Pitfall 3 — no
-// account enumeration).
+// RequestOtp normalises raw, enforces the D-03 send-rate rules (60s cooldown,
+// 5/hour cap), generates a fresh 6-digit code, stores its HMAC hash in
+// Valkey with a 300s TTL, and sends it over the channel matching the
+// destination's kind. Once past the rate limits it always returns the same
+// nil result whether or not a user exists for destination (Pitfall 3 — no
+// account enumeration on the request path; no user lookup happens here).
 func (a *Auth) RequestOtp(ctx context.Context, raw string) error {
 	dest, err := domain.NormalizeDestination(raw)
 	if err != nil {
@@ -63,16 +71,40 @@ func (a *Auth) RequestOtp(ctx context.Context, raw string) error {
 	}
 
 	dh := hashDestination(a.Pepper, dest.Value)
+	codeKey := otpCodeKey(dh)
+	cooldownKey := otpCooldownKey(dh)
+	hourlyKey := otpHourlyKey(dh)
+
+	won, err := a.RDB.SetNX(ctx, cooldownKey, 1, otpCooldownTTL).Result()
+	if err != nil {
+		return fmt.Errorf("app: check otp cooldown: %w", err)
+	}
+	if !won {
+		return domain.ErrResendTooSoon
+	}
+
+	count, err := a.RDB.Incr(ctx, hourlyKey).Result()
+	if err != nil {
+		return fmt.Errorf("app: increment otp hourly count: %w", err)
+	}
+	if count == 1 {
+		if err := a.RDB.Expire(ctx, hourlyKey, otpHourlyTTL).Err(); err != nil {
+			return fmt.Errorf("app: set otp hourly ttl: %w", err)
+		}
+	}
+	if count > otpHourlyLimit {
+		return domain.ErrRateLimited
+	}
+
 	code, err := generateCode()
 	if err != nil {
 		return fmt.Errorf("app: generate otp code: %w", err)
 	}
 	codeHash := hashCode(a.Pepper, dh, code)
 
-	key := otpCodeKey(dh)
 	if _, err := a.RDB.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
-		pipe.HSet(ctx, key, "h", codeHash, "a", 0)
-		pipe.Expire(ctx, key, otpCodeTTL)
+		pipe.HSet(ctx, codeKey, "h", codeHash, "a", 0)
+		pipe.Expire(ctx, codeKey, otpCodeTTL)
 		return nil
 	}); err != nil {
 		return fmt.Errorf("app: store otp code: %w", err)
@@ -80,12 +112,12 @@ func (a *Auth) RequestOtp(ctx context.Context, raw string) error {
 
 	sender, err := a.senderFor(dest.Kind)
 	if err != nil {
-		a.RDB.Del(ctx, key)
+		a.RDB.Del(ctx, codeKey, cooldownKey)
 		return err
 	}
 
 	if err := sender.SendOtp(ctx, dest.Value, code); err != nil {
-		a.RDB.Del(ctx, key)
+		a.RDB.Del(ctx, codeKey, cooldownKey)
 		return fmt.Errorf("app: send otp: %w", err)
 	}
 
@@ -120,7 +152,15 @@ func (a *Auth) VerifyOtp(ctx context.Context, raw, code string) (Session, error)
 
 	wantHash := hashCode(a.Pepper, dh, code)
 	if !hmac.Equal([]byte(stored["h"]), []byte(wantHash)) {
-		return Session{}, &domain.CodeMismatchError{AttemptsLeft: 0}
+		attempts, err := a.RDB.HIncrBy(ctx, key, "a", 1).Result()
+		if err != nil {
+			return Session{}, fmt.Errorf("app: increment otp attempts: %w", err)
+		}
+		if attempts >= otpMaxAttempts {
+			a.RDB.Del(ctx, key)
+			return Session{}, domain.ErrCodeExpired
+		}
+		return Session{}, &domain.CodeMismatchError{AttemptsLeft: int(otpMaxAttempts - attempts)}
 	}
 
 	won, err := a.RDB.Del(ctx, key).Result()
@@ -251,7 +291,9 @@ func (a *Auth) senderFor(kind string) (notify.Sender, error) {
 	}
 }
 
-func otpCodeKey(dh string) string { return "otp:code:" + dh }
+func otpCodeKey(dh string) string     { return "otp:code:" + dh }
+func otpCooldownKey(dh string) string { return "otp:cooldown:" + dh }
+func otpHourlyKey(dh string) string   { return "otp:hourly:" + dh }
 
 // hashDestination HMACs a normalised destination so no raw email/phone ever
 // appears in a Valkey key.

@@ -22,11 +22,13 @@ type Destination struct {
 const maxEmailLen = 254
 
 // NormalizeDestination trims and classifies raw as an email or phone
-// destination. Email path only in this task: trimmed, lower-cased, and
-// net/mail.ParseAddress must yield exactly the bare address back (no display
-// name, no extra angle-bracket noise) and at most maxEmailLen characters.
-// Phone parsing arrives alongside this function's phone branch in a later
-// task.
+// destination (D-01). Email: trimmed, lower-cased, and net/mail.ParseAddress
+// must yield exactly the bare address back (no display name, no extra
+// angle-bracket noise) and at most maxEmailLen characters. Phone: a Thai
+// local number (leading "0" + 8-9 digits) is normalised to "+66" + the
+// digits after the leading zero; anything already starting with "+" is kept
+// as-is once formatting characters (spaces, "-", "(", ")") are stripped, as
+// long as 8-15 digits remain.
 func NormalizeDestination(raw string) (Destination, error) {
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {
@@ -52,8 +54,59 @@ func normalizeEmail(trimmed string) (Destination, error) {
 	return Destination{Kind: KindEmail, Value: lower}, nil
 }
 
-// normalizePhone is filled in by a later task (phone channel); until then
-// every non-email destination is rejected.
-func normalizePhone(_ string) (Destination, error) {
-	return Destination{}, ErrInvalidArgument
+// thaiLocalDigits and e164Digits bound the digit count accepted for the two
+// phone forms normalizePhone recognises.
+const (
+	thaiLocalDigitsMin = 8
+	thaiLocalDigitsMax = 9
+	e164DigitsMin      = 8
+	e164DigitsMax      = 15
+)
+
+func normalizePhone(trimmed string) (Destination, error) {
+	stripped := stripPhoneFormatting(trimmed)
+
+	switch {
+	case strings.HasPrefix(stripped, "0"):
+		digits := stripped[1:]
+		if !isAllDigits(digits) || len(digits) < thaiLocalDigitsMin || len(digits) > thaiLocalDigitsMax {
+			return Destination{}, ErrInvalidArgument
+		}
+		return Destination{Kind: KindPhone, Value: "+66" + digits}, nil
+	case strings.HasPrefix(stripped, "+"):
+		digits := stripped[1:]
+		if !isAllDigits(digits) || len(digits) < e164DigitsMin || len(digits) > e164DigitsMax {
+			return Destination{}, ErrInvalidArgument
+		}
+		return Destination{Kind: KindPhone, Value: stripped}, nil
+	default:
+		return Destination{}, ErrInvalidArgument
+	}
+}
+
+// stripPhoneFormatting removes the punctuation people commonly type in a
+// phone number — spaces, dashes, parens — before digit classification.
+func stripPhoneFormatting(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		switch r {
+		case ' ', '-', '(', ')':
+			continue
+		default:
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
+}
+
+func isAllDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
 }

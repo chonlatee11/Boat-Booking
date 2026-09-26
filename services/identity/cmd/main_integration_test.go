@@ -233,31 +233,41 @@ func pollMailpitCode(t *testing.T, apiURL, to string) string {
 
 	deadline := time.Now().Add(20 * time.Second)
 	for time.Now().Before(deadline) {
-		resp, err := http.Get(apiURL + "/api/v1/search?query=" + q)
-		if err == nil {
-			var search mailpitSearchResult
-			if json.NewDecoder(resp.Body).Decode(&search) == nil && len(search.Messages) > 0 {
-				resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
-				id := search.Messages[0].ID
-				msgResp, err := http.Get(apiURL + "/api/v1/message/" + id)
-				if err == nil {
-					var msg mailpitMessage
-					if json.NewDecoder(msgResp.Body).Decode(&msg) == nil {
-						msgResp.Body.Close() //nolint:errcheck // test helper, nothing actionable
-						if code := sixDigits.FindString(msg.Text); code != "" {
-							return code
-						}
-					}
-					msgResp.Body.Close() //nolint:errcheck // test helper, nothing actionable
-				}
-			} else {
-				resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
-			}
+		if code, ok := fetchMailpitCode(apiURL, q); ok {
+			return code
 		}
 		time.Sleep(200 * time.Millisecond)
 	}
 	t.Fatalf("no otp code arrived at Mailpit for %q within 20s", to)
 	return ""
+}
+
+// fetchMailpitCode makes one attempt to find a delivered message matching q
+// and extract its 6-digit OTP code.
+func fetchMailpitCode(apiURL, q string) (code string, ok bool) {
+	resp, err := http.Get(apiURL + "/api/v1/search?query=" + q)
+	if err != nil {
+		return "", false
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	var search mailpitSearchResult
+	if json.NewDecoder(resp.Body).Decode(&search) != nil || len(search.Messages) == 0 {
+		return "", false
+	}
+
+	msgResp, err := http.Get(apiURL + "/api/v1/message/" + search.Messages[0].ID)
+	if err != nil {
+		return "", false
+	}
+	defer func() { _ = msgResp.Body.Close() }()
+
+	var msg mailpitMessage
+	if json.NewDecoder(msgResp.Body).Decode(&msg) != nil {
+		return "", false
+	}
+	code = sixDigits.FindString(msg.Text)
+	return code, code != ""
 }
 
 func newAuthClient(baseURL string, headers map[string]string) identityv1connect.AuthServiceClient {
