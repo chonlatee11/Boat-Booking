@@ -240,7 +240,7 @@ export function PierSheet({
             </div>
           )}
         </div>
-        <SheetFooter className="border-t">
+        <SheetFooter className="sticky bottom-0 border-t bg-popover">
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button disabled={!isValid || pending} onClick={handleSubmit}>
             {pending && <Spinner />}
