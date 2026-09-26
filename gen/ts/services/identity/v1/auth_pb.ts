@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file services/identity/v1/auth.proto.
  */
 export const file_services_identity_v1_auth: GenFile = /*@__PURE__*/
-  fileDesc("Ch9zZXJ2aWNlcy9pZGVudGl0eS92MS9hdXRoLnByb3RvEhdib2F0Ym9va2luZy5pZGVudGl0eS52MSIoChFSZXF1ZXN0T3RwUmVxdWVzdBITCgtkZXN0aW5hdGlvbhgBIAEoCSIUChJSZXF1ZXN0T3RwUmVzcG9uc2UiNQoQVmVyaWZ5T3RwUmVxdWVzdBITCgtkZXN0aW5hdGlvbhgBIAEoCRIMCgRjb2RlGAIgASgJIlMKC1Nlc3Npb25Vc2VyEg8KB3VzZXJfaWQYASABKAkSDAoEcm9sZRgCIAEoCRITCgtvcGVyYXRvcl9pZBgDIAEoCRIQCghwaWVyX2lkcxgEIAMoCSJ0ChFWZXJpZnlPdHBSZXNwb25zZRIUCgxhY2Nlc3NfdG9rZW4YASABKAkSFQoNcmVmcmVzaF90b2tlbhgCIAEoCRIyCgR1c2VyGAMgASgLMiQuYm9hdGJvb2tpbmcuaWRlbnRpdHkudjEuU2Vzc2lvblVzZXIy2AEKC0F1dGhTZXJ2aWNlEmUKClJlcXVlc3RPdHASKi5ib2F0Ym9va2luZy5pZGVudGl0eS52MS5SZXF1ZXN0T3RwUmVxdWVzdBorLmJvYXRib29raW5nLmlkZW50aXR5LnYxLlJlcXVlc3RPdHBSZXNwb25zZRJiCglWZXJpZnlPdHASKS5ib2F0Ym9va2luZy5pZGVudGl0eS52MS5WZXJpZnlPdHBSZXF1ZXN0GiouYm9hdGJvb2tpbmcuaWRlbnRpdHkudjEuVmVyaWZ5T3RwUmVzcG9uc2VCQ1pBZ2l0aHViLmNvbS9jaG9ubGF0ZWUxMS9ib2F0LWJvb2tpbmcvZ2VuL2dvL2lkZW50aXR5L3YxO2lkZW50aXR5djFiBnByb3RvMw");
+  fileDesc("Ch9zZXJ2aWNlcy9pZGVudGl0eS92MS9hdXRoLnByb3RvEhdib2F0Ym9va2luZy5pZGVudGl0eS52MSIoChFSZXF1ZXN0T3RwUmVxdWVzdBITCgtkZXN0aW5hdGlvbhgBIAEoCSIUChJSZXF1ZXN0T3RwUmVzcG9uc2UiNQoQVmVyaWZ5T3RwUmVxdWVzdBITCgtkZXN0aW5hdGlvbhgBIAEoCRIMCgRjb2RlGAIgASgJIlMKC1Nlc3Npb25Vc2VyEg8KB3VzZXJfaWQYASABKAkSDAoEcm9sZRgCIAEoCRITCgtvcGVyYXRvcl9pZBgDIAEoCRIQCghwaWVyX2lkcxgEIAMoCSJ0ChFWZXJpZnlPdHBSZXNwb25zZRIUCgxhY2Nlc3NfdG9rZW4YASABKAkSFQoNcmVmcmVzaF90b2tlbhgCIAEoCRIyCgR1c2VyGAMgASgLMiQuYm9hdGJvb2tpbmcuaWRlbnRpdHkudjEuU2Vzc2lvblVzZXIiJwoOUmVmcmVzaFJlcXVlc3QSFQoNcmVmcmVzaF90b2tlbhgBIAEoCSJyCg9SZWZyZXNoUmVzcG9uc2USFAoMYWNjZXNzX3Rva2VuGAEgASgJEhUKDXJlZnJlc2hfdG9rZW4YAiABKAkSMgoEdXNlchgDIAEoCzIkLmJvYXRib29raW5nLmlkZW50aXR5LnYxLlNlc3Npb25Vc2VyIiYKDUxvZ291dFJlcXVlc3QSFQoNcmVmcmVzaF90b2tlbhgBIAEoCSIQCg5Mb2dvdXRSZXNwb25zZTKRAwoLQXV0aFNlcnZpY2USZQoKUmVxdWVzdE90cBIqLmJvYXRib29raW5nLmlkZW50aXR5LnYxLlJlcXVlc3RPdHBSZXF1ZXN0GisuYm9hdGJvb2tpbmcuaWRlbnRpdHkudjEuUmVxdWVzdE90cFJlc3BvbnNlEmIKCVZlcmlmeU90cBIpLmJvYXRib29raW5nLmlkZW50aXR5LnYxLlZlcmlmeU90cFJlcXVlc3QaKi5ib2F0Ym9va2luZy5pZGVudGl0eS52MS5WZXJpZnlPdHBSZXNwb25zZRJcCgdSZWZyZXNoEicuYm9hdGJvb2tpbmcuaWRlbnRpdHkudjEuUmVmcmVzaFJlcXVlc3QaKC5ib2F0Ym9va2luZy5pZGVudGl0eS52MS5SZWZyZXNoUmVzcG9uc2USWQoGTG9nb3V0EiYuYm9hdGJvb2tpbmcuaWRlbnRpdHkudjEuTG9nb3V0UmVxdWVzdBonLmJvYXRib29raW5nLmlkZW50aXR5LnYxLkxvZ291dFJlc3BvbnNlQkNaQWdpdGh1Yi5jb20vY2hvbmxhdGVlMTEvYm9hdC1ib29raW5nL2dlbi9nby9pZGVudGl0eS92MTtpZGVudGl0eXYxYgZwcm90bzM");
 
 /**
  * destination is an email address or phone number in any input format —
@@ -216,9 +216,129 @@ export const VerifyOtpResponseSchema: GenMessage<VerifyOtpResponse, {jsonType: V
   messageDesc(file_services_identity_v1_auth, 4);
 
 /**
- * AuthService is identity's passwordless OTP login sync API (D-01). Both
- * RPCs need only the internal token — no verified claims, since the caller
- * isn't authenticated yet.
+ * @generated from message boatbooking.identity.v1.RefreshRequest
+ */
+export type RefreshRequest = Message<"boatbooking.identity.v1.RefreshRequest"> & {
+  /**
+   * @generated from field: string refresh_token = 1;
+   */
+  refreshToken: string;
+};
+
+/**
+ * @generated from message boatbooking.identity.v1.RefreshRequest
+ */
+export type RefreshRequestJson = {
+  /**
+   * @generated from field: string refresh_token = 1;
+   */
+  refreshToken?: string;
+};
+
+/**
+ * Describes the message boatbooking.identity.v1.RefreshRequest.
+ * Use `create(RefreshRequestSchema)` to create a new message.
+ */
+export const RefreshRequestSchema: GenMessage<RefreshRequest, {jsonType: RefreshRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_identity_v1_auth, 5);
+
+/**
+ * @generated from message boatbooking.identity.v1.RefreshResponse
+ */
+export type RefreshResponse = Message<"boatbooking.identity.v1.RefreshResponse"> & {
+  /**
+   * @generated from field: string access_token = 1;
+   */
+  accessToken: string;
+
+  /**
+   * @generated from field: string refresh_token = 2;
+   */
+  refreshToken: string;
+
+  /**
+   * @generated from field: boatbooking.identity.v1.SessionUser user = 3;
+   */
+  user?: SessionUser | undefined;
+};
+
+/**
+ * @generated from message boatbooking.identity.v1.RefreshResponse
+ */
+export type RefreshResponseJson = {
+  /**
+   * @generated from field: string access_token = 1;
+   */
+  accessToken?: string;
+
+  /**
+   * @generated from field: string refresh_token = 2;
+   */
+  refreshToken?: string;
+
+  /**
+   * @generated from field: boatbooking.identity.v1.SessionUser user = 3;
+   */
+  user?: SessionUserJson;
+};
+
+/**
+ * Describes the message boatbooking.identity.v1.RefreshResponse.
+ * Use `create(RefreshResponseSchema)` to create a new message.
+ */
+export const RefreshResponseSchema: GenMessage<RefreshResponse, {jsonType: RefreshResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_identity_v1_auth, 6);
+
+/**
+ * @generated from message boatbooking.identity.v1.LogoutRequest
+ */
+export type LogoutRequest = Message<"boatbooking.identity.v1.LogoutRequest"> & {
+  /**
+   * @generated from field: string refresh_token = 1;
+   */
+  refreshToken: string;
+};
+
+/**
+ * @generated from message boatbooking.identity.v1.LogoutRequest
+ */
+export type LogoutRequestJson = {
+  /**
+   * @generated from field: string refresh_token = 1;
+   */
+  refreshToken?: string;
+};
+
+/**
+ * Describes the message boatbooking.identity.v1.LogoutRequest.
+ * Use `create(LogoutRequestSchema)` to create a new message.
+ */
+export const LogoutRequestSchema: GenMessage<LogoutRequest, {jsonType: LogoutRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_identity_v1_auth, 7);
+
+/**
+ * @generated from message boatbooking.identity.v1.LogoutResponse
+ */
+export type LogoutResponse = Message<"boatbooking.identity.v1.LogoutResponse"> & {
+};
+
+/**
+ * @generated from message boatbooking.identity.v1.LogoutResponse
+ */
+export type LogoutResponseJson = {
+};
+
+/**
+ * Describes the message boatbooking.identity.v1.LogoutResponse.
+ * Use `create(LogoutResponseSchema)` to create a new message.
+ */
+export const LogoutResponseSchema: GenMessage<LogoutResponse, {jsonType: LogoutResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_identity_v1_auth, 8);
+
+/**
+ * AuthService is identity's passwordless OTP login sync API (D-01). Every
+ * RPC needs only the internal token — no verified claims, since the caller
+ * isn't authenticated by anything but the token/code it presents.
  *
  * @generated from service boatbooking.identity.v1.AuthService
  */
@@ -238,6 +358,31 @@ export const AuthService: GenService<{
     methodKind: "unary";
     input: typeof VerifyOtpRequestSchema;
     output: typeof VerifyOtpResponseSchema;
+  },
+  /**
+   * Refresh rotates a refresh token: the presented one is revoked and a new
+   * access+refresh pair is issued, re-reading the user's current
+   * role/operator_id/pier_ids/disabled state (D-10). Presenting a token that
+   * was already rotated revokes every refresh token for that user (reuse
+   * detection).
+   *
+   * @generated from rpc boatbooking.identity.v1.AuthService.Refresh
+   */
+  refresh: {
+    methodKind: "unary";
+    input: typeof RefreshRequestSchema;
+    output: typeof RefreshResponseSchema;
+  },
+  /**
+   * Logout revokes the presented refresh token. Idempotent — an unknown or
+   * already-revoked token is not an error.
+   *
+   * @generated from rpc boatbooking.identity.v1.AuthService.Logout
+   */
+  logout: {
+    methodKind: "unary";
+    input: typeof LogoutRequestSchema;
+    output: typeof LogoutResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_services_identity_v1_auth, 0);

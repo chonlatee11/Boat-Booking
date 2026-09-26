@@ -37,12 +37,25 @@ const (
 	AuthServiceRequestOtpProcedure = "/boatbooking.identity.v1.AuthService/RequestOtp"
 	// AuthServiceVerifyOtpProcedure is the fully-qualified name of the AuthService's VerifyOtp RPC.
 	AuthServiceVerifyOtpProcedure = "/boatbooking.identity.v1.AuthService/VerifyOtp"
+	// AuthServiceRefreshProcedure is the fully-qualified name of the AuthService's Refresh RPC.
+	AuthServiceRefreshProcedure = "/boatbooking.identity.v1.AuthService/Refresh"
+	// AuthServiceLogoutProcedure is the fully-qualified name of the AuthService's Logout RPC.
+	AuthServiceLogoutProcedure = "/boatbooking.identity.v1.AuthService/Logout"
 )
 
 // AuthServiceClient is a client for the boatbooking.identity.v1.AuthService service.
 type AuthServiceClient interface {
 	RequestOtp(context.Context, *connect.Request[v1.RequestOtpRequest]) (*connect.Response[v1.RequestOtpResponse], error)
 	VerifyOtp(context.Context, *connect.Request[v1.VerifyOtpRequest]) (*connect.Response[v1.VerifyOtpResponse], error)
+	// Refresh rotates a refresh token: the presented one is revoked and a new
+	// access+refresh pair is issued, re-reading the user's current
+	// role/operator_id/pier_ids/disabled state (D-10). Presenting a token that
+	// was already rotated revokes every refresh token for that user (reuse
+	// detection).
+	Refresh(context.Context, *connect.Request[v1.RefreshRequest]) (*connect.Response[v1.RefreshResponse], error)
+	// Logout revokes the presented refresh token. Idempotent — an unknown or
+	// already-revoked token is not an error.
+	Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error)
 }
 
 // NewAuthServiceClient constructs a client for the boatbooking.identity.v1.AuthService service. By
@@ -68,6 +81,18 @@ func NewAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(authServiceMethods.ByName("VerifyOtp")),
 			connect.WithClientOptions(opts...),
 		),
+		refresh: connect.NewClient[v1.RefreshRequest, v1.RefreshResponse](
+			httpClient,
+			baseURL+AuthServiceRefreshProcedure,
+			connect.WithSchema(authServiceMethods.ByName("Refresh")),
+			connect.WithClientOptions(opts...),
+		),
+		logout: connect.NewClient[v1.LogoutRequest, v1.LogoutResponse](
+			httpClient,
+			baseURL+AuthServiceLogoutProcedure,
+			connect.WithSchema(authServiceMethods.ByName("Logout")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -75,6 +100,8 @@ func NewAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 type authServiceClient struct {
 	requestOtp *connect.Client[v1.RequestOtpRequest, v1.RequestOtpResponse]
 	verifyOtp  *connect.Client[v1.VerifyOtpRequest, v1.VerifyOtpResponse]
+	refresh    *connect.Client[v1.RefreshRequest, v1.RefreshResponse]
+	logout     *connect.Client[v1.LogoutRequest, v1.LogoutResponse]
 }
 
 // RequestOtp calls boatbooking.identity.v1.AuthService.RequestOtp.
@@ -87,10 +114,29 @@ func (c *authServiceClient) VerifyOtp(ctx context.Context, req *connect.Request[
 	return c.verifyOtp.CallUnary(ctx, req)
 }
 
+// Refresh calls boatbooking.identity.v1.AuthService.Refresh.
+func (c *authServiceClient) Refresh(ctx context.Context, req *connect.Request[v1.RefreshRequest]) (*connect.Response[v1.RefreshResponse], error) {
+	return c.refresh.CallUnary(ctx, req)
+}
+
+// Logout calls boatbooking.identity.v1.AuthService.Logout.
+func (c *authServiceClient) Logout(ctx context.Context, req *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error) {
+	return c.logout.CallUnary(ctx, req)
+}
+
 // AuthServiceHandler is an implementation of the boatbooking.identity.v1.AuthService service.
 type AuthServiceHandler interface {
 	RequestOtp(context.Context, *connect.Request[v1.RequestOtpRequest]) (*connect.Response[v1.RequestOtpResponse], error)
 	VerifyOtp(context.Context, *connect.Request[v1.VerifyOtpRequest]) (*connect.Response[v1.VerifyOtpResponse], error)
+	// Refresh rotates a refresh token: the presented one is revoked and a new
+	// access+refresh pair is issued, re-reading the user's current
+	// role/operator_id/pier_ids/disabled state (D-10). Presenting a token that
+	// was already rotated revokes every refresh token for that user (reuse
+	// detection).
+	Refresh(context.Context, *connect.Request[v1.RefreshRequest]) (*connect.Response[v1.RefreshResponse], error)
+	// Logout revokes the presented refresh token. Idempotent — an unknown or
+	// already-revoked token is not an error.
+	Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error)
 }
 
 // NewAuthServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -112,12 +158,28 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(authServiceMethods.ByName("VerifyOtp")),
 		connect.WithHandlerOptions(opts...),
 	)
+	authServiceRefreshHandler := connect.NewUnaryHandler(
+		AuthServiceRefreshProcedure,
+		svc.Refresh,
+		connect.WithSchema(authServiceMethods.ByName("Refresh")),
+		connect.WithHandlerOptions(opts...),
+	)
+	authServiceLogoutHandler := connect.NewUnaryHandler(
+		AuthServiceLogoutProcedure,
+		svc.Logout,
+		connect.WithSchema(authServiceMethods.ByName("Logout")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/boatbooking.identity.v1.AuthService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AuthServiceRequestOtpProcedure:
 			authServiceRequestOtpHandler.ServeHTTP(w, r)
 		case AuthServiceVerifyOtpProcedure:
 			authServiceVerifyOtpHandler.ServeHTTP(w, r)
+		case AuthServiceRefreshProcedure:
+			authServiceRefreshHandler.ServeHTTP(w, r)
+		case AuthServiceLogoutProcedure:
+			authServiceLogoutHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -133,4 +195,12 @@ func (UnimplementedAuthServiceHandler) RequestOtp(context.Context, *connect.Requ
 
 func (UnimplementedAuthServiceHandler) VerifyOtp(context.Context, *connect.Request[v1.VerifyOtpRequest]) (*connect.Response[v1.VerifyOtpResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.identity.v1.AuthService.VerifyOtp is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) Refresh(context.Context, *connect.Request[v1.RefreshRequest]) (*connect.Response[v1.RefreshResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.identity.v1.AuthService.Refresh is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.identity.v1.AuthService.Logout is not implemented"))
 }

@@ -286,6 +286,190 @@ func (x *VerifyOtpResponse) GetUser() *SessionUser {
 	return nil
 }
 
+type RefreshRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshRequest) Reset() {
+	*x = RefreshRequest{}
+	mi := &file_services_identity_v1_auth_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshRequest) ProtoMessage() {}
+
+func (x *RefreshRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_services_identity_v1_auth_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshRequest.ProtoReflect.Descriptor instead.
+func (*RefreshRequest) Descriptor() ([]byte, []int) {
+	return file_services_identity_v1_auth_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *RefreshRequest) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+type RefreshResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	User          *SessionUser           `protobuf:"bytes,3,opt,name=user,proto3" json:"user,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshResponse) Reset() {
+	*x = RefreshResponse{}
+	mi := &file_services_identity_v1_auth_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshResponse) ProtoMessage() {}
+
+func (x *RefreshResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_services_identity_v1_auth_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshResponse.ProtoReflect.Descriptor instead.
+func (*RefreshResponse) Descriptor() ([]byte, []int) {
+	return file_services_identity_v1_auth_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *RefreshResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *RefreshResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+func (x *RefreshResponse) GetUser() *SessionUser {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
+type LogoutRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogoutRequest) Reset() {
+	*x = LogoutRequest{}
+	mi := &file_services_identity_v1_auth_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogoutRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogoutRequest) ProtoMessage() {}
+
+func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_services_identity_v1_auth_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogoutRequest.ProtoReflect.Descriptor instead.
+func (*LogoutRequest) Descriptor() ([]byte, []int) {
+	return file_services_identity_v1_auth_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *LogoutRequest) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+type LogoutResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogoutResponse) Reset() {
+	*x = LogoutResponse{}
+	mi := &file_services_identity_v1_auth_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogoutResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogoutResponse) ProtoMessage() {}
+
+func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_services_identity_v1_auth_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogoutResponse.ProtoReflect.Descriptor instead.
+func (*LogoutResponse) Descriptor() ([]byte, []int) {
+	return file_services_identity_v1_auth_proto_rawDescGZIP(), []int{8}
+}
+
 var File_services_identity_v1_auth_proto protoreflect.FileDescriptor
 
 const file_services_identity_v1_auth_proto_rawDesc = "" +
@@ -306,11 +490,22 @@ const file_services_identity_v1_auth_proto_rawDesc = "" +
 	"\x11VerifyOtpResponse\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
 	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x128\n" +
-	"\x04user\x18\x03 \x01(\v2$.boatbooking.identity.v1.SessionUserR\x04user2\xd8\x01\n" +
+	"\x04user\x18\x03 \x01(\v2$.boatbooking.identity.v1.SessionUserR\x04user\"5\n" +
+	"\x0eRefreshRequest\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"\x93\x01\n" +
+	"\x0fRefreshResponse\x12!\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x128\n" +
+	"\x04user\x18\x03 \x01(\v2$.boatbooking.identity.v1.SessionUserR\x04user\"4\n" +
+	"\rLogoutRequest\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"\x10\n" +
+	"\x0eLogoutResponse2\x91\x03\n" +
 	"\vAuthService\x12e\n" +
 	"\n" +
 	"RequestOtp\x12*.boatbooking.identity.v1.RequestOtpRequest\x1a+.boatbooking.identity.v1.RequestOtpResponse\x12b\n" +
-	"\tVerifyOtp\x12).boatbooking.identity.v1.VerifyOtpRequest\x1a*.boatbooking.identity.v1.VerifyOtpResponseBCZAgithub.com/chonlatee11/boat-booking/gen/go/identity/v1;identityv1b\x06proto3"
+	"\tVerifyOtp\x12).boatbooking.identity.v1.VerifyOtpRequest\x1a*.boatbooking.identity.v1.VerifyOtpResponse\x12\\\n" +
+	"\aRefresh\x12'.boatbooking.identity.v1.RefreshRequest\x1a(.boatbooking.identity.v1.RefreshResponse\x12Y\n" +
+	"\x06Logout\x12&.boatbooking.identity.v1.LogoutRequest\x1a'.boatbooking.identity.v1.LogoutResponseBCZAgithub.com/chonlatee11/boat-booking/gen/go/identity/v1;identityv1b\x06proto3"
 
 var (
 	file_services_identity_v1_auth_proto_rawDescOnce sync.Once
@@ -324,25 +519,34 @@ func file_services_identity_v1_auth_proto_rawDescGZIP() []byte {
 	return file_services_identity_v1_auth_proto_rawDescData
 }
 
-var file_services_identity_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_services_identity_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_services_identity_v1_auth_proto_goTypes = []any{
 	(*RequestOtpRequest)(nil),  // 0: boatbooking.identity.v1.RequestOtpRequest
 	(*RequestOtpResponse)(nil), // 1: boatbooking.identity.v1.RequestOtpResponse
 	(*VerifyOtpRequest)(nil),   // 2: boatbooking.identity.v1.VerifyOtpRequest
 	(*SessionUser)(nil),        // 3: boatbooking.identity.v1.SessionUser
 	(*VerifyOtpResponse)(nil),  // 4: boatbooking.identity.v1.VerifyOtpResponse
+	(*RefreshRequest)(nil),     // 5: boatbooking.identity.v1.RefreshRequest
+	(*RefreshResponse)(nil),    // 6: boatbooking.identity.v1.RefreshResponse
+	(*LogoutRequest)(nil),      // 7: boatbooking.identity.v1.LogoutRequest
+	(*LogoutResponse)(nil),     // 8: boatbooking.identity.v1.LogoutResponse
 }
 var file_services_identity_v1_auth_proto_depIdxs = []int32{
 	3, // 0: boatbooking.identity.v1.VerifyOtpResponse.user:type_name -> boatbooking.identity.v1.SessionUser
-	0, // 1: boatbooking.identity.v1.AuthService.RequestOtp:input_type -> boatbooking.identity.v1.RequestOtpRequest
-	2, // 2: boatbooking.identity.v1.AuthService.VerifyOtp:input_type -> boatbooking.identity.v1.VerifyOtpRequest
-	1, // 3: boatbooking.identity.v1.AuthService.RequestOtp:output_type -> boatbooking.identity.v1.RequestOtpResponse
-	4, // 4: boatbooking.identity.v1.AuthService.VerifyOtp:output_type -> boatbooking.identity.v1.VerifyOtpResponse
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	3, // 1: boatbooking.identity.v1.RefreshResponse.user:type_name -> boatbooking.identity.v1.SessionUser
+	0, // 2: boatbooking.identity.v1.AuthService.RequestOtp:input_type -> boatbooking.identity.v1.RequestOtpRequest
+	2, // 3: boatbooking.identity.v1.AuthService.VerifyOtp:input_type -> boatbooking.identity.v1.VerifyOtpRequest
+	5, // 4: boatbooking.identity.v1.AuthService.Refresh:input_type -> boatbooking.identity.v1.RefreshRequest
+	7, // 5: boatbooking.identity.v1.AuthService.Logout:input_type -> boatbooking.identity.v1.LogoutRequest
+	1, // 6: boatbooking.identity.v1.AuthService.RequestOtp:output_type -> boatbooking.identity.v1.RequestOtpResponse
+	4, // 7: boatbooking.identity.v1.AuthService.VerifyOtp:output_type -> boatbooking.identity.v1.VerifyOtpResponse
+	6, // 8: boatbooking.identity.v1.AuthService.Refresh:output_type -> boatbooking.identity.v1.RefreshResponse
+	8, // 9: boatbooking.identity.v1.AuthService.Logout:output_type -> boatbooking.identity.v1.LogoutResponse
+	6, // [6:10] is the sub-list for method output_type
+	2, // [2:6] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_services_identity_v1_auth_proto_init() }
@@ -356,7 +560,7 @@ func file_services_identity_v1_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_services_identity_v1_auth_proto_rawDesc), len(file_services_identity_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

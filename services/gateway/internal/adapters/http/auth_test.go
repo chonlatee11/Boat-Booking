@@ -27,6 +27,10 @@ type fakeAuthServer struct {
 	requestOtpErr error
 	verifyOtpErr  error
 	verifyOtpResp *identityv1.VerifyOtpResponse
+	refreshErr    error
+	refreshResp   *identityv1.RefreshResponse
+	logoutErr     error
+	logoutCalled  bool
 }
 
 func (f *fakeAuthServer) RequestOtp(_ context.Context, req *connect.Request[identityv1.RequestOtpRequest]) (*connect.Response[identityv1.RequestOtpResponse], error) {
@@ -43,6 +47,23 @@ func (f *fakeAuthServer) VerifyOtp(_ context.Context, req *connect.Request[ident
 		return nil, f.verifyOtpErr
 	}
 	return connect.NewResponse(f.verifyOtpResp), nil
+}
+
+func (f *fakeAuthServer) Refresh(_ context.Context, req *connect.Request[identityv1.RefreshRequest]) (*connect.Response[identityv1.RefreshResponse], error) {
+	f.lastHeaders = req.Header().Clone()
+	if f.refreshErr != nil {
+		return nil, f.refreshErr
+	}
+	return connect.NewResponse(f.refreshResp), nil
+}
+
+func (f *fakeAuthServer) Logout(_ context.Context, req *connect.Request[identityv1.LogoutRequest]) (*connect.Response[identityv1.LogoutResponse], error) {
+	f.lastHeaders = req.Header().Clone()
+	f.logoutCalled = true
+	if f.logoutErr != nil {
+		return nil, f.logoutErr
+	}
+	return connect.NewResponse(&identityv1.LogoutResponse{}), nil
 }
 
 // newAuthTestServer mounts AuthRoutes on a fresh chi router in front of fake,
@@ -212,6 +233,150 @@ func TestOtpRequestBodyTooLargeReturns400(t *testing.T) {
 	}
 	if fake.lastHeaders != nil {
 		t.Error("identity was called with an oversized body, want rejected before any upstream contact")
+	}
+}
+
+func TestRefreshRotatesCookiesAndReturnsUser(t *testing.T) {
+	fake := &fakeAuthServer{refreshResp: &identityv1.RefreshResponse{
+		AccessToken:  "new-access-token",
+		RefreshToken: "new-refresh-token",
+		User:         &identityv1.SessionUser{UserId: "u1", Role: auth.RoleCustomer},
+	}}
+	srv := newAuthTestServer(t, fake)
+
+	req, err := http.NewRequest(http.MethodPost, srv.URL+"/api/v1/auth/refresh", nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "old-refresh-token"})
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("do: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", resp.StatusCode)
+	}
+	cookiesByName := map[string]*http.Cookie{}
+	for _, c := range resp.Cookies() {
+		cookiesByName[c.Name] = c
+	}
+	if got := cookiesByName[auth.AccessCookie]; got == nil || got.Value != "new-access-token" {
+		t.Errorf("access_token cookie = %+v, want value new-access-token", got)
+	}
+	if got := cookiesByName[auth.RefreshCookie]; got == nil || got.Value != "new-refresh-token" {
+		t.Errorf("refresh_token cookie = %+v, want value new-refresh-token", got)
+	}
+	if fake.lastHeaders == nil {
+		t.Fatal("identity was never called")
+	}
+}
+
+func TestRefreshMissingCookieReturns401AndClearsCookies(t *testing.T) {
+	fake := &fakeAuthServer{}
+	srv := newAuthTestServer(t, fake)
+
+	resp, err := http.Post(srv.URL+"/api/v1/auth/refresh", "application/json", nil)
+	if err != nil {
+		t.Fatalf("post: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
+
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want 401", resp.StatusCode)
+	}
+	assertCookiesCleared(t, resp.Cookies())
+	if fake.lastHeaders != nil {
+		t.Error("identity was called without a refresh cookie, want rejected before any upstream contact")
+	}
+}
+
+func TestRefreshIdentityErrorClearsCookies(t *testing.T) {
+	fake := &fakeAuthServer{refreshErr: connect.NewError(connect.CodeUnauthenticated, errString("session invalid"))}
+	srv := newAuthTestServer(t, fake)
+
+	req, err := http.NewRequest(http.MethodPost, srv.URL+"/api/v1/auth/refresh", nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "reused-token"})
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("do: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
+
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want 401", resp.StatusCode)
+	}
+	assertCookiesCleared(t, resp.Cookies())
+}
+
+func TestLogoutClearsCookiesAndReturns204(t *testing.T) {
+	fake := &fakeAuthServer{}
+	srv := newAuthTestServer(t, fake)
+
+	req, err := http.NewRequest(http.MethodPost, srv.URL+"/api/v1/auth/logout", nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "a-refresh-token"})
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("do: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
+
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204", resp.StatusCode)
+	}
+	assertCookiesCleared(t, resp.Cookies())
+	if !fake.logoutCalled {
+		t.Error("identity Logout was never called")
+	}
+}
+
+func TestLogoutClearsCookiesEvenOnIdentityError(t *testing.T) {
+	fake := &fakeAuthServer{logoutErr: connect.NewError(connect.CodeInternal, errString("boom"))}
+	srv := newAuthTestServer(t, fake)
+
+	req, err := http.NewRequest(http.MethodPost, srv.URL+"/api/v1/auth/logout", nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "a-refresh-token"})
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("do: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
+
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204 even when identity errors", resp.StatusCode)
+	}
+	assertCookiesCleared(t, resp.Cookies())
+}
+
+// assertCookiesCleared fails t unless both session cookies are present with
+// an empty value and a non-positive MaxAge (the browser deletes them).
+func assertCookiesCleared(t *testing.T, cookies []*http.Cookie) {
+	t.Helper()
+	byName := map[string]*http.Cookie{}
+	for _, c := range cookies {
+		byName[c.Name] = c
+	}
+	access := byName[auth.AccessCookie]
+	refresh := byName[auth.RefreshCookie]
+	if access == nil || access.Value != "" || access.MaxAge > 0 {
+		t.Errorf("access_token cookie = %+v, want cleared (empty value, MaxAge <= 0)", access)
+	}
+	if refresh == nil || refresh.Value != "" || refresh.MaxAge > 0 {
+		t.Errorf("refresh_token cookie = %+v, want cleared (empty value, MaxAge <= 0)", refresh)
 	}
 }
 
