@@ -6,5 +6,6 @@ use (
 	./services/_template
 	./services/catalog
 	./services/gateway
+	./services/identity
 	./services/schedule
 )

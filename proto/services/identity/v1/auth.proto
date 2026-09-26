@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package boatbooking.identity.v1;
+
+option go_package = "github.com/chonlatee11/boat-booking/gen/go/identity/v1;identityv1";
+
+// AuthService is identity's passwordless OTP login sync API (D-01). Both
+// RPCs need only the internal token — no verified claims, since the caller
+// isn't authenticated yet.
+service AuthService {
+  rpc RequestOtp(RequestOtpRequest) returns (RequestOtpResponse);
+  rpc VerifyOtp(VerifyOtpRequest) returns (VerifyOtpResponse);
+}
+
+// destination is an email address or phone number in any input format —
+// identity normalises it server-side (D-01).
+message RequestOtpRequest {
+  string destination = 1;
+}
+
+// Always empty and always returned, whether or not a user exists for
+// destination (Pitfall 3 — no account enumeration).
+message RequestOtpResponse {}
+
+message VerifyOtpRequest {
+  string destination = 1;
+  string code = 2;
+}
+
+// SessionUser is the identity carried by the issued session (D-06).
+message SessionUser {
+  string user_id = 1;
+  string role = 2;
+  string operator_id = 3;
+  repeated string pier_ids = 4;
+}
+
+message VerifyOtpResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  SessionUser user = 3;
+}
