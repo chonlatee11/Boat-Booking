@@ -308,7 +308,7 @@ HARBOR_USER ?= admin
 HARBOR_PASSWORD ?= $(HARBOR_ADMIN_PASSWORD)
 
 push:
-	@echo "$(HARBOR_PASSWORD)" | docker login localhost:8880 -u "$(HARBOR_USER)" --password-stdin
+	@printf '%s' "$$HARBOR_PASSWORD" | docker login localhost:8880 -u "$(HARBOR_USER)" --password-stdin
 	@for s in $(SERVICES); do \
 		name=$${s#_}; \
 		docker tag boatbooking/$$name:$(TAG) $(REGISTRY)/$$name:$(TAG); \
