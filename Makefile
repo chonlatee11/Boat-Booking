@@ -12,7 +12,7 @@ COMPOSE_CI := docker compose --env-file .env -f deploy/ci/docker-compose.yml
 SERVICES ?= $(shell for d in services/*/; do n=$$(basename "$$d"); [ -f "$${d}cmd/main.go" ] && echo "$$n"; done)
 TAG ?= $(shell git rev-parse --short HEAD)
 
-.PHONY: dev-keys dev-token up up-infra obs-check down kong-roundtrip test test-integration dev-tools lint hooks proto-gen proto-check ci-keys ci-up ci-down images
+.PHONY: dev-keys dev-token up up-infra obs-check down kong-roundtrip test test-integration dev-tools lint hooks proto-gen proto-check sqlc-gen ci-keys ci-up ci-down images
 
 dev-keys:
 	go run $(M)/pkg/auth/cmd/devtoken keys
@@ -53,6 +53,12 @@ dev-tools:
 proto-gen:
 	buf generate
 	cd gen/go && go mod tidy
+
+sqlc-gen:
+	@for f in services/*/internal/adapters/postgres/sqlc.yaml; do \
+		echo "sqlc generate -f $$f"; \
+		docker run --rm -u $$(id -u):$$(id -g) -v "$(CURDIR)":/src -w /src sqlc/sqlc:1.31.1 generate -f $$f; \
+	done
 
 proto-check:
 	buf lint
