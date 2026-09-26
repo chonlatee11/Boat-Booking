@@ -116,6 +116,16 @@ while [ "$SECONDS" -lt "$DEADLINE" ]; do
 done
 
 if [ "$RESULT" = "SUCCESS" ] && [ "$SHA" = "$HEAD_SHA" ]; then
+  # A green build must have actually run the integration suite and the
+  # template smoke test -- not just skipped straight to SUCCESS (T-13-02).
+  CONSOLE=$(auth_curl "$JOB_URL/lastBuild/consoleText")
+  MISSING=""
+  echo "$CONSOLE" | grep -q "make test-integration" || MISSING="$MISSING make-test-integration"
+  echo "$CONSOLE" | grep -q "PASS template-smoke" || MISSING="$MISSING PASS-template-smoke"
+  if [ -n "$MISSING" ]; then
+    echo "FAIL jenkins-build-console missing:$MISSING"
+    exit 1
+  fi
   echo "PASS jenkins-build SUCCESS"
   exit 0
 fi
