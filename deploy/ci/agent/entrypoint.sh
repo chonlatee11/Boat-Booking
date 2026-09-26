@@ -6,6 +6,12 @@
 # testcontainers works over the SSH session Jenkins actually builds in.
 set -euo pipefail
 
+# Named volumes with no matching path in the image are created root-owned;
+# the SSH build user is "jenkins" (uid 1000), so fix ownership before sshd
+# starts or `go install`/module-cache writes fail with permission denied.
+mkdir -p /home/jenkins/go /home/jenkins/.cache
+chown jenkins:jenkins /home/jenkins/go /home/jenkins/.cache
+
 DOCKER_SOCK=/var/run/docker.sock
 if [ -S "$DOCKER_SOCK" ]; then
   SOCK_GID=$(stat -c %g "$DOCKER_SOCK")
