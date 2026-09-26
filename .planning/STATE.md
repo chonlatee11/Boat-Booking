@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 02
 current_phase_name: Identity + Catalog
 status: executing
-stopped_at: Completed 02-11-PLAN.md
-last_updated: "2026-09-26T20:53:27.946Z"
+stopped_at: Completed 02-12-PLAN.md
+last_updated: "2026-09-26T21:12:33.827Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 02 execution started
-state_head: 55e2d4ac5575e8b840dc69b89580c4a0b3a7b1fe
+state_head: c853b29f80d557301716a9eb70a4f73688e4d6f5
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 27
-  completed_plans: 25
+  completed_plans: 26
   percent: 20
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 02 (Identity + Catalog) — EXECUTING
-Plan: 12 of 13
+Plan: 13 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 02 execution started
 
@@ -83,6 +83,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 02 P09 | 35min | 3 tasks | 51 files |
 | Phase 02 P10 | 7min | 2 tasks | 12 files |
 | Phase 02 P11 | 33min | 3 tasks | 13 files |
+| Phase 02 P12 | 17min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -139,6 +140,9 @@ Recent decisions affecting current work:
 - [Phase 02]: [Phase 02] apps/web's shadcn add pulled the same unaudited 'cn' npm package 02-09 already rejected -- rewrote every generated ui/*.tsx import to @/lib/utils and dropped 'cn' from package.json/lockfile before writing app code — Matches the established mitigation from 02-09; keeps the dependency tree auditable
 - [Phase 02]: [Phase 02] storage-init retries s3.configure up to 15x/2s instead of trusting storage's healthcheck alone -- the master HTTP healthcheck can pass before the filer's gRPC listener (which weed shell dials) is ready under load; a cold make up hit this race
 - [Phase 02]: [Phase 02] maplibre-gl v6 has no default export -- import { Map as MapLibreMap, Marker } from 'maplibre-gl', not the v1-v3 default `maplibregl` import
+- [Phase 02]: RouteSheet(returnOf=route) recursive self-render for the D-11 return-route shortcut instead of a second component — One form definition; guarded from infinite nesting since a returnOf Sheet has isEdit=false
+- [Phase 02]: money.ts uses only regex+BigInt string arithmetic (no parseFloat/Number on the amount, zero imports) — Mirrors pkg/money's Go convention and the 10,000,000 satang server bound; compiles/tests standalone
+- [Phase 02]: Boat status badges use explicit green/orange Tailwind classes instead of the Badge default/secondary variants — UI-SPEC reserves the brand accent color for CTAs, never status badges
 
 ### Pending Todos
 
@@ -159,6 +163,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T20:53:27.862Z
-Stopped at: Completed 02-11-PLAN.md
+Last session: 2026-09-26T21:12:33.708Z
+Stopped at: Completed 02-12-PLAN.md
 Resume file: None
