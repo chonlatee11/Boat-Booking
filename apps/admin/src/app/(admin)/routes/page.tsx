@@ -1,6 +1,9 @@
 'use client';
 
-import { PencilIcon, PlusIcon } from 'lucide-react';
+import { PencilIcon, PlusIcon, RepeatIcon } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { rpc } from '@/lib/api';
 import { useWhoami } from '@/lib/queries';
 import {
   useAdminRoutes,
@@ -8,6 +11,7 @@ import {
   usePublicPiers,
   pierName,
 } from './queries';
+import { formatSatang } from './money';
 import type { RouteJson } from '@gen/services/catalog/v1/catalog_pb';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,17 +23,8 @@ import {
   EmptyContent,
 } from '@/components/ui/empty';
 import { DataTable, TruncatedCell } from '@/components/data-table';
+import { ArchiveDialog } from '@/components/archive-dialog';
 import { RouteSheet } from './route-sheet';
-
-// Local baht formatter for Task 1 — replaced by money.ts's formatSatang once
-// that file exists (Task 2 of this plan).
-function formatBahtDisplay(satang: string): string {
-  const n = BigInt(satang);
-  const hundred = BigInt(100);
-  const baht = n / hundred;
-  const frac = n % hundred;
-  return `฿${baht.toString()}.${frac.toString().padStart(2, '0')}`;
-}
 
 function currentPricesLabel(route: RouteJson): string {
   const prices = route.currentPrices ?? [];
@@ -37,9 +32,9 @@ function currentPricesLabel(route: RouteJson): string {
   const child = prices.find((p) => p.ticketType === 'TICKET_TYPE_CHILD');
   const parts: string[] = [];
   if (adult?.amountSatang)
-    parts.push(`ผู้ใหญ่ ${formatBahtDisplay(adult.amountSatang)}`);
+    parts.push(`ผู้ใหญ่ ${formatSatang(adult.amountSatang)}`);
   if (child?.amountSatang)
-    parts.push(`เด็ก ${formatBahtDisplay(child.amountSatang)}`);
+    parts.push(`เด็ก ${formatSatang(child.amountSatang)}`);
   return parts.length > 0 ? parts.join(' / ') : '—';
 }
 
@@ -48,6 +43,7 @@ export default function RoutesPage() {
   const { data: ownPiersData } = useOwnPiers();
   const { data: publicPiersData } = usePublicPiers();
   const { data: whoami } = useWhoami();
+  const queryClient = useQueryClient();
 
   const routes = data?.routes ?? [];
   const canWrite =
@@ -62,6 +58,16 @@ export default function RoutesPage() {
       สร้างเส้นทางใหม่
     </Button>
   );
+
+  async function handleArchive(route: RouteJson) {
+    try {
+      await rpc('catalog', 'ArchiveRoute', { routeId: route.routeId });
+      toast.success('เก็บถาวรเส้นทางสำเร็จ');
+      await queryClient.invalidateQueries({ queryKey: ['routes'] });
+    } catch {
+      toast.error('เก็บถาวรเส้นทางไม่สำเร็จ กรุณาลองใหม่');
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -101,24 +107,43 @@ export default function RoutesPage() {
             ? [
                 {
                   header: '',
-                  className: 'w-24 text-right',
-                  cell: (route: RouteJson) => (
-                    <div className="flex justify-end gap-1">
-                      <RouteSheet
-                        route={route}
-                        trigger={
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-11"
-                            aria-label="แก้ไขเส้นทาง"
-                          >
-                            <PencilIcon className="size-4" />
-                          </Button>
-                        }
-                      />
-                    </div>
-                  ),
+                  className: 'w-32 text-right',
+                  cell: (route: RouteJson) =>
+                    route.archived ? null : (
+                      <div className="flex justify-end gap-1">
+                        <RouteSheet
+                          returnOf={route}
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-11"
+                              aria-label="สร้างเส้นทางย้อนกลับ"
+                            >
+                              <RepeatIcon className="size-4" />
+                            </Button>
+                          }
+                        />
+                        <RouteSheet
+                          route={route}
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-11"
+                              aria-label="แก้ไขเส้นทาง"
+                            >
+                              <PencilIcon className="size-4" />
+                            </Button>
+                          }
+                        />
+                        <ArchiveDialog
+                          entityLabel="เส้นทาง"
+                          name={`${name(route.pierFromId)} → ${name(route.pierToId)}`}
+                          onConfirm={() => handleArchive(route)}
+                        />
+                      </div>
+                    ),
                 },
               ]
             : []),
