@@ -25,14 +25,48 @@ check() {
 	fi
 }
 
-# devtoken's default operator/role (pier_admin) is fine here — proof only
-# needs a validly-signed access token, not a specific tenant.
-TOKEN=$(go run github.com/chonlatee11/boat-booking/pkg/auth/cmd/devtoken token)
-NAME="Proof Boat $(date +%s)"
-BODY=$(printf '{"name":"%s","defaultCapacity":42,"status":"BOAT_STATUS_ACTIVE"}' "$NAME")
+# super_admin is required end-to-end: UpsertOperator is super_admin-only
+# (D-08) and UpsertPier's create path is super_admin-only (D-07/D-08); an
+# empty -operator is fine since super_admin's scope ignores it.
+TOKEN=$(go run github.com/chonlatee11/boat-booking/pkg/auth/cmd/devtoken token -role super_admin -operator "")
+ADMIN="$BASE/api/v1/admin/boatbooking.catalog.v1.CatalogService"
+SUFFIX=$(date +%s)
+
+op_code=$(curl -s -o /tmp/proof-operator.json -w '%{http_code}' \
+	-X POST "$ADMIN/UpsertOperator" \
+	--cookie "access_token=$TOKEN" \
+	-H 'Content-Type: application/json' \
+	-d "$(printf '{"name":"Proof Operator %s"}' "$SUFFIX")")
+if [ "$op_code" != "200" ]; then
+	echo "FAIL upsert-200 (operator, got $op_code): $(cat /tmp/proof-operator.json)"
+	exit 1
+fi
+OPERATOR_ID=$(jq -r '.operator.operatorId // empty' /tmp/proof-operator.json)
+if [ -z "$OPERATOR_ID" ]; then
+	echo "FAIL upsert-200: no operator.operatorId in response: $(cat /tmp/proof-operator.json)"
+	exit 1
+fi
+
+pier_code=$(curl -s -o /tmp/proof-pier.json -w '%{http_code}' \
+	-X POST "$ADMIN/UpsertPier" \
+	--cookie "access_token=$TOKEN" \
+	-H 'Content-Type: application/json' \
+	-d "$(printf '{"operatorId":"%s","nameTh":"Proof Pier","nameEn":"Proof Pier","lat":7.88,"lng":98.39}' "$OPERATOR_ID")")
+if [ "$pier_code" != "200" ]; then
+	echo "FAIL upsert-200 (pier, got $pier_code): $(cat /tmp/proof-pier.json)"
+	exit 1
+fi
+PIER_ID=$(jq -r '.pier.pierId // empty' /tmp/proof-pier.json)
+if [ -z "$PIER_ID" ]; then
+	echo "FAIL upsert-200: no pier.pierId in response: $(cat /tmp/proof-pier.json)"
+	exit 1
+fi
+
+NAME="Proof Boat $SUFFIX"
+BODY=$(printf '{"name":"%s","defaultCapacity":42,"status":"BOAT_STATUS_ACTIVE","homePierId":"%s"}' "$NAME" "$PIER_ID")
 
 http_code=$(curl -s -o /tmp/proof-upsert.json -w '%{http_code}' \
-	-X POST "$BASE/api/v1/admin/boatbooking.catalog.v1.CatalogService/UpsertBoat" \
+	-X POST "$ADMIN/UpsertBoat" \
 	--cookie "access_token=$TOKEN" \
 	-H 'Content-Type: application/json' \
 	-d "$BODY")
@@ -47,7 +81,7 @@ if [ -z "$BOAT_ID" ]; then
 	echo "FAIL upsert-200: no boat.boatId in response: $(cat /tmp/proof-upsert.json)"
 	exit 1
 fi
-echo "proof.sh: boat id = $BOAT_ID"
+echo "proof.sh: operator id = $OPERATOR_ID, pier id = $PIER_ID, boat id = $BOAT_ID"
 
 # PASS applied: schedule's own projection holds the same capacity within 30s.
 applied=0

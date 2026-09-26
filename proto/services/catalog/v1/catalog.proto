@@ -13,6 +13,7 @@ option go_package = "github.com/chonlatee11/boat-booking/gen/go/catalog/v1;catal
 service CatalogService {
   rpc UpsertBoat(UpsertBoatRequest) returns (UpsertBoatResponse);
   rpc ListBoats(ListBoatsRequest) returns (ListBoatsResponse);
+  rpc ArchiveBoat(ArchiveBoatRequest) returns (ArchiveBoatResponse);
 
   // Operator management is super_admin only (D-08, AUTH-05).
   rpc UpsertOperator(UpsertOperatorRequest) returns (UpsertOperatorResponse);
@@ -39,22 +40,28 @@ service CatalogService {
   rpc ListRoutePrices(ListRoutePricesRequest) returns (ListRoutePricesResponse);
 }
 
+// home_pier_id and archived are additive fields (D-07): the boat's operator
+// is always its home pier's operator.
 message Boat {
   string boat_id = 1;
   string operator_id = 2;
   string name = 3;
   int32 default_capacity = 4;
   boatbooking.catalog.events.v1.BoatStatus status = 5;
+  string home_pier_id = 6;
+  bool archived = 7;
 }
 
 // An empty boat_id means create; a non-empty boat_id means update.
 // operator_id always comes from the trusted gateway claims, never from the
-// request body (D-30).
+// request body (D-30) — it is always derived from home_pier_id's stored
+// operator.
 message UpsertBoatRequest {
   string boat_id = 1;
   string name = 2;
   int32 default_capacity = 3;
   boatbooking.catalog.events.v1.BoatStatus status = 4;
+  string home_pier_id = 5;
 }
 
 message UpsertBoatResponse {
@@ -65,6 +72,14 @@ message ListBoatsRequest {}
 
 message ListBoatsResponse {
   repeated Boat boats = 1;
+}
+
+message ArchiveBoatRequest {
+  string boat_id = 1;
+}
+
+message ArchiveBoatResponse {
+  Boat boat = 1;
 }
 
 message Operator {

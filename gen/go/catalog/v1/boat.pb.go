@@ -75,7 +75,9 @@ func (BoatStatus) EnumDescriptor() ([]byte, []int) {
 
 // BoatUpserted is a past-tense fact: a boat was created or updated in the
 // catalog. Ids only, no personal data (D-45) — the boat's own name is not
-// PII.
+// PII. home_pier_id and archived are additive fields (D-07) — the
+// schedule-service consumer ignores them and keeps applying the event
+// unchanged.
 type BoatUpserted struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	BoatId          string                 `protobuf:"bytes,1,opt,name=boat_id,json=boatId,proto3" json:"boat_id,omitempty"`
@@ -83,6 +85,8 @@ type BoatUpserted struct {
 	Name            string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	DefaultCapacity int32                  `protobuf:"varint,4,opt,name=default_capacity,json=defaultCapacity,proto3" json:"default_capacity,omitempty"`
 	Status          BoatStatus             `protobuf:"varint,5,opt,name=status,proto3,enum=boatbooking.catalog.events.v1.BoatStatus" json:"status,omitempty"`
+	HomePierId      string                 `protobuf:"bytes,6,opt,name=home_pier_id,json=homePierId,proto3" json:"home_pier_id,omitempty"`
+	Archived        bool                   `protobuf:"varint,7,opt,name=archived,proto3" json:"archived,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -152,18 +156,35 @@ func (x *BoatUpserted) GetStatus() BoatStatus {
 	return BoatStatus_BOAT_STATUS_UNSPECIFIED
 }
 
+func (x *BoatUpserted) GetHomePierId() string {
+	if x != nil {
+		return x.HomePierId
+	}
+	return ""
+}
+
+func (x *BoatUpserted) GetArchived() bool {
+	if x != nil {
+		return x.Archived
+	}
+	return false
+}
+
 var File_events_catalog_v1_boat_proto protoreflect.FileDescriptor
 
 const file_events_catalog_v1_boat_proto_rawDesc = "" +
 	"\n" +
-	"\x1cevents/catalog/v1/boat.proto\x12\x1dboatbooking.catalog.events.v1\"\xca\x01\n" +
+	"\x1cevents/catalog/v1/boat.proto\x12\x1dboatbooking.catalog.events.v1\"\x88\x02\n" +
 	"\fBoatUpserted\x12\x17\n" +
 	"\aboat_id\x18\x01 \x01(\tR\x06boatId\x12\x1f\n" +
 	"\voperator_id\x18\x02 \x01(\tR\n" +
 	"operatorId\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12)\n" +
 	"\x10default_capacity\x18\x04 \x01(\x05R\x0fdefaultCapacity\x12A\n" +
-	"\x06status\x18\x05 \x01(\x0e2).boatbooking.catalog.events.v1.BoatStatusR\x06status*^\n" +
+	"\x06status\x18\x05 \x01(\x0e2).boatbooking.catalog.events.v1.BoatStatusR\x06status\x12 \n" +
+	"\fhome_pier_id\x18\x06 \x01(\tR\n" +
+	"homePierId\x12\x1a\n" +
+	"\barchived\x18\a \x01(\bR\barchived*^\n" +
 	"\n" +
 	"BoatStatus\x12\x1b\n" +
 	"\x17BOAT_STATUS_UNSPECIFIED\x10\x00\x12\x16\n" +

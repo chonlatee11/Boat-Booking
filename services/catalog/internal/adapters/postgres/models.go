@@ -16,6 +16,8 @@ type Boat struct {
 	Status          string
 	CreatedAt       pgtype.Timestamptz
 	UpdatedAt       pgtype.Timestamptz
+	HomePierID      pgtype.UUID
+	ArchivedAt      pgtype.Timestamptz
 }
 
 type Operator struct {

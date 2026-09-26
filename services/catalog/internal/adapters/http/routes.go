@@ -43,23 +43,17 @@ type server struct {
 	nudge func()
 }
 
-// UpsertBoat requires verified claims (else Unauthenticated) — operator_id
-// always comes from the claims, never the request body (D-30).
+// UpsertBoat requires verified claims; app.UpsertBoat enforces the
+// home-pier scope rule (D-07) — operator_id is always derived from the
+// home pier, never taken from the request body (D-30).
 func (s *server) UpsertBoat(ctx context.Context, req *connect.Request[catalogv1.UpsertBoatRequest]) (*connect.Response[catalogv1.UpsertBoatResponse], error) {
-	claims, ok := httpx.FromContext(ctx)
-	if !ok {
+	scope, hasClaims, err := scopeFrom(ctx)
+	if !hasClaims {
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing claims"))
 	}
-	operatorID, err := uuid.Parse(claims.OperatorID)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("invalid operator id in claims"))
+		return nil, err
 	}
-	// TODO(WR-01): no claims.Role check here — Phase 1 has exactly one role
-	// (pier_admin, see 01-RESEARCH.md "V4 Access Control": "no business-level
-	// roles exist yet"). Phase 2 introduces customer/staff roles
-	// (SKELETON.md); add a role check on this write path (and on the
-	// gateway's upsertBoatHandler, services/gateway/internal/adapters/http/bff.go)
-	// before a second role can reach this handler.
 
 	status, err := statusFromProto(req.Msg.Status)
 	if err != nil {
@@ -73,12 +67,20 @@ func (s *server) UpsertBoat(ctx context.Context, req *connect.Request[catalogv1.
 			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid boat_id"))
 		}
 	}
+	var homePierID uuid.UUID
+	if req.Msg.HomePierId != "" {
+		homePierID, err = uuid.Parse(req.Msg.HomePierId)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid home_pier_id"))
+		}
+	}
 
 	var stored domain.Boat
 	err = bbpgx.WithTx(ctx, s.pool, func(tx pgx.Tx) error {
 		var txErr error
-		stored, txErr = app.UpsertBoat(ctx, tx, operatorID, domain.Boat{
+		stored, txErr = app.UpsertBoat(ctx, tx, scope, domain.Boat{
 			ID:              id,
+			HomePierID:      homePierID,
 			Name:            req.Msg.Name,
 			DefaultCapacity: req.Msg.DefaultCapacity,
 			Status:          status,
@@ -86,31 +88,60 @@ func (s *server) UpsertBoat(ctx context.Context, req *connect.Request[catalogv1.
 		return txErr
 	})
 	if err != nil {
-		switch {
-		case errors.Is(err, domain.ErrInvalidArgument):
-			return nil, connect.NewError(connect.CodeInvalidArgument, err)
-		case errors.Is(err, domain.ErrNotFound):
-			return nil, connect.NewError(connect.CodeNotFound, err)
-		default:
-			return nil, connect.NewError(connect.CodeInternal, err)
-		}
+		return nil, toConnectErr(err)
 	}
 	s.nudge()
 
 	return connect.NewResponse(&catalogv1.UpsertBoatResponse{Boat: toProtoBoat(stored)}), nil
 }
 
-// ListBoats needs only the internal token, no claims.
+// ListBoats with no claims returns the public (non-archived only)
+// projection; with claims it applies the Scope rule (AUTH-05, CAT-04).
 func (s *server) ListBoats(ctx context.Context, _ *connect.Request[catalogv1.ListBoatsRequest]) (*connect.Response[catalogv1.ListBoatsResponse], error) {
-	boats, err := app.ListBoats(ctx, postgres.New(s.pool))
+	scope, hasClaims, err := scopeFrom(ctx)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, err
+	}
+
+	boats, err := app.ListBoats(ctx, postgres.New(s.pool), scope, !hasClaims)
+	if err != nil {
+		return nil, toConnectErr(err)
 	}
 	resp := &catalogv1.ListBoatsResponse{Boats: make([]*catalogv1.Boat, len(boats))}
 	for i, b := range boats {
 		resp.Boats[i] = toProtoBoat(b)
 	}
 	return connect.NewResponse(resp), nil
+}
+
+// ArchiveBoat requires verified claims; app.ArchiveBoat enforces the same
+// home-pier scope rule as UpsertBoat (D-07).
+func (s *server) ArchiveBoat(ctx context.Context, req *connect.Request[catalogv1.ArchiveBoatRequest]) (*connect.Response[catalogv1.ArchiveBoatResponse], error) {
+	scope, hasClaims, err := scopeFrom(ctx)
+	if !hasClaims {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing claims"))
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := uuid.Parse(req.Msg.BoatId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid boat_id"))
+	}
+
+	var stored domain.Boat
+	err = bbpgx.WithTx(ctx, s.pool, func(tx pgx.Tx) error {
+		var txErr error
+		stored, txErr = app.ArchiveBoat(ctx, tx, scope, id)
+		return txErr
+	})
+	if err != nil {
+		return nil, toConnectErr(err)
+	}
+	s.nudge()
+
+	return connect.NewResponse(&catalogv1.ArchiveBoatResponse{Boat: toProtoBoat(stored)}), nil
 }
 
 func toProtoBoat(b domain.Boat) *catalogv1.Boat {
@@ -120,6 +151,8 @@ func toProtoBoat(b domain.Boat) *catalogv1.Boat {
 		Name:            b.Name,
 		DefaultCapacity: b.DefaultCapacity,
 		Status:          statusToProto(b.Status),
+		HomePierId:      b.HomePierID.String(),
+		Archived:        b.Archived,
 	}
 }
 

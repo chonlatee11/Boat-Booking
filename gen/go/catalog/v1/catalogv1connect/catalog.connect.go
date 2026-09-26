@@ -39,6 +39,9 @@ const (
 	// CatalogServiceListBoatsProcedure is the fully-qualified name of the CatalogService's ListBoats
 	// RPC.
 	CatalogServiceListBoatsProcedure = "/boatbooking.catalog.v1.CatalogService/ListBoats"
+	// CatalogServiceArchiveBoatProcedure is the fully-qualified name of the CatalogService's
+	// ArchiveBoat RPC.
+	CatalogServiceArchiveBoatProcedure = "/boatbooking.catalog.v1.CatalogService/ArchiveBoat"
 	// CatalogServiceUpsertOperatorProcedure is the fully-qualified name of the CatalogService's
 	// UpsertOperator RPC.
 	CatalogServiceUpsertOperatorProcedure = "/boatbooking.catalog.v1.CatalogService/UpsertOperator"
@@ -78,6 +81,7 @@ const (
 type CatalogServiceClient interface {
 	UpsertBoat(context.Context, *connect.Request[v1.UpsertBoatRequest]) (*connect.Response[v1.UpsertBoatResponse], error)
 	ListBoats(context.Context, *connect.Request[v1.ListBoatsRequest]) (*connect.Response[v1.ListBoatsResponse], error)
+	ArchiveBoat(context.Context, *connect.Request[v1.ArchiveBoatRequest]) (*connect.Response[v1.ArchiveBoatResponse], error)
 	// Operator management is super_admin only (D-08, AUTH-05).
 	UpsertOperator(context.Context, *connect.Request[v1.UpsertOperatorRequest]) (*connect.Response[v1.UpsertOperatorResponse], error)
 	ListOperators(context.Context, *connect.Request[v1.ListOperatorsRequest]) (*connect.Response[v1.ListOperatorsResponse], error)
@@ -121,6 +125,12 @@ func NewCatalogServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			httpClient,
 			baseURL+CatalogServiceListBoatsProcedure,
 			connect.WithSchema(catalogServiceMethods.ByName("ListBoats")),
+			connect.WithClientOptions(opts...),
+		),
+		archiveBoat: connect.NewClient[v1.ArchiveBoatRequest, v1.ArchiveBoatResponse](
+			httpClient,
+			baseURL+CatalogServiceArchiveBoatProcedure,
+			connect.WithSchema(catalogServiceMethods.ByName("ArchiveBoat")),
 			connect.WithClientOptions(opts...),
 		),
 		upsertOperator: connect.NewClient[v1.UpsertOperatorRequest, v1.UpsertOperatorResponse](
@@ -196,6 +206,7 @@ func NewCatalogServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 type catalogServiceClient struct {
 	upsertBoat      *connect.Client[v1.UpsertBoatRequest, v1.UpsertBoatResponse]
 	listBoats       *connect.Client[v1.ListBoatsRequest, v1.ListBoatsResponse]
+	archiveBoat     *connect.Client[v1.ArchiveBoatRequest, v1.ArchiveBoatResponse]
 	upsertOperator  *connect.Client[v1.UpsertOperatorRequest, v1.UpsertOperatorResponse]
 	listOperators   *connect.Client[v1.ListOperatorsRequest, v1.ListOperatorsResponse]
 	archiveOperator *connect.Client[v1.ArchiveOperatorRequest, v1.ArchiveOperatorResponse]
@@ -217,6 +228,11 @@ func (c *catalogServiceClient) UpsertBoat(ctx context.Context, req *connect.Requ
 // ListBoats calls boatbooking.catalog.v1.CatalogService.ListBoats.
 func (c *catalogServiceClient) ListBoats(ctx context.Context, req *connect.Request[v1.ListBoatsRequest]) (*connect.Response[v1.ListBoatsResponse], error) {
 	return c.listBoats.CallUnary(ctx, req)
+}
+
+// ArchiveBoat calls boatbooking.catalog.v1.CatalogService.ArchiveBoat.
+func (c *catalogServiceClient) ArchiveBoat(ctx context.Context, req *connect.Request[v1.ArchiveBoatRequest]) (*connect.Response[v1.ArchiveBoatResponse], error) {
+	return c.archiveBoat.CallUnary(ctx, req)
 }
 
 // UpsertOperator calls boatbooking.catalog.v1.CatalogService.UpsertOperator.
@@ -278,6 +294,7 @@ func (c *catalogServiceClient) ListRoutePrices(ctx context.Context, req *connect
 type CatalogServiceHandler interface {
 	UpsertBoat(context.Context, *connect.Request[v1.UpsertBoatRequest]) (*connect.Response[v1.UpsertBoatResponse], error)
 	ListBoats(context.Context, *connect.Request[v1.ListBoatsRequest]) (*connect.Response[v1.ListBoatsResponse], error)
+	ArchiveBoat(context.Context, *connect.Request[v1.ArchiveBoatRequest]) (*connect.Response[v1.ArchiveBoatResponse], error)
 	// Operator management is super_admin only (D-08, AUTH-05).
 	UpsertOperator(context.Context, *connect.Request[v1.UpsertOperatorRequest]) (*connect.Response[v1.UpsertOperatorResponse], error)
 	ListOperators(context.Context, *connect.Request[v1.ListOperatorsRequest]) (*connect.Response[v1.ListOperatorsResponse], error)
@@ -317,6 +334,12 @@ func NewCatalogServiceHandler(svc CatalogServiceHandler, opts ...connect.Handler
 		CatalogServiceListBoatsProcedure,
 		svc.ListBoats,
 		connect.WithSchema(catalogServiceMethods.ByName("ListBoats")),
+		connect.WithHandlerOptions(opts...),
+	)
+	catalogServiceArchiveBoatHandler := connect.NewUnaryHandler(
+		CatalogServiceArchiveBoatProcedure,
+		svc.ArchiveBoat,
+		connect.WithSchema(catalogServiceMethods.ByName("ArchiveBoat")),
 		connect.WithHandlerOptions(opts...),
 	)
 	catalogServiceUpsertOperatorHandler := connect.NewUnaryHandler(
@@ -391,6 +414,8 @@ func NewCatalogServiceHandler(svc CatalogServiceHandler, opts ...connect.Handler
 			catalogServiceUpsertBoatHandler.ServeHTTP(w, r)
 		case CatalogServiceListBoatsProcedure:
 			catalogServiceListBoatsHandler.ServeHTTP(w, r)
+		case CatalogServiceArchiveBoatProcedure:
+			catalogServiceArchiveBoatHandler.ServeHTTP(w, r)
 		case CatalogServiceUpsertOperatorProcedure:
 			catalogServiceUpsertOperatorHandler.ServeHTTP(w, r)
 		case CatalogServiceListOperatorsProcedure:
@@ -428,6 +453,10 @@ func (UnimplementedCatalogServiceHandler) UpsertBoat(context.Context, *connect.R
 
 func (UnimplementedCatalogServiceHandler) ListBoats(context.Context, *connect.Request[v1.ListBoatsRequest]) (*connect.Response[v1.ListBoatsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ListBoats is not implemented"))
+}
+
+func (UnimplementedCatalogServiceHandler) ArchiveBoat(context.Context, *connect.Request[v1.ArchiveBoatRequest]) (*connect.Response[v1.ArchiveBoatResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("boatbooking.catalog.v1.CatalogService.ArchiveBoat is not implemented"))
 }
 
 func (UnimplementedCatalogServiceHandler) UpsertOperator(context.Context, *connect.Request[v1.UpsertOperatorRequest]) (*connect.Response[v1.UpsertOperatorResponse], error) {

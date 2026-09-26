@@ -73,12 +73,36 @@ fi
 status=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/v1/public/boats")
 [ "$status" = "200" ] && check "public-boats-200" 1 || check "public-boats-200" 0
 
+# (i2) public piers without a token -> 200 (CAT-06, D-21).
+status=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/v1/public/piers")
+[ "$status" = "200" ] && check "public-piers-200" 1 || check "public-piers-200" 0
+
+# (i3) public routes without a token -> 200 (CAT-06, D-21).
+status=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/v1/public/routes")
+[ "$status" = "200" ] && check "public-routes-200" 1 || check "public-routes-200" 0
+
 # (j) POST /api/v1/admin/boatbooking.catalog.v1.CatalogService/UpsertBoat with
-# a valid (pier_admin) token -> 200 (connect success is always 200; D-18).
-status=$(curl -s -o /dev/null -w '%{http_code}' --cookie "access_token=$tok" \
+# a valid (pier_admin, scoped to a real home pier) token -> 200 (connect
+# success is always 200; D-18). Boats are pier-scoped (D-07), so this seeds
+# an operator + pier via super_admin first, then scopes the boat's writer to
+# that pier.
+ADMIN="$BASE/api/v1/admin/boatbooking.catalog.v1.CatalogService"
+super_tok=$($DEVTOKEN -role super_admin -operator "")
+op_body=$(curl -s --cookie "access_token=$super_tok" \
 	-X POST -H 'Content-Type: application/json' \
-	-d '{"name":"Roundtrip Boat","defaultCapacity":10,"status":"BOAT_STATUS_ACTIVE"}' \
-	"$BASE/api/v1/admin/boatbooking.catalog.v1.CatalogService/UpsertBoat")
+	-d '{"name":"Roundtrip Operator"}' \
+	"$ADMIN/UpsertOperator")
+ROUNDTRIP_OPERATOR_ID=$(echo "$op_body" | jq -r '.operator.operatorId // empty')
+pier_body_setup=$(curl -s --cookie "access_token=$super_tok" \
+	-X POST -H 'Content-Type: application/json' \
+	-d "$(printf '{"operatorId":"%s","nameTh":"Roundtrip Pier","nameEn":"Roundtrip Pier","lat":7.88,"lng":98.39}' "$ROUNDTRIP_OPERATOR_ID")" \
+	"$ADMIN/UpsertPier")
+ROUNDTRIP_PIER_ID=$(echo "$pier_body_setup" | jq -r '.pier.pierId // empty')
+scoped_tok=$($DEVTOKEN -operator "$ROUNDTRIP_OPERATOR_ID" -pier-ids "$ROUNDTRIP_PIER_ID")
+status=$(curl -s -o /dev/null -w '%{http_code}' --cookie "access_token=$scoped_tok" \
+	-X POST -H 'Content-Type: application/json' \
+	-d "$(printf '{"name":"Roundtrip Boat","defaultCapacity":10,"status":"BOAT_STATUS_ACTIVE","homePierId":"%s"}' "$ROUNDTRIP_PIER_ID")" \
+	"$ADMIN/UpsertBoat")
 [ "$status" = "200" ] && check "admin-proxy-upsert-boat-200" 1 || check "admin-proxy-upsert-boat-200" 0
 
 # (k) whoami returns pier_ids for a devtoken minted with -pier-ids (D-06).
