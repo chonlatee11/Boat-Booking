@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@/i18n/navigation';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, type ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,8 @@ import {
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { Spinner } from '@/components/ui/spinner';
 
+const RESEND_COOLDOWN_SECONDS = 60;
+
 export function OtpLogin() {
   const t = useTranslations('auth');
   const router = useRouter();
@@ -25,6 +27,29 @@ export function OtpLogin() {
   const [code, setCode] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(
+      () => setCooldown((c) => Math.max(0, c - 1)),
+      1000,
+    );
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  function otpErrorMessage(err: ApiError): string {
+    if (err.status === 429) {
+      return t('errors.rateLimited');
+    }
+    if (err.code === 'invalid_argument') {
+      return t('errors.wrongCode', { n: err.attemptsLeft ?? 0 });
+    }
+    if (err.code === 'failed_precondition') {
+      return t('errors.expired');
+    }
+    return t('errors.generic');
+  }
 
   async function requestOtp() {
     setPending(true);
@@ -37,8 +62,9 @@ export function OtpLogin() {
       });
       setStep('code');
       setCode('');
-    } catch {
-      setError(t('errors.generic'));
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+    } catch (err) {
+      setError(otpErrorMessage(err as ApiError));
     } finally {
       setPending(false);
     }
@@ -55,8 +81,12 @@ export function OtpLogin() {
       });
       await queryClient.invalidateQueries({ queryKey: ['whoami'] });
       router.replace('/');
-    } catch {
-      setError(t('errors.generic'));
+    } catch (err) {
+      const apiErr = err as ApiError;
+      setError(otpErrorMessage(apiErr));
+      if (apiErr.code === 'failed_precondition') {
+        setStep('destination');
+      }
     } finally {
       setPending(false);
     }
@@ -126,8 +156,12 @@ export function OtpLogin() {
         {pending && <Spinner />}
         {t('verify')}
       </Button>
-      <Button variant="link" disabled={pending} onClick={requestOtp}>
-        {t('resend')}
+      <Button
+        variant="link"
+        disabled={cooldown > 0 || pending}
+        onClick={requestOtp}
+      >
+        {cooldown > 0 ? t('resendIn', { n: cooldown }) : t('resend')}
       </Button>
     </div>
   );
