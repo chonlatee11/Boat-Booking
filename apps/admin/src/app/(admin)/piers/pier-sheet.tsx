@@ -29,6 +29,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { MapPicker, type LatLng } from '@/components/map-picker';
+import { PhotoUpload } from '@/components/photo-upload';
 
 export function PierSheet({
   pier,
@@ -227,6 +228,14 @@ export function PierSheet({
               <Field>
                 <FieldLabel>ตำแหน่งที่ตั้ง</FieldLabel>
                 <MapPicker value={location} onChange={setLocation} />
+              </Field>
+              <Field>
+                <FieldLabel>รูปภาพ</FieldLabel>
+                <PhotoUpload
+                  photoKey={photoKey}
+                  photoUrl={pier?.photoUrl}
+                  onChange={setPhotoKey}
+                />
               </Field>
             </div>
           )}
