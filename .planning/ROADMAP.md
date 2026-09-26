@@ -95,7 +95,7 @@ Plans:
   4. super_admin creates/edits operators and creates piers; pier_admin edits/archives the piers assigned to them (with map picker) and creates/edits/archives routes (with tiered cancellation policy), boats, and per-route ticket prices (adult/child, integer satang) via the admin UI (wording corrected per 02-CONTEXT D-08)
   5. Public search lists piers and routes with coordinates for the map, without authentication
 
-**Plans**: 3/13 plans executed
+**Plans**: 4/13 plans executed
 **UI hint**: yes
 
 Plans:
@@ -107,7 +107,7 @@ Plans:
 
 - [x] 02-02-PLAN.md — identity service: email/phone OTP (Valkey, Mailpit/Resend), auto-created customers, UserCreated, JWT + refresh token
 - [x] 02-03-PLAN.md — catalog operators + piers with the shared Scope rule (super_admin / pier_admin / staff) and public pier list
-- [ ] 02-04-PLAN.md — gateway generic admin RPC proxy + claim-less public proxy (replaces per-endpoint BFF handlers)
+- [x] 02-04-PLAN.md — gateway generic admin RPC proxy + claim-less public proxy (replaces per-endpoint BFF handlers)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -198,7 +198,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Platform Foundation | 14/14 | In Progress|  |
-| 2. Identity + Catalog | 3/13 | In Progress|  |
+| 2. Identity + Catalog | 4/13 | In Progress|  |
 | 3. Schedule | 0/? | Not started | - |
 | 4. Booking Core | 0/? | Not started | - |
 | 5. Payment + Ticket + Notification | 0/? | Not started | - |

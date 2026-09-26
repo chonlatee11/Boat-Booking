@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 02
 current_phase_name: Identity + Catalog
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-09-26T17:30:31.050Z"
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-09-26T17:52:29.110Z"
 last_activity: 2026-09-26
 last_activity_desc: Phase 02 execution started
-state_head: cb1b37c6b30d6f0209cb342a7842f8129e0778f6
+state_head: 3b7c02c8496ce3c6ace68844500f6945af399aaa
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 27
-  completed_plans: 17
+  completed_plans: 18
   percent: 20
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 02 (Identity + Catalog) — EXECUTING
-Plan: 4 of 13
+Plan: 5 of 13
 Status: Ready to execute
 Last activity: 2026-09-26 — Phase 02 execution started
 
@@ -75,6 +75,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 02 P01 | 11min | 3 tasks | 9 files |
 | Phase 02 P02 | 35min | 3 tasks | 42 files |
 | Phase 02 P03 | 23min | 2 tasks | 32 files |
+| Phase 02 P04 | 21min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,8 @@ Recent decisions affecting current work:
 - [Phase 02]: [Phase 02] services/identity/go.mod needed its own standalone GOWORK=off go mod tidy beyond a workspace-mode go get — the Dockerfile builds each service as an isolated module, which needs every transitive dep's go.sum entry (golang-jwt/jwt/v5 via pkg/auth) that workspace-mode go get does not populate
 - [Phase 02]: app.Scope + http.scopeFrom/toConnectErr established as the one operator/pier scoping rule (Pitfall 6) — routes/boats/prices reuse it, not reimplement it
 - [Phase 02]: UpsertOperator kept boat.go's single ON CONFLICT upsert shape; UpsertPier uses an explicit create/update branch since pier updates need GetPierForUpdateScoped's (operator_id, pier_ids) filter
+- [Phase 02]: Routes takes one shared *http.Client instead of a typed catalog client + separate transport param
+- [Phase 02]: adminProxy buffers the bounded request body upfront (io.ReadAll behind MaxBytesReader) instead of streaming through httputil.ReverseProxy, guaranteeing the upstream is never contacted for an oversized body
 
 ### Pending Todos
 
@@ -135,6 +138,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T17:30:30.953Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-09-26T17:52:29.014Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None
