@@ -237,7 +237,15 @@ func (r *Relay) publishOnce(ctx context.Context) error {
 		for _, row := range batch {
 			env, err := events.Unmarshal(row.payload)
 			if err != nil {
-				return fmt.Errorf("outbox: unmarshal row %d: %w", row.id, err)
+				// ponytail: our own Insert never writes malformed payloads;
+				// a corrupt row here can't be fixed by retrying. Log and
+				// mark it published so it doesn't wedge every row behind it
+				// forever, matching pkg/kafka's consumer-side handling of
+				// the symmetric case (see processRecord).
+				r.log.Error("outbox: unmarshal failed, skipping poison row",
+					"id", row.id, "event_id", row.eventID, "event_type", row.eventType, "error", err)
+				published = append(published, row.id)
+				continue
 			}
 
 			carrier := propagation.MapCarrier{"traceparent": row.traceparent}

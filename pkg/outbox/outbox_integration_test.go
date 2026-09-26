@@ -409,6 +409,63 @@ func counterValue(rm metricdata.ResourceMetrics, name string) int64 {
 	return total
 }
 
+// TestRelaySkipsPoisonRowWithoutLosingEarlierProgress is a regression test
+// for CR-01: a row with an unparseable payload used to abort the whole batch
+// transaction, rolling back published_at for every row already sent to
+// Kafka earlier in the same batch (permanent head-of-line block + duplicate
+// republish). The relay must instead skip the poison row and keep the
+// already-published rows' progress, matching pkg/kafka's consumer-side
+// handling of the symmetric case.
+func TestRelaySkipsPoisonRowWithoutLosingEarlierProgress(t *testing.T) {
+	ctx := context.Background()
+	pool, relay := newRelayForTest(t, ctx, 100*time.Millisecond)
+
+	goodAggID := "agg-" + uuid.NewString()
+	goodEnv, err := events.New("test.ThingHappened", goodAggID, wrapperspb.String("good"))
+	if err != nil {
+		t.Fatalf("events.New: %v", err)
+	}
+	if err := bbpgx.WithTx(ctx, pool, func(tx pgx.Tx) error {
+		return outbox.Insert(ctx, tx, goodEnv)
+	}); err != nil {
+		t.Fatalf("insert good row: %v", err)
+	}
+
+	// A row with an unparseable payload, inserted directly (Insert always
+	// marshals a valid envelope) with a higher id than the good row so it
+	// sorts after it in the relay's `ORDER BY id` batch scan.
+	poisonID := uuid.NewString()
+	if _, err := pool.Exec(ctx, `
+		insert into outbox (event_id, topic, aggregate_id, event_type, payload, traceparent)
+		values ($1, 'test.events', 'agg-poison', 'test.ThingHappened', $2, '')
+	`, poisonID, []byte{0x80}); err != nil {
+		t.Fatalf("insert poison row: %v", err)
+	}
+
+	runRelay(t, relay)
+
+	recs := consumeMatching(t, "test.events", 5*time.Second, 1, func(r *kgo.Record) bool {
+		return string(r.Key) == goodAggID
+	})
+	if len(recs) != 1 {
+		t.Fatalf("good row was not published to Kafka; got %d matching records", len(recs))
+	}
+
+	var goodPublishedAt, poisonPublishedAt *time.Time
+	if err := pool.QueryRow(ctx, `select published_at from outbox where event_id = $1`, goodEnv.EventId).Scan(&goodPublishedAt); err != nil {
+		t.Fatalf("query good published_at: %v", err)
+	}
+	if goodPublishedAt == nil {
+		t.Error("good row's published_at is NULL — poison row rolled back its progress (CR-01 regression)")
+	}
+	if err := pool.QueryRow(ctx, `select published_at from outbox where event_id = $1`, poisonID).Scan(&poisonPublishedAt); err != nil {
+		t.Fatalf("query poison published_at: %v", err)
+	}
+	if poisonPublishedAt == nil {
+		t.Error("poison row's published_at is still NULL — it should be marked done so it never wedges the batch again")
+	}
+}
+
 func TestSweepDeletesOnlyOldPublished(t *testing.T) {
 	ctx := context.Background()
 	pool, relay := newRelayForTest(t, ctx, time.Hour) // long poll: only Sweep matters here
