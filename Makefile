@@ -251,7 +251,7 @@ ci-up: ci-keys
 	deploy/ci/harbor-prepare.sh
 	$(COMPOSE_CI) up -d --build --wait
 	@HARBOR_ADMIN_PASSWORD=$$(grep -E '^HARBOR_ADMIN_PASSWORD=' .env | tail -1 | cut -d= -f2-); \
-	STATUS=$$(curl -s -o /dev/null -w '%{http_code}' -u "admin:$$HARBOR_ADMIN_PASSWORD" \
+	STATUS=$$(printf 'user = "admin:%s"\n' "$$HARBOR_ADMIN_PASSWORD" | curl -s -o /dev/null -w '%{http_code}' -K - \
 		-X POST http://localhost:8880/api/v2.0/projects \
 		-H 'Content-Type: application/json' \
 		-d '{"project_name":"boatbooking","metadata":{"public":"false"}}'); \
