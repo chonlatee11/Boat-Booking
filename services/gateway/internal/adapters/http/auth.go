@@ -68,10 +68,15 @@ func otpVerifyHandler(identity identityv1connect.AuthServiceClient, internalToke
 	}
 }
 
-// refreshHandler rotates the session (D-10): missing cookie or any identity
-// error clears both cookies and fails; success re-sets both from the fresh
-// pair. Never trusts a client-supplied user id — only the cookie's opaque
-// refresh token identifies the session.
+// refreshHandler rotates the session (D-10): a missing cookie or an
+// Unauthenticated identity error (the refresh token itself is
+// invalid/expired/reused/revoked, ErrSessionInvalid) clears both cookies and
+// fails; any other identity error (WR-05: e.g. Unavailable/DeadlineExceeded
+// during a transient identity/DB blip) fails without touching the cookies —
+// the refresh token was never rotated and is still good, so the browser
+// keeps it and can retry. Success re-sets both from the fresh pair. Never
+// trusts a client-supplied user id — only the cookie's opaque refresh token
+// identifies the session.
 func refreshHandler(identity identityv1connect.AuthServiceClient, internalToken string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c, err := r.Cookie(auth.RefreshCookie)
@@ -84,7 +89,9 @@ func refreshHandler(identity identityv1connect.AuthServiceClient, internalToken 
 		req.Header().Set(httpx.HeaderInternalToken, internalToken)
 		resp, err := identity.Refresh(r.Context(), req)
 		if err != nil {
-			clearAuthCookies(w)
+			if connect.CodeOf(err) == connect.CodeUnauthenticated {
+				clearAuthCookies(w)
+			}
 			httpx.WriteError(w, err)
 			return
 		}

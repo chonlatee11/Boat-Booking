@@ -344,6 +344,35 @@ func TestRefreshIdentityErrorClearsCookies(t *testing.T) {
 	assertCookiesCleared(t, resp.Cookies())
 }
 
+// TestRefreshTransientIdentityErrorKeepsCookies proves the WR-05 fix: an
+// Unavailable error from identity (a transient identity/DB blip, not a
+// verdict on the refresh token) must not clear the session cookies -- the
+// refresh token was never rotated and is still good, so the browser should
+// keep it and the client can retry.
+func TestRefreshTransientIdentityErrorKeepsCookies(t *testing.T) {
+	fake := &fakeAuthServer{refreshErr: connect.NewError(connect.CodeUnavailable, errString("identity unreachable"))}
+	srv := newAuthTestServer(t, fake)
+
+	req, err := http.NewRequest(http.MethodPost, srv.URL+"/api/v1/auth/refresh", nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	req.AddCookie(&http.Cookie{Name: auth.RefreshCookie, Value: "still-valid-token"}) //nolint:gosec // inbound test request cookie, not a Set-Cookie
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("do: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
+
+	if resp.StatusCode != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want 503", resp.StatusCode)
+	}
+	for _, c := range resp.Cookies() {
+		t.Errorf("cookie %q was cleared/set on a transient identity error, want cookies left untouched: %+v", c.Name, c)
+	}
+}
+
 func TestLogoutClearsCookiesAndReturns204(t *testing.T) {
 	fake := &fakeAuthServer{}
 	srv := newAuthTestServer(t, fake)
