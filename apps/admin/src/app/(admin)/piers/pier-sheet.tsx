@@ -80,9 +80,19 @@ export function PierSheet({
   const trimmedNameTh = nameTh.trim();
   const trimmedNameEn = nameEn.trim();
   const namesValid = trimmedNameTh.length > 0 && trimmedNameEn.length > 0;
-  const hoursValid =
-    (!opensAt && !closesAt) || (Boolean(opensAt) && Boolean(closesAt));
-  const isValid = namesValid && Boolean(location) && hoursValid;
+  // IN-07: a super_admin creating a pier must pick an operator, or the
+  // server sends operatorId "" and answers NotFound with a generic
+  // failure message. isEdit/staff callers keep the stored operatorId
+  // (input 100 sends it unconditionally), so this only gates the
+  // super_admin-create case.
+  const operatorValid = isEdit || !isSuperAdmin || Boolean(operatorId);
+  // "HH:MM" 24h strings compare correctly with </>=.
+  const hoursPartial = Boolean(opensAt) !== Boolean(closesAt);
+  const hoursOutOfOrder =
+    Boolean(opensAt) && Boolean(closesAt) && opensAt >= closesAt;
+  const hoursValid = !hoursPartial && !hoursOutOfOrder;
+  const isValid =
+    namesValid && Boolean(location) && hoursValid && operatorValid;
   // Edit mode has no dedicated GetPier fetch — the row is already in memory
   // from the ListPiers query backing the table (same pattern as 02-09's
   // operator-dialog) — but if the list happens to be refetching while the
@@ -158,6 +168,9 @@ export function PierSheet({
                       </NativeSelectOption>
                     ))}
                   </NativeSelect>
+                  {!operatorValid && (
+                    <FieldError>กรุณาเลือกผู้ประกอบการ</FieldError>
+                  )}
                 </Field>
               )}
               <Field>
@@ -222,8 +235,11 @@ export function PierSheet({
                   />
                 </Field>
               </div>
-              {!hoursValid && (
+              {hoursPartial && (
                 <FieldError>กรุณากรอกเวลาเปิดและเวลาปิดทั้งสองช่อง</FieldError>
+              )}
+              {hoursOutOfOrder && (
+                <FieldError>เวลาเปิดต้องอยู่ก่อนเวลาปิด</FieldError>
               )}
               <Field>
                 <FieldLabel>ตำแหน่งที่ตั้ง</FieldLabel>
