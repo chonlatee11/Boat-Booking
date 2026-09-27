@@ -60,7 +60,12 @@ func main() {
 // then close Kafka, Valkey, and the DB pool.
 func run(ctx context.Context) error {
 	addr := httpx.EnvOr("HTTP_ADDR", ":8080")
-	databaseURL := os.Getenv("DATABASE_URL")
+	// IN-05: unlike gateway (no DB at all), identity always needs Postgres
+	// -- EnsureSuperAdmin and app.Auth/app.Users below all take a
+	// non-nil pool. MustEnv fails fast at startup with a clear message
+	// naming the missing var, instead of a nil-pointer panic deep inside
+	// WithTx the first time a request needs the DB.
+	databaseURL := httpx.MustEnv("DATABASE_URL")
 	brokersEnv := os.Getenv("KAFKA_BROKERS")
 	token := httpx.MustEnv("INTERNAL_TOKEN")
 
