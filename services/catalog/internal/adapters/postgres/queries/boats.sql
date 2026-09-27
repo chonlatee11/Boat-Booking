@@ -5,10 +5,11 @@ returning *;
 
 -- name: UpdateBoat :one
 update boats
-set home_pier_id = $2,
-    name = $3,
-    default_capacity = $4,
-    status = $5,
+set operator_id = $2,
+    home_pier_id = $3,
+    name = $4,
+    default_capacity = $5,
+    status = $6,
     updated_at = now()
 where id = $1
 returning *;

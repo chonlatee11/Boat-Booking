@@ -441,6 +441,84 @@ func TestUpsertBoatValidationAndTenancy(t *testing.T) {
 	}
 }
 
+// TestUpdateBoatMovedToAnotherOperatorPierUpdatesOperatorID proves the
+// CR-02 fix: when a super_admin moves a boat's home_pier_id to a pier owned
+// by a different operator, the stored operator_id (and the operator_id on
+// the resulting BoatUpserted event) follow the new pier — the boat leaves
+// the old operator's scope and enters the new operator's scope, instead of
+// keeping the stale operator_id and becoming invisible to both.
+func TestUpdateBoatMovedToAnotherOperatorPierUpdatesOperatorID(t *testing.T) {
+	addr, _ := setCatalogEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+	ctx := context.Background()
+
+	superAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RoleSuperAdmin, ""))
+	operatorA := mustCreateOperator(t, ctx, superAdmin, "Operator A Move")
+	pierA1 := mustCreatePier(t, ctx, superAdmin, operatorA, "ท่า A1 ย้าย", "Pier A1 Move", 7.5, 98.1)
+	operatorB := mustCreateOperator(t, ctx, superAdmin, "Operator B Move")
+	pierB1 := mustCreatePier(t, ctx, superAdmin, operatorB, "ท่า B1 ย้าย", "Pier B1 Move", 7.6, 98.2)
+
+	clientA := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, operatorA, pierA1))
+	resp, err := clientA.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
+		Name: "Movable", DefaultCapacity: 12, Status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, HomePierId: pierA1,
+	}))
+	if err != nil {
+		t.Fatalf("create boat under operator A: %v", err)
+	}
+	boatID := resp.Msg.Boat.BoatId
+	if resp.Msg.Boat.OperatorId != operatorA {
+		t.Fatalf("created boat operator_id = %q, want %q", resp.Msg.Boat.OperatorId, operatorA)
+	}
+
+	// super_admin moves the boat to operator B's pier.
+	moveResp, err := superAdmin.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
+		BoatId: boatID, Name: "Movable", DefaultCapacity: 12, Status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, HomePierId: pierB1,
+	}))
+	if err != nil {
+		t.Fatalf("move boat to operator B pier: %v", err)
+	}
+	if moveResp.Msg.Boat.OperatorId != operatorB {
+		t.Errorf("moved boat operator_id = %q, want %q (CR-02)", moveResp.Msg.Boat.OperatorId, operatorB)
+	}
+	if moveResp.Msg.Boat.HomePierId != pierB1 {
+		t.Errorf("moved boat home_pier_id = %q, want %q", moveResp.Msg.Boat.HomePierId, pierB1)
+	}
+
+	// Operator A's pier_admin can no longer see it.
+	listA, err := clientA.ListBoats(ctx, connect.NewRequest(&catalogv1.ListBoatsRequest{}))
+	if err != nil {
+		t.Fatalf("ListBoats as operator A: %v", err)
+	}
+	for _, b := range listA.Msg.Boats {
+		if b.BoatId == boatID {
+			t.Errorf("boat %s still visible to operator A after move", boatID)
+		}
+	}
+
+	// Operator B's pier_admin can now see and edit it.
+	clientB := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, operatorB, pierB1))
+	listB, err := clientB.ListBoats(ctx, connect.NewRequest(&catalogv1.ListBoatsRequest{}))
+	if err != nil {
+		t.Fatalf("ListBoats as operator B: %v", err)
+	}
+	var found bool
+	for _, b := range listB.Msg.Boats {
+		if b.BoatId == boatID {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("boat %s not visible to operator B after move", boatID)
+	}
+	if _, err := clientB.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
+		BoatId: boatID, Name: "Movable Renamed", DefaultCapacity: 12, Status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, HomePierId: pierB1,
+	})); err != nil {
+		t.Errorf("operator B editing the moved boat: %v", err)
+	}
+}
+
 // TestListBoatsOrdered proves ListBoats returns boats ordered by name then
 // id; the public (no-claims, internal-token-only) call lists every
 // non-archived boat regardless of operator.

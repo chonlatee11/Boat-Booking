@@ -191,10 +191,11 @@ func (q *Queries) ListBoatsPublic(ctx context.Context) ([]Boat, error) {
 
 const updateBoat = `-- name: UpdateBoat :one
 update boats
-set home_pier_id = $2,
-    name = $3,
-    default_capacity = $4,
-    status = $5,
+set operator_id = $2,
+    home_pier_id = $3,
+    name = $4,
+    default_capacity = $5,
+    status = $6,
     updated_at = now()
 where id = $1
 returning id, operator_id, name, default_capacity, status, created_at, updated_at, home_pier_id, archived_at
@@ -202,6 +203,7 @@ returning id, operator_id, name, default_capacity, status, created_at, updated_a
 
 type UpdateBoatParams struct {
 	ID              pgtype.UUID
+	OperatorID      pgtype.UUID
 	HomePierID      pgtype.UUID
 	Name            string
 	DefaultCapacity int32
@@ -211,6 +213,7 @@ type UpdateBoatParams struct {
 func (q *Queries) UpdateBoat(ctx context.Context, arg UpdateBoatParams) (Boat, error) {
 	row := q.db.QueryRow(ctx, updateBoat,
 		arg.ID,
+		arg.OperatorID,
 		arg.HomePierID,
 		arg.Name,
 		arg.DefaultCapacity,

@@ -115,6 +115,7 @@ func updateBoat(ctx context.Context, tx pgx.Tx, q *postgres.Queries, scope Scope
 
 	row, err := q.UpdateBoat(ctx, postgres.UpdateBoatParams{
 		ID:              toPgUUID(b.ID),
+		OperatorID:      toPgUUID(b.OperatorID),
 		HomePierID:      toPgUUID(b.HomePierID),
 		Name:            b.Name,
 		DefaultCapacity: b.DefaultCapacity,
