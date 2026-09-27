@@ -46,7 +46,7 @@ type server struct {
 
 func (s *server) RequestOtp(ctx context.Context, req *connect.Request[identityv1.RequestOtpRequest]) (*connect.Response[identityv1.RequestOtpResponse], error) {
 	if err := s.auth.RequestOtp(ctx, req.Msg.Destination); err != nil {
-		return nil, mapAuthError(err)
+		return nil, mapAuthError(ctx, err)
 	}
 	return connect.NewResponse(&identityv1.RequestOtpResponse{}), nil
 }
@@ -54,7 +54,7 @@ func (s *server) RequestOtp(ctx context.Context, req *connect.Request[identityv1
 func (s *server) VerifyOtp(ctx context.Context, req *connect.Request[identityv1.VerifyOtpRequest]) (*connect.Response[identityv1.VerifyOtpResponse], error) {
 	sess, err := s.auth.VerifyOtp(ctx, req.Msg.Destination, req.Msg.Code)
 	if err != nil {
-		return nil, mapAuthError(err)
+		return nil, mapAuthError(ctx, err)
 	}
 	return connect.NewResponse(&identityv1.VerifyOtpResponse{
 		AccessToken:  sess.AccessToken,
@@ -66,7 +66,7 @@ func (s *server) VerifyOtp(ctx context.Context, req *connect.Request[identityv1.
 func (s *server) Refresh(ctx context.Context, req *connect.Request[identityv1.RefreshRequest]) (*connect.Response[identityv1.RefreshResponse], error) {
 	sess, err := s.auth.Refresh(ctx, req.Msg.RefreshToken)
 	if err != nil {
-		return nil, mapAuthError(err)
+		return nil, mapAuthError(ctx, err)
 	}
 	return connect.NewResponse(&identityv1.RefreshResponse{
 		AccessToken:  sess.AccessToken,
@@ -77,7 +77,7 @@ func (s *server) Refresh(ctx context.Context, req *connect.Request[identityv1.Re
 
 func (s *server) Logout(ctx context.Context, req *connect.Request[identityv1.LogoutRequest]) (*connect.Response[identityv1.LogoutResponse], error) {
 	if err := s.auth.Logout(ctx, req.Msg.RefreshToken); err != nil {
-		return nil, mapAuthError(err)
+		return nil, mapAuthError(ctx, err)
 	}
 	return connect.NewResponse(&identityv1.LogoutResponse{}), nil
 }
@@ -93,7 +93,7 @@ func sessionUserProto(u domain.User) *identityv1.SessionUser {
 
 // mapAuthError converts app/domain errors to connect codes. CodeMismatchError
 // carries how many attempts remain via the Attempts-Left response header.
-func mapAuthError(err error) error {
+func mapAuthError(ctx context.Context, err error) error {
 	var mismatch *domain.CodeMismatchError
 	switch {
 	case errors.As(err, &mismatch):
@@ -116,7 +116,7 @@ func mapAuthError(err error) error {
 		// forward that body — never let an unmapped error (schema/
 		// constraint/host detail) reach a client. Log the real error,
 		// return a generic one.
-		slog.Error("identity: unmapped auth error", "error", err)
+		slog.ErrorContext(ctx, "identity: unmapped auth error", "error", err)
 		return connect.NewError(connect.CodeInternal, errors.New("internal error"))
 	}
 }

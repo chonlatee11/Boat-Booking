@@ -53,7 +53,7 @@ func (s *server) AddRoutePrice(ctx context.Context, req *connect.Request[catalog
 		return txErr
 	})
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	s.nudge()
 
@@ -78,7 +78,7 @@ func (s *server) ListRoutePrices(ctx context.Context, req *connect.Request[catal
 
 	prices, err := app.ListRoutePrices(ctx, postgres.New(s.pool), scope, routeID)
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	resp := &catalogv1.ListRoutePricesResponse{Prices: make([]*catalogv1.RoutePrice, len(prices))}
 	for i, p := range prices {

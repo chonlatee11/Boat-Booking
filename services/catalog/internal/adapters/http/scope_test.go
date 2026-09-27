@@ -1,6 +1,7 @@
 package httpadapter
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -15,7 +16,7 @@ import (
 // redact is at the source.
 func TestToConnectErrRedactsUnmappedErrors(t *testing.T) {
 	original := errors.New(`app: insert pier: ERROR: new row violates check constraint "piers_lat_check"`)
-	got := toConnectErr(original)
+	got := toConnectErr(context.Background(), original)
 
 	var ce *connect.Error
 	if !errors.As(got, &ce) {

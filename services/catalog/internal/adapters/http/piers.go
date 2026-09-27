@@ -59,7 +59,7 @@ func (s *server) UpsertPier(ctx context.Context, req *connect.Request[catalogv1.
 		return txErr
 	})
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	s.nudge()
 
@@ -86,7 +86,7 @@ func (s *server) ListPiers(ctx context.Context, req *connect.Request[catalogv1.L
 
 	piers, err := app.ListPiers(ctx, postgres.New(s.pool), scope, !hasClaims, filterOperatorID)
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	resp := &catalogv1.ListPiersResponse{Piers: make([]*catalogv1.Pier, len(piers))}
 	for i, p := range piers {
@@ -118,7 +118,7 @@ func (s *server) ArchivePier(ctx context.Context, req *connect.Request[catalogv1
 		return txErr
 	})
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	s.nudge()
 
@@ -158,7 +158,7 @@ func (s *server) PresignPierPhoto(ctx context.Context, req *connect.Request[cata
 
 	uploadURL, key, err := s.photos.PresignPierPhoto(ctx, scope, req.Msg.ContentType, req.Msg.SizeBytes)
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 
 	return connect.NewResponse(&catalogv1.PresignPierPhotoResponse{

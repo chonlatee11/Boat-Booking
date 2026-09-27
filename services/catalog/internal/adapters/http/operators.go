@@ -42,7 +42,7 @@ func (s *server) UpsertOperator(ctx context.Context, req *connect.Request[catalo
 		return txErr
 	})
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	s.nudge()
 
@@ -62,7 +62,7 @@ func (s *server) ListOperators(ctx context.Context, _ *connect.Request[catalogv1
 
 	operators, err := app.ListOperators(ctx, postgres.New(s.pool), scope)
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	resp := &catalogv1.ListOperatorsResponse{Operators: make([]*catalogv1.Operator, len(operators))}
 	for i, o := range operators {
@@ -94,7 +94,7 @@ func (s *server) ArchiveOperator(ctx context.Context, req *connect.Request[catal
 		return txErr
 	})
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	s.nudge()
 

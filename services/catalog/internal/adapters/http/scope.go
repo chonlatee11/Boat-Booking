@@ -49,7 +49,7 @@ func scopeFrom(ctx context.Context) (scope app.Scope, hasClaims bool, err error)
 
 // toConnectErr maps a domain sentinel error to its Connect code — the one
 // error switch every catalog handler uses.
-func toConnectErr(err error) error {
+func toConnectErr(ctx context.Context, err error) error {
 	if err == nil {
 		return nil
 	}
@@ -70,7 +70,7 @@ func toConnectErr(err error) error {
 		// copy that body through unchanged — never let an unmapped error
 		// (schema/constraint/host detail) reach a client. Log the real
 		// error, return a generic one.
-		slog.Error("catalog: unmapped error", "error", err)
+		slog.ErrorContext(ctx, "catalog: unmapped error", "error", err)
 		return connect.NewError(connect.CodeInternal, errors.New("internal error"))
 	}
 }

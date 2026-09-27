@@ -91,7 +91,7 @@ func (s *server) UpsertBoat(ctx context.Context, req *connect.Request[catalogv1.
 		return txErr
 	})
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	s.nudge()
 
@@ -108,7 +108,7 @@ func (s *server) ListBoats(ctx context.Context, _ *connect.Request[catalogv1.Lis
 
 	boats, err := app.ListBoats(ctx, postgres.New(s.pool), scope, !hasClaims)
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	resp := &catalogv1.ListBoatsResponse{Boats: make([]*catalogv1.Boat, len(boats))}
 	for i, b := range boats {
@@ -140,7 +140,7 @@ func (s *server) ArchiveBoat(ctx context.Context, req *connect.Request[catalogv1
 		return txErr
 	})
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	s.nudge()
 

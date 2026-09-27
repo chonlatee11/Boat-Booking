@@ -61,7 +61,7 @@ func (s *userServer) UpsertUser(ctx context.Context, req *connect.Request[identi
 
 	user, err := s.users.UpsertUser(ctx, claims, in, userID)
 	if err != nil {
-		return nil, mapUserError(err)
+		return nil, mapUserError(ctx, err)
 	}
 	return connect.NewResponse(&identityv1.UpsertUserResponse{User: toProtoStaffUser(user)}), nil
 }
@@ -83,7 +83,7 @@ func (s *userServer) ListUsers(ctx context.Context, req *connect.Request[identit
 
 	users, err := s.users.ListUsers(ctx, claims, operatorFilter)
 	if err != nil {
-		return nil, mapUserError(err)
+		return nil, mapUserError(ctx, err)
 	}
 	resp := &identityv1.ListUsersResponse{Users: make([]*identityv1.StaffUser, len(users))}
 	for i, user := range users {
@@ -105,7 +105,7 @@ func (s *userServer) SetUserDisabled(ctx context.Context, req *connect.Request[i
 
 	user, err := s.users.SetUserDisabled(ctx, claims, id, req.Msg.Disabled)
 	if err != nil {
-		return nil, mapUserError(err)
+		return nil, mapUserError(ctx, err)
 	}
 	return connect.NewResponse(&identityv1.SetUserDisabledResponse{User: toProtoStaffUser(user)}), nil
 }
@@ -123,7 +123,7 @@ func toProtoStaffUser(u domain.User) *identityv1.StaffUser {
 }
 
 // mapUserError converts app/domain errors to connect codes.
-func mapUserError(err error) error {
+func mapUserError(ctx context.Context, err error) error {
 	switch {
 	case errors.Is(err, domain.ErrPermissionDenied):
 		return connect.NewError(connect.CodePermissionDenied, err)
@@ -143,7 +143,7 @@ func mapUserError(err error) error {
 		// that body unchanged — never let an unmapped error (schema/
 		// constraint/host detail) reach an admin user. Log the real
 		// error, return a generic one.
-		slog.Error("identity: unmapped user error", "error", err)
+		slog.ErrorContext(ctx, "identity: unmapped user error", "error", err)
 		return connect.NewError(connect.CodeInternal, errors.New("internal error"))
 	}
 }

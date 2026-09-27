@@ -56,7 +56,7 @@ func (s *server) UpsertRoute(ctx context.Context, req *connect.Request[catalogv1
 		return txErr
 	})
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	s.nudge()
 
@@ -83,7 +83,7 @@ func (s *server) ListRoutes(ctx context.Context, req *connect.Request[catalogv1.
 
 	routes, err := app.ListRoutes(ctx, postgres.New(s.pool), scope, !hasClaims, filterOperatorID)
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	resp := &catalogv1.ListRoutesResponse{Routes: make([]*catalogv1.Route, len(routes))}
 	for i, r := range routes {
@@ -115,7 +115,7 @@ func (s *server) ArchiveRoute(ctx context.Context, req *connect.Request[catalogv
 		return txErr
 	})
 	if err != nil {
-		return nil, toConnectErr(err)
+		return nil, toConnectErr(ctx, err)
 	}
 	s.nudge()
 

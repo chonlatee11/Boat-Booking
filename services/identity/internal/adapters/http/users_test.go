@@ -1,6 +1,7 @@
 package httpadapter
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -15,7 +16,7 @@ import (
 // redact is at the source.
 func TestMapUserErrorRedactsUnmappedErrors(t *testing.T) {
 	original := errors.New("app: insert staff user: pgx: failed to connect to host=postgres port=5432")
-	got := mapUserError(original)
+	got := mapUserError(context.Background(), original)
 
 	var ce *connect.Error
 	if !errors.As(got, &ce) {
