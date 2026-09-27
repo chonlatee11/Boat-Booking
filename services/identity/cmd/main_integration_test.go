@@ -567,6 +567,64 @@ func TestOtpAttemptsLockout(t *testing.T) {
 	assertConnectCode(t, err, connect.CodeFailedPrecondition, "correct code after lockout")
 }
 
+// TestOtpAttemptsLockoutConcurrent proves the CR-01 fix: counting the
+// attempt atomically in the same round trip as the read means concurrent
+// wrong guesses cannot exceed the D-03 5-attempt cap. At most 5 of the 20
+// parallel guesses get compared against the hash (and correctly rejected as
+// wrong); the rest are already locked out. The correct code is then
+// rejected too, proving the lockout held under concurrency, not just in
+// sequence (TestOtpAttemptsLockout).
+func TestOtpAttemptsLockoutConcurrent(t *testing.T) {
+	addr, _, _ := setIdentityEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+
+	ctx := context.Background()
+	client := newAuthClient(baseURL, map[string]string{"X-Internal-Token": "test-token"})
+	dest := "lockout-concurrent@example.com"
+
+	if _, err := client.RequestOtp(ctx, connect.NewRequest(&identityv1.RequestOtpRequest{Destination: dest})); err != nil {
+		t.Fatalf("RequestOtp: %v", err)
+	}
+	code := pollMailpitCode(t, mailpitAPIURL, dest)
+	wrongCode := "000000"
+	if wrongCode == code {
+		wrongCode = "111111"
+	}
+
+	const n = 20
+	const maxAttempts = 5 // D-03
+	var wg sync.WaitGroup
+	var mismatchCount, lockedCount int64
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, err := client.VerifyOtp(ctx, connect.NewRequest(&identityv1.VerifyOtpRequest{Destination: dest, Code: wrongCode}))
+			switch connect.CodeOf(err) {
+			case connect.CodeInvalidArgument:
+				atomic.AddInt64(&mismatchCount, 1)
+			case connect.CodeFailedPrecondition:
+				atomic.AddInt64(&lockedCount, 1)
+			default:
+				t.Errorf("unexpected error: %v", err)
+			}
+		}()
+	}
+	wg.Wait()
+
+	if mismatchCount > maxAttempts {
+		t.Errorf("mismatchCount = %d, want <= %d (CR-01: concurrent guesses must not bypass the attempt cap)", mismatchCount, maxAttempts)
+	}
+	if mismatchCount+lockedCount != n {
+		t.Errorf("mismatchCount(%d)+lockedCount(%d) != n(%d)", mismatchCount, lockedCount, n)
+	}
+
+	_, err := client.VerifyOtp(ctx, connect.NewRequest(&identityv1.VerifyOtpRequest{Destination: dest, Code: code}))
+	assertConnectCode(t, err, connect.CodeFailedPrecondition, "correct code after concurrent lockout")
+}
+
 // TestOtpSingleUseConcurrent proves the atomic-DEL single-use rule holds
 // under concurrency: exactly one of many simultaneous VerifyOtp calls with
 // the same correct code succeeds, and exactly one customer row is created.

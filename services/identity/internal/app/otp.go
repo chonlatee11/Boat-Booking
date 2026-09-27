@@ -142,21 +142,37 @@ func (a *Auth) VerifyOtp(ctx context.Context, raw, code string) (Session, error)
 	dh := hashDestination(a.Pepper, dest.Value)
 	key := otpCodeKey(dh)
 
-	stored, err := a.RDB.HGetAll(ctx, key).Result()
-	if err != nil {
-		return Session{}, fmt.Errorf("app: get otp code: %w", err)
+	// CR-01: count the attempt atomically in the same round trip as the
+	// read, so concurrent guesses can't all read the hash before any of
+	// them increments "a" — every verify, right or wrong, consumes one
+	// attempt before it is compared.
+	var (
+		getCmd      *redis.MapStringStringCmd
+		attemptsCmd *redis.IntCmd
+	)
+	if _, err := a.RDB.TxPipelined(ctx, func(p redis.Pipeliner) error {
+		getCmd = p.HGetAll(ctx, key)
+		attemptsCmd = p.HIncrBy(ctx, key, "a", 1)
+		return nil
+	}); err != nil {
+		return Session{}, fmt.Errorf("app: check otp: %w", err)
 	}
-	if len(stored) == 0 {
+	stored, attempts := getCmd.Val(), attemptsCmd.Val()
+	if stored["h"] == "" {
+		// Never requested, already consumed, or expired between requests —
+		// HIncrBy may have just recreated a TTL-less stub (IN-01). Either
+		// way there is nothing valid left to verify against.
+		a.RDB.Del(ctx, key)
+		return Session{}, domain.ErrCodeExpired
+	}
+	if attempts > otpMaxAttempts {
+		a.RDB.Del(ctx, key)
 		return Session{}, domain.ErrCodeExpired
 	}
 
 	wantHash := hashCode(a.Pepper, dh, code)
 	if !hmac.Equal([]byte(stored["h"]), []byte(wantHash)) {
-		attempts, err := a.RDB.HIncrBy(ctx, key, "a", 1).Result()
-		if err != nil {
-			return Session{}, fmt.Errorf("app: increment otp attempts: %w", err)
-		}
-		if attempts >= otpMaxAttempts {
+		if attempts == otpMaxAttempts {
 			a.RDB.Del(ctx, key)
 			return Session{}, domain.ErrCodeExpired
 		}
