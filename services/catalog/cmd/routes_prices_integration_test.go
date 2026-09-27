@@ -149,6 +149,63 @@ func TestRoutesScopingAndSharedPierTo(t *testing.T) {
 	}
 }
 
+// TestUpdateRouteRejectsChangedPierFrom proves the WR-02 fix: pier_from_id
+// is immutable on update. UpdateRoute never wrote it, so a request naming a
+// different pier_from used to either silently no-op or, if pier_to now
+// equalled the old pier_from, trip the pier_from<>pier_to check constraint
+// as an opaque CodeInternal. Both must now be InvalidArgument, with the
+// stored row unchanged.
+func TestUpdateRouteRejectsChangedPierFrom(t *testing.T) {
+	addr, _ := setCatalogEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+	ctx := context.Background()
+
+	superAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RoleSuperAdmin, ""))
+	opA := mustCreateOperator(t, ctx, superAdmin, "Operator A PierFrom")
+	a1 := mustCreatePier(t, ctx, superAdmin, opA, "ท่า A1 คงที่", "Pier A1 Fixed", 7.9, 98.3)
+	a2 := mustCreatePier(t, ctx, superAdmin, opA, "ท่า A2 คงที่", "Pier A2 Fixed", 7.91, 98.31)
+	b1 := mustCreatePier(t, ctx, superAdmin, opA, "ท่า B1 คงที่", "Pier B1 Fixed", 8.0, 98.4)
+
+	pierAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, opA, a1, a2))
+	route := mustCreateRoute(t, ctx, pierAdmin, a1, b1, 45)
+
+	// Silent-no-op case: pier_to unchanged, pier_from changed to another
+	// in-scope pier.
+	_, err := pierAdmin.UpsertRoute(ctx, connect.NewRequest(&catalogv1.UpsertRouteRequest{
+		RouteId: route.RouteId, PierFromId: a2, PierToId: b1, DurationMinutes: 45,
+	}))
+	assertConnectCode(t, err, connect.CodeInvalidArgument, "update changing pier_from (no-op case)")
+
+	// Unhandled-500 case from the review: pier_from changed to a2 and
+	// pier_to set to the old pier_from a1. Validate() alone would pass
+	// (a2 != a1), but UpdateRoute never wrote pier_from_id, so the stored
+	// row would become a1 -> a1 and trip the pier_from<>pier_to check
+	// constraint as an opaque CodeInternal without this immutability check.
+	_, err = pierAdmin.UpsertRoute(ctx, connect.NewRequest(&catalogv1.UpsertRouteRequest{
+		RouteId: route.RouteId, PierFromId: a2, PierToId: a1, DurationMinutes: 45,
+	}))
+	assertConnectCode(t, err, connect.CodeInvalidArgument, "update changing pier_from (would-be self-loop case)")
+
+	listResp, err := pierAdmin.ListRoutes(ctx, connect.NewRequest(&catalogv1.ListRoutesRequest{}))
+	if err != nil {
+		t.Fatalf("ListRoutes: %v", err)
+	}
+	var found *catalogv1.Route
+	for _, r := range listResp.Msg.Routes {
+		if r.RouteId == route.RouteId {
+			found = r
+		}
+	}
+	if found == nil {
+		t.Fatalf("route %s not found", route.RouteId)
+	}
+	if found.PierFromId != a1 || found.PierToId != b1 || found.DurationMinutes != 45 {
+		t.Errorf("stored route changed after rejected pier_from update: %+v, want pier_from=%s pier_to=%s duration=45", found, a1, b1)
+	}
+}
+
 // archiveRouteDirectly sets archived_at on routeID via a direct DB write —
 // used to exercise AddRoutePrice's archived-route rejection ahead of
 // ArchiveRoute existing as an RPC (Task 3).

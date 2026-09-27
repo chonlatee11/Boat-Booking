@@ -153,7 +153,7 @@ export function RouteSheet({
               <NativeSelect
                 id="route-pier-from"
                 value={pierFromId}
-                disabled={pending}
+                disabled={pending || isEdit}
                 onChange={(e) => setPierFromId(e.target.value)}
               >
                 <NativeSelectOption value="">เลือกท่าต้นทาง</NativeSelectOption>

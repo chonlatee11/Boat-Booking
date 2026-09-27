@@ -138,6 +138,13 @@ func updateRoute(ctx context.Context, tx pgx.Tx, q *postgres.Queries, scope Scop
 	if stored.ArchivedAt.Valid {
 		return domain.Route{}, domain.ErrFailedPrecondition
 	}
+	// WR-02: pier_from_id is immutable. UpdateRoute never writes it, so a
+	// request that names a different pier_from would otherwise silently
+	// no-op (or, if pier_to now equals the old pier_from, trip the
+	// pier_from<>pier_to check constraint as an opaque 500).
+	if fromPgUUID(stored.PierFromID) != r.PierFromID {
+		return domain.Route{}, fmt.Errorf("%w: pier_from_id is immutable", domain.ErrInvalidArgument)
+	}
 
 	row, err := q.UpdateRoute(ctx, postgres.UpdateRouteParams{
 		ID:                 toPgUUID(r.ID),
