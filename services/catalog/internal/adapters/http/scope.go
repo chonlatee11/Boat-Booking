@@ -3,6 +3,7 @@ package httpadapter
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
@@ -64,6 +65,12 @@ func toConnectErr(err error) error {
 	case errors.Is(err, domain.ErrAlreadyExists):
 		return connect.NewError(connect.CodeAlreadyExists, err)
 	default:
-		return connect.NewError(connect.CodeInternal, err)
+		// WR-09: connect-go puts err.Error() on the wire for every code,
+		// including CodeInternal, and the admin/public gateway proxies
+		// copy that body through unchanged — never let an unmapped error
+		// (schema/constraint/host detail) reach a client. Log the real
+		// error, return a generic one.
+		slog.Error("catalog: unmapped error", "error", err)
+		return connect.NewError(connect.CodeInternal, errors.New("internal error"))
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -84,6 +85,10 @@ func run(ctx context.Context) error {
 	}
 
 	log := httpx.NewLogger(serviceName)
+	// WR-09: mapAuthError/mapUserError's default branches log the real
+	// error before redacting it on the wire — route that log through the
+	// same JSON+trace_id logger everything else uses.
+	slog.SetDefault(log)
 	shutdownOTel, err := httpx.SetupOTel(ctx, serviceName)
 	if err != nil {
 		return fmt.Errorf("%s: setup otel: %w", serviceName, err)

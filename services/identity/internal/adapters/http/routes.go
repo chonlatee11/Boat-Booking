@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	"connectrpc.com/connect"
@@ -110,6 +111,12 @@ func mapAuthError(err error) error {
 	case errors.Is(err, domain.ErrSessionInvalid):
 		return connect.NewError(connect.CodeUnauthenticated, err)
 	default:
-		return connect.NewError(connect.CodeInternal, err)
+		// WR-09: connect-go puts err.Error() on the wire for every code,
+		// including CodeInternal, and the gateway's auth routes/proxies
+		// forward that body — never let an unmapped error (schema/
+		// constraint/host detail) reach a client. Log the real error,
+		// return a generic one.
+		slog.Error("identity: unmapped auth error", "error", err)
+		return connect.NewError(connect.CodeInternal, errors.New("internal error"))
 	}
 }

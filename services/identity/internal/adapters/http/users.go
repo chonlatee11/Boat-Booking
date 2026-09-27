@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
@@ -137,6 +138,12 @@ func mapUserError(err error) error {
 	case errors.Is(err, domain.ErrFailedPrecondition):
 		return connect.NewError(connect.CodeFailedPrecondition, err)
 	default:
-		return connect.NewError(connect.CodeInternal, err)
+		// WR-09: connect-go puts err.Error() on the wire for every code,
+		// including CodeInternal, and the gateway's admin proxy forwards
+		// that body unchanged — never let an unmapped error (schema/
+		// constraint/host detail) reach an admin user. Log the real
+		// error, return a generic one.
+		slog.Error("identity: unmapped user error", "error", err)
+		return connect.NewError(connect.CodeInternal, errors.New("internal error"))
 	}
 }
