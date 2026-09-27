@@ -82,13 +82,27 @@ export function StaffDialog({
   const operators = (operatorsData?.operators ?? []).filter((o) => !o.archived);
   const piers = (piersData?.piers ?? []).filter((p) => !p.archived);
 
+  // WR-08: a pier archived after being assigned stays in user.pierIds
+  // (archiving a pier does not touch identity's pier_ids), so `pierIds`
+  // state can hold an id that `piers` above no longer lists. Render and
+  // submit only the ids still valid for this operator, derived fresh every
+  // render rather than synced into state — before piersData has loaded,
+  // skip the filter so an about-to-arrive valid pier doesn't flash as
+  // unchecked for one render.
+  const selectedPierIds = piersData
+    ? pierIds.filter((id) => piers.some((p) => p.pierId === id))
+    : pierIds;
+
   const trimmedEmail = email.trim();
   const trimmedName = name.trim();
   const emailValid = EMAIL_PATTERN.test(trimmedEmail);
   const nameValid =
     trimmedName.length >= 1 && trimmedName.length <= MAX_NAME_LENGTH;
   const isValid =
-    emailValid && nameValid && Boolean(operatorId) && pierIds.length >= 1;
+    emailValid &&
+    nameValid &&
+    Boolean(operatorId) &&
+    selectedPierIds.length >= 1;
 
   // Edit mode has no dedicated GetUser fetch — the row is already in memory
   // from the ListUsers query backing the table (02-09's operator-dialog /
@@ -106,7 +120,7 @@ export function StaffDialog({
         name: trimmedName,
         role,
         operatorId,
-        pierIds,
+        pierIds: selectedPierIds,
       });
       toast.success('บันทึกผู้ใช้งานสำเร็จ');
       await queryClient.invalidateQueries({ queryKey: ['staff-users'] });
@@ -223,7 +237,7 @@ export function StaffDialog({
                       <input
                         type="checkbox"
                         className="size-4"
-                        checked={pierIds.includes(p.pierId ?? '')}
+                        checked={selectedPierIds.includes(p.pierId ?? '')}
                         disabled={pending}
                         onChange={(e) =>
                           togglePier(p.pierId ?? '', e.target.checked)
@@ -234,7 +248,7 @@ export function StaffDialog({
                   ))}
                 </div>
               )}
-              {operatorId && pierIds.length === 0 && (
+              {operatorId && selectedPierIds.length === 0 && (
                 <FieldError>เลือกท่าเรืออย่างน้อยหนึ่งแห่ง</FieldError>
               )}
             </Field>
