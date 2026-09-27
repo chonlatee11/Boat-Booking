@@ -43,7 +43,16 @@ export function OtpLogin() {
       return t('errors.rateLimited');
     }
     if (err.code === 'invalid_argument') {
-      return t('errors.wrongCode', { n: err.attemptsLeft ?? 0 });
+      // IN-04: attemptsLeft is only ever set on the verify step's
+      // wrong-code response (identity's mapAuthError sets Attempts-Left
+      // only for CodeMismatchError). A malformed destination on the
+      // request step is also invalid_argument but carries no
+      // attemptsLeft -- don't tell the user "wrong code (0 attempts
+      // left)" for that.
+      if (err.attemptsLeft !== undefined) {
+        return t('errors.wrongCode', { n: err.attemptsLeft });
+      }
+      return t('errors.invalidDestination');
     }
     if (err.code === 'failed_precondition') {
       return t('errors.expired');

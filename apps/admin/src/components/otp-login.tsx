@@ -21,8 +21,16 @@ function otpErrorMessage(err: ApiError): string {
     return 'ขอรหัสได้สูงสุด 5 ครั้งต่อชั่วโมง กรุณาลองใหม่ภายหลัง';
   }
   if (err.code === 'invalid_argument') {
-    const left = err.attemptsLeft ?? 0;
-    return `รหัสไม่ถูกต้อง กรุณาลองใหม่ (เหลือ ${left} ครั้ง)`;
+    // IN-04: attemptsLeft is only ever set on the verify step's
+    // wrong-code response (identity's mapAuthError sets Attempts-Left
+    // only for CodeMismatchError). A malformed destination on the
+    // request step is also invalid_argument but carries no
+    // attemptsLeft -- don't tell the user "wrong code (0 attempts
+    // left)" for that.
+    if (err.attemptsLeft !== undefined) {
+      return `รหัสไม่ถูกต้อง กรุณาลองใหม่ (เหลือ ${err.attemptsLeft} ครั้ง)`;
+    }
+    return 'อีเมลหรือเบอร์โทรศัพท์ไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่';
   }
   if (err.code === 'failed_precondition') {
     return 'รหัสหมดอายุหรือถูกล็อก กรุณาขอรหัสใหม่';

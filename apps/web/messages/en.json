@@ -27,6 +27,7 @@
     "signOut": "Sign out",
     "errors": {
       "wrongCode": "Incorrect code ({n} attempts left)",
+      "invalidDestination": "Invalid email or phone number — check and try again",
       "expired": "Code expired or locked — request a new one",
       "rateLimited": "Max 5 requests per hour — try again later",
       "generic": "Something went wrong — try again"
