@@ -193,9 +193,14 @@ services:
         # filer's own gRPC listener (which weed shell's s3.* commands need)
         # can still be a few seconds behind, so retry past the startup race
         # instead of failing on the first "connection refused".
-        configure_cmd="printf 's3.configure -user=catalog -actions=Read,Write,List -buckets=pier-photos -access_key=%s -secret_key=%s -apply\n' \"$$S3_ACCESS_KEY\" \"$$S3_SECRET_KEY\" | weed shell -master=storage:9333"
+        # IN-08: a shell function instead of building a command string and
+        # eval-ing it -- a quote or $(...) in .env's S3_ACCESS_KEY/
+        # S3_SECRET_KEY would otherwise run inside this container.
+        configure() {
+          printf 's3.configure -user=catalog -actions=Read,Write,List -buckets=pier-photos -access_key=%s -secret_key=%s -apply\n' "$$S3_ACCESS_KEY" "$$S3_SECRET_KEY" | weed shell -master=storage:9333
+        }
         i=0
-        until eval "$$configure_cmd"; do
+        until configure; do
           i=$$((i + 1))
           if [ "$$i" -ge 15 ]; then
             echo "storage-init: giving up waiting for storage's filer gRPC to accept connections" >&2
