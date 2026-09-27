@@ -27,8 +27,9 @@ const maxEmailLen = 254
 // angle-bracket noise) and at most maxEmailLen characters. Phone: a Thai
 // local number (leading "0" + 8-9 digits) is normalised to "+66" + the
 // digits after the leading zero; anything already starting with "+" is kept
-// as-is once formatting characters (spaces, "-", "(", ")") are stripped, as
-// long as 8-15 digits remain.
+// as-is once formatting characters (spaces, "-", "(", ")") are stripped and
+// a "+660" trunk-zero prefix is collapsed to "+66" (WR-07: "+66 081..." and
+// "081..." are the same subscriber), as long as 8-15 digits remain.
 func NormalizeDestination(raw string) (Destination, error) {
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {
@@ -74,6 +75,14 @@ func normalizePhone(trimmed string) (Destination, error) {
 		}
 		return Destination{Kind: KindPhone, Value: "+66" + digits}, nil
 	case strings.HasPrefix(stripped, "+"):
+		if strings.HasPrefix(stripped, "+660") {
+			// WR-07: "+66 0XXXXXXXX" and "0XXXXXXXX" are the same Thai
+			// subscriber -- E.164 never keeps the trunk 0 after a country
+			// code, so strip it here too, or the two spellings would
+			// normalise to two different destinations (two customer
+			// accounts, two separate OTP rate-limit budgets).
+			stripped = "+66" + stripped[4:]
+		}
 		digits := stripped[1:]
 		if !isAllDigits(digits) || len(digits) < e164DigitsMin || len(digits) > e164DigitsMax {
 			return Destination{}, ErrInvalidArgument

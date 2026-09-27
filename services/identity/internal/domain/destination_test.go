@@ -11,6 +11,12 @@ func TestNormalizeDestination(t *testing.T) {
 	}{
 		{name: "thai local phone", raw: "0812345678", want: Destination{Kind: KindPhone, Value: "+66812345678"}},
 		{name: "thai phone with spaces and dashes", raw: "+66 81-234-5678", want: Destination{Kind: KindPhone, Value: "+66812345678"}},
+		// WR-07: "0812345678" == "+66812345678" == "+660812345678" (the
+		// trunk 0 kept after the country code) must all normalise to the
+		// same destination, or the same subscriber gets two accounts and
+		// two separate OTP rate-limit budgets.
+		{name: "thai phone with trunk zero kept after country code", raw: "+660812345678", want: Destination{Kind: KindPhone, Value: "+66812345678"}},
+		{name: "thai phone with trunk zero and spaces/dashes", raw: "+66 081-234-5678", want: Destination{Kind: KindPhone, Value: "+66812345678"}},
 		{name: "already e164 non-thai phone", raw: "+14155550100", want: Destination{Kind: KindPhone, Value: "+14155550100"}},
 		{name: "too short local phone", raw: "081234", wantErr: true},
 		{name: "email trimmed and lower-cased", raw: " A@B.co ", want: Destination{Kind: KindEmail, Value: "a@b.co"}},
