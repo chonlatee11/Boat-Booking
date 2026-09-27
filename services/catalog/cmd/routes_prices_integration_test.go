@@ -206,6 +206,56 @@ func TestUpdateRouteRejectsChangedPierFrom(t *testing.T) {
 	}
 }
 
+// TestUpdateRouteWithoutPolicyKeepsStoredPolicy proves the WR-03 fix: an
+// update that omits cancellation_policy (e.g. an API client changing only
+// duration_minutes) keeps the route's custom refund schedule instead of
+// silently resetting it to the D-13 default.
+func TestUpdateRouteWithoutPolicyKeepsStoredPolicy(t *testing.T) {
+	addr, _ := setCatalogEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+	ctx := context.Background()
+
+	superAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RoleSuperAdmin, ""))
+	opA := mustCreateOperator(t, ctx, superAdmin, "Operator A Policy")
+	a1 := mustCreatePier(t, ctx, superAdmin, opA, "ท่า A1 นโยบาย", "Pier A1 Policy", 7.9, 98.3)
+	b1 := mustCreatePier(t, ctx, superAdmin, opA, "ท่า B1 นโยบาย", "Pier B1 Policy", 8.0, 98.4)
+
+	pierAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, opA, a1))
+	customPolicy := []*catalogv1.CancellationTier{
+		{MinHoursBefore: 48, RefundPercent: 90},
+		{MinHoursBefore: 0, RefundPercent: 10},
+	}
+	createResp, err := pierAdmin.UpsertRoute(ctx, connect.NewRequest(&catalogv1.UpsertRouteRequest{
+		PierFromId: a1, PierToId: b1, DurationMinutes: 30, CancellationPolicy: customPolicy,
+	}))
+	if err != nil {
+		t.Fatalf("create route with custom policy: %v", err)
+	}
+	route := createResp.Msg.Route
+
+	// Update duration only, omitting cancellation_policy entirely.
+	updResp, err := pierAdmin.UpsertRoute(ctx, connect.NewRequest(&catalogv1.UpsertRouteRequest{
+		RouteId: route.RouteId, PierFromId: a1, PierToId: b1, DurationMinutes: 40,
+	}))
+	if err != nil {
+		t.Fatalf("update duration only: %v", err)
+	}
+	if updResp.Msg.Route.DurationMinutes != 40 {
+		t.Errorf("duration = %d, want 40", updResp.Msg.Route.DurationMinutes)
+	}
+	if len(updResp.Msg.Route.CancellationPolicy) != len(customPolicy) {
+		t.Fatalf("cancellation_policy len = %d, want %d (WR-03: must not reset to default)", len(updResp.Msg.Route.CancellationPolicy), len(customPolicy))
+	}
+	for i, want := range customPolicy {
+		got := updResp.Msg.Route.CancellationPolicy[i]
+		if got.MinHoursBefore != want.MinHoursBefore || got.RefundPercent != want.RefundPercent {
+			t.Errorf("cancellation_policy[%d] = {%d,%d}, want {%d,%d}", i, got.MinHoursBefore, got.RefundPercent, want.MinHoursBefore, want.RefundPercent)
+		}
+	}
+}
+
 // archiveRouteDirectly sets archived_at on routeID via a direct DB write —
 // used to exercise AddRoutePrice's archived-route rejection ahead of
 // ArchiveRoute existing as an RPC (Task 3).

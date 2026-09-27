@@ -76,22 +76,39 @@ func UpsertRoute(ctx context.Context, tx pgx.Tx, scope Scope, r domain.Route) (d
 	}
 
 	r.OperatorID = fromPgUUID(pierFrom.OperatorID)
-	if len(r.CancellationPolicy) == 0 {
-		r.CancellationPolicy = domain.DefaultCancellationPolicy()
-	}
-	if err := r.Validate(); err != nil {
-		return domain.Route{}, err
-	}
-
-	policyJSON, err := json.Marshal(r.CancellationPolicy)
-	if err != nil {
-		return domain.Route{}, fmt.Errorf("app: marshal cancellation policy: %w", err)
-	}
 
 	if r.ID == uuid.Nil {
+		// D-13: an empty policy on create gets the default refund schedule.
+		if len(r.CancellationPolicy) == 0 {
+			r.CancellationPolicy = domain.DefaultCancellationPolicy()
+		}
+		if err := r.Validate(); err != nil {
+			return domain.Route{}, err
+		}
+		policyJSON, err := json.Marshal(r.CancellationPolicy)
+		if err != nil {
+			return domain.Route{}, fmt.Errorf("app: marshal cancellation policy: %w", err)
+		}
 		return createRoute(ctx, tx, q, r, policyJSON)
 	}
-	return updateRoute(ctx, tx, q, scope, r, policyJSON)
+
+	// WR-03: on update an empty policy means "keep whatever is stored",
+	// not "reset to the default" — Route.Validate() would reject the empty
+	// slice, so validate everything else it checks and defer the policy
+	// check to when one is actually given; updateRoute falls back to the
+	// stored policy otherwise.
+	if r.DurationMinutes < 1 || r.DurationMinutes > 1440 {
+		return domain.Route{}, fmt.Errorf("%w: duration_minutes must be 1-1440, got %d", domain.ErrInvalidArgument, r.DurationMinutes)
+	}
+	if r.PierFromID == r.PierToID {
+		return domain.Route{}, fmt.Errorf("%w: pier_from_id and pier_to_id must differ", domain.ErrInvalidArgument)
+	}
+	if len(r.CancellationPolicy) > 0 {
+		if err := domain.ValidateCancellationPolicy(r.CancellationPolicy); err != nil {
+			return domain.Route{}, err
+		}
+	}
+	return updateRoute(ctx, tx, q, scope, r)
 }
 
 func createRoute(ctx context.Context, tx pgx.Tx, q *postgres.Queries, r domain.Route, policyJSON []byte) (domain.Route, error) {
@@ -122,7 +139,7 @@ func createRoute(ctx context.Context, tx pgx.Tx, q *postgres.Queries, r domain.R
 	return publishRouteUpserted(ctx, tx, stored)
 }
 
-func updateRoute(ctx context.Context, tx pgx.Tx, q *postgres.Queries, scope Scope, r domain.Route, policyJSON []byte) (domain.Route, error) {
+func updateRoute(ctx context.Context, tx pgx.Tx, q *postgres.Queries, scope Scope, r domain.Route) (domain.Route, error) {
 	stored, err := q.GetRouteForUpdateScoped(ctx, postgres.GetRouteForUpdateScopedParams{
 		ID:         toPgUUID(r.ID),
 		AllScope:   scope.All(),
@@ -144,6 +161,18 @@ func updateRoute(ctx context.Context, tx pgx.Tx, q *postgres.Queries, scope Scop
 	// pier_from<>pier_to check constraint as an opaque 500).
 	if fromPgUUID(stored.PierFromID) != r.PierFromID {
 		return domain.Route{}, fmt.Errorf("%w: pier_from_id is immutable", domain.ErrInvalidArgument)
+	}
+
+	// WR-03: an empty policy on the request keeps the stored schedule
+	// as-is (raw jsonb bytes, no round trip through the domain type)
+	// rather than resetting it to the default.
+	policyJSON := stored.CancellationPolicy
+	if len(r.CancellationPolicy) > 0 {
+		marshaled, err := json.Marshal(r.CancellationPolicy)
+		if err != nil {
+			return domain.Route{}, fmt.Errorf("app: marshal cancellation policy: %w", err)
+		}
+		policyJSON = marshaled
 	}
 
 	row, err := q.UpdateRoute(ctx, postgres.UpdateRouteParams{
