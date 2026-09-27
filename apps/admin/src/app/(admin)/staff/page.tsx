@@ -170,7 +170,13 @@ export default function StaffPage() {
       await queryClient.invalidateQueries({ queryKey: ['staff-users'] });
     } catch (err) {
       const apiErr = err as ApiError;
-      toast.error(apiErr.message || 'ปิดการใช้งานผู้ใช้ไม่สำเร็จ กรุณาลองใหม่');
+      // IN-09: re-enabling a user hit the disable-failure text for both
+      // directions -- pick the message from the direction actually
+      // requested.
+      const fallback = disabled
+        ? 'ปิดการใช้งานผู้ใช้ไม่สำเร็จ กรุณาลองใหม่'
+        : 'เปิดการใช้งานผู้ใช้ไม่สำเร็จ กรุณาลองใหม่';
+      toast.error(apiErr.message || fallback);
     }
   }
 
