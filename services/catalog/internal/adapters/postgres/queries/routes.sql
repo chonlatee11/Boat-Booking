@@ -18,6 +18,11 @@ where routes.id = $1
   and (sqlc.arg(all_scope)::bool or (routes.operator_id = sqlc.arg(operator_id) and routes.pier_from_id = any(sqlc.arg(pier_ids)::uuid[])))
 for update of routes;
 
+-- name: GetRouteScoped :one
+select routes.* from routes
+where routes.id = $1
+  and (sqlc.arg(all_scope)::bool or (routes.operator_id = sqlc.arg(operator_id) and routes.pier_from_id = any(sqlc.arg(pier_ids)::uuid[])));
+
 -- name: ListRoutesAdmin :many
 select routes.* from routes
 join piers pf on pf.id = routes.pier_from_id

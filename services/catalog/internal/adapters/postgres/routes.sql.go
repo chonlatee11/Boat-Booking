@@ -72,6 +72,41 @@ func (q *Queries) GetRouteForUpdateScoped(ctx context.Context, arg GetRouteForUp
 	return i, err
 }
 
+const getRouteScoped = `-- name: GetRouteScoped :one
+select routes.id, routes.operator_id, routes.pier_from_id, routes.pier_to_id, routes.duration_minutes, routes.cancellation_policy, routes.archived_at, routes.created_at, routes.updated_at from routes
+where routes.id = $1
+  and ($2::bool or (routes.operator_id = $3 and routes.pier_from_id = any($4::uuid[])))
+`
+
+type GetRouteScopedParams struct {
+	ID         pgtype.UUID
+	AllScope   bool
+	OperatorID pgtype.UUID
+	PierIds    []pgtype.UUID
+}
+
+func (q *Queries) GetRouteScoped(ctx context.Context, arg GetRouteScopedParams) (Route, error) {
+	row := q.db.QueryRow(ctx, getRouteScoped,
+		arg.ID,
+		arg.AllScope,
+		arg.OperatorID,
+		arg.PierIds,
+	)
+	var i Route
+	err := row.Scan(
+		&i.ID,
+		&i.OperatorID,
+		&i.PierFromID,
+		&i.PierToID,
+		&i.DurationMinutes,
+		&i.CancellationPolicy,
+		&i.ArchivedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const insertRoute = `-- name: InsertRoute :one
 insert into routes (id, operator_id, pier_from_id, pier_to_id, duration_minutes, cancellation_policy)
 values ($1, $2, $3, $4, $5, $6)

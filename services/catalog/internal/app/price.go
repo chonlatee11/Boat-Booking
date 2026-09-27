@@ -90,7 +90,11 @@ func AddRoutePrice(ctx context.Context, tx pgx.Tx, scope Scope, p domain.RoutePr
 // scope (staff may read, unlike AddRoutePrice which requires CanWrite) —
 // out-of-scope or missing routeID returns domain.ErrNotFound.
 func ListRoutePrices(ctx context.Context, q *postgres.Queries, scope Scope, routeID uuid.UUID) ([]domain.RoutePrice, error) {
-	_, err := q.GetRouteForUpdateScoped(ctx, postgres.GetRouteForUpdateScopedParams{
+	// IN-02: a plain read, so use the non-locking GetRouteScoped rather
+	// than GetRouteForUpdateScoped's FOR UPDATE, which would otherwise
+	// take a row lock on this read-only path and contend with concurrent
+	// AddRoutePrice/ArchiveRoute writers for no reason.
+	_, err := q.GetRouteScoped(ctx, postgres.GetRouteScopedParams{
 		ID:         toPgUUID(routeID),
 		AllScope:   scope.All(),
 		OperatorID: toPgUUID(scope.OperatorID),
