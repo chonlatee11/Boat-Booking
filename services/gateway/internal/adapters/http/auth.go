@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"io"
+	"mime"
 	"net/http"
 	"strconv"
 
@@ -145,7 +146,20 @@ func sessionUserBody(u *identityv1.SessionUser) map[string]any {
 // decodeAuthBody reads r's body (bounded to maxAuthBodyBytes) and unmarshals
 // it as JSON into msg, rejecting unknown fields (protojson's default). On
 // any failure it writes a 400 and returns false.
+//
+// WR-01: Content-Type must be exactly application/json, the same rule
+// adminProxy already enforces. A form-like Content-Type (e.g. text/plain)
+// can be produced by a plain cross-site auto-submitting <form>, letting an
+// attacker drive a victim's browser into POSTing a JSON-shaped body without
+// a CORS preflight (login CSRF). Rejecting non-JSON here forces a preflight,
+// which Kong's cors origin allow-list then blocks.
 func decodeAuthBody(w http.ResponseWriter, r *http.Request, msg proto.Message) bool {
+	mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	if err != nil || mediaType != "application/json" {
+		httpx.WriteError(w, connect.NewError(connect.CodeInvalidArgument, errors.New("content-type must be application/json")))
+		return false
+	}
+
 	r.Body = http.MaxBytesReader(w, r.Body, maxAuthBodyBytes)
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

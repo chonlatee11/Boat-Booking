@@ -166,6 +166,35 @@ func TestOtpVerifyWrongCodeReturnsAttemptsLeft(t *testing.T) {
 	}
 }
 
+// TestOtpVerifyRejectsNonJSONContentType proves the WR-01 fix: a
+// non-application/json Content-Type (the shape a plain cross-site
+// auto-submitting <form> can send without triggering a CORS preflight) is
+// rejected before identity is ever called, closing the login-CSRF path.
+func TestOtpVerifyRejectsNonJSONContentType(t *testing.T) {
+	fake := &fakeAuthServer{verifyOtpResp: &identityv1.VerifyOtpResponse{
+		AccessToken: "tok", RefreshToken: "rtok",
+		User: &identityv1.SessionUser{UserId: "u1", Role: auth.RoleCustomer},
+	}}
+	srv := newAuthTestServer(t, fake)
+
+	resp, err := http.Post(srv.URL+"/api/v1/auth/otp/verify", "text/plain",
+		strings.NewReader(`{"destination":"x=y@attacker.com","code":"123456"}`))
+	if err != nil {
+		t.Fatalf("post: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck // test helper, nothing actionable
+
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400", resp.StatusCode)
+	}
+	if fake.lastHeaders != nil {
+		t.Error("identity was called with a non-JSON Content-Type, want rejected before any upstream contact")
+	}
+	for _, c := range resp.Cookies() {
+		t.Errorf("cookie %q was set on a rejected request, want none", c.Name)
+	}
+}
+
 func TestOtpRequestResourceExhaustedReturns429(t *testing.T) {
 	fake := &fakeAuthServer{requestOtpErr: connect.NewError(connect.CodeResourceExhausted, errString("resend requested too soon"))}
 	srv := newAuthTestServer(t, fake)
