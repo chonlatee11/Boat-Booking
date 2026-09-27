@@ -60,6 +60,40 @@ func (q *Queries) GetOperator(ctx context.Context, id pgtype.UUID) (Operator, er
 	return i, err
 }
 
+const getOperatorForShare = `-- name: GetOperatorForShare :one
+select id, name, archived_at, created_at, updated_at from operators where id = $1 for share
+`
+
+func (q *Queries) GetOperatorForShare(ctx context.Context, id pgtype.UUID) (Operator, error) {
+	row := q.db.QueryRow(ctx, getOperatorForShare, id)
+	var i Operator
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.ArchivedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getOperatorForUpdate = `-- name: GetOperatorForUpdate :one
+select id, name, archived_at, created_at, updated_at from operators where id = $1 for update
+`
+
+func (q *Queries) GetOperatorForUpdate(ctx context.Context, id pgtype.UUID) (Operator, error) {
+	row := q.db.QueryRow(ctx, getOperatorForUpdate, id)
+	var i Operator
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.ArchivedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listOperatorsScoped = `-- name: ListOperatorsScoped :many
 select id, name, archived_at, created_at, updated_at from operators
 where $1::bool or id = $2

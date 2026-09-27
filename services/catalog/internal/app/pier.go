@@ -48,7 +48,13 @@ func createPier(ctx context.Context, tx pgx.Tx, q *postgres.Queries, scope Scope
 		return domain.Pier{}, domain.ErrPermissionDenied
 	}
 
-	op, err := q.GetOperator(ctx, toPgUUID(p.OperatorID))
+	// WR-06: FOR SHARE against the operator row, mirroring how pier/route
+	// writes already take GetPierForShareScoped. ArchiveOperator takes
+	// FOR UPDATE before counting active piers, so the two block each other
+	// instead of racing: either this create commits first and the archive
+	// then sees the new pier and is rejected, or the archive commits first
+	// and this create sees archived_at set.
+	op, err := q.GetOperatorForShare(ctx, toPgUUID(p.OperatorID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Pier{}, domain.ErrNotFound

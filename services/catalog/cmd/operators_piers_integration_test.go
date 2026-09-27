@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -391,4 +392,45 @@ func TestArchiveOperatorBlockedByPiers(t *testing.T) {
 		OperatorId: opEmpty, NameTh: "x", NameEn: "x", Lat: 7.9, Lng: 98.3,
 	}))
 	assertConnectCode(t, err, connect.CodeFailedPrecondition, "create pier for archived operator")
+}
+
+// TestArchiveOperatorRaceWithPierCreate proves the WR-06 fix: a concurrent
+// ArchiveOperator and UpsertPier (create) on the same operator must never
+// both succeed. createPier's FOR SHARE and ArchiveOperator's FOR UPDATE on
+// the same operator row make the two serialize instead of racing past each
+// other under READ COMMITTED.
+func TestArchiveOperatorRaceWithPierCreate(t *testing.T) {
+	addr, _ := setCatalogEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+	ctx := context.Background()
+
+	superAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RoleSuperAdmin, ""))
+	op := mustCreateOperator(t, ctx, superAdmin, "Race Operator")
+
+	var wg sync.WaitGroup
+	var archiveErr, createErr error
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		_, archiveErr = superAdmin.ArchiveOperator(ctx, connect.NewRequest(&catalogv1.ArchiveOperatorRequest{OperatorId: op}))
+	}()
+	go func() {
+		defer wg.Done()
+		_, createErr = superAdmin.UpsertPier(ctx, connect.NewRequest(&catalogv1.UpsertPierRequest{
+			OperatorId: op, NameTh: "ท่าแข่ง", NameEn: "Race Pier", Lat: 7.9, Lng: 98.3,
+		}))
+	}()
+	wg.Wait()
+
+	if archiveErr == nil && createErr == nil {
+		t.Fatalf("both ArchiveOperator and a concurrent UpsertPier (create) succeeded — an archived operator must never end up owning a non-archived pier (WR-06)")
+	}
+	if archiveErr != nil {
+		assertConnectCode(t, archiveErr, connect.CodeFailedPrecondition, "ArchiveOperator lost the race")
+	}
+	if createErr != nil {
+		assertConnectCode(t, createErr, connect.CodeFailedPrecondition, "UpsertPier lost the race")
+	}
 }

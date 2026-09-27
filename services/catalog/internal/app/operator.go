@@ -102,6 +102,19 @@ func ArchiveOperator(ctx context.Context, tx pgx.Tx, scope Scope, id uuid.UUID) 
 
 	q := postgres.New(tx)
 
+	// WR-06: lock the operator row FOR UPDATE before counting its active
+	// piers. createPier takes FOR SHARE on the same row, so the two now
+	// block each other instead of racing under READ COMMITTED — a pier
+	// insert either commits first (and this count then sees it and the
+	// archive is rejected) or this archive commits first (and the insert
+	// then sees archived_at set).
+	if _, err := q.GetOperatorForUpdate(ctx, toPgUUID(id)); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Operator{}, domain.ErrNotFound
+		}
+		return domain.Operator{}, fmt.Errorf("app: get operator for update: %w", err)
+	}
+
 	activePiers, err := q.CountActivePiersForOperator(ctx, toPgUUID(id))
 	if err != nil {
 		return domain.Operator{}, fmt.Errorf("app: count active piers: %w", err)

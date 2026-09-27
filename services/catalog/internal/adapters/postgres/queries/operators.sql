@@ -15,6 +15,12 @@ order by name, id;
 -- name: GetOperator :one
 select * from operators where id = $1;
 
+-- name: GetOperatorForShare :one
+select * from operators where id = $1 for share;
+
+-- name: GetOperatorForUpdate :one
+select * from operators where id = $1 for update;
+
 -- name: ArchiveOperator :one
 update operators
 set archived_at = coalesce(archived_at, now()),
