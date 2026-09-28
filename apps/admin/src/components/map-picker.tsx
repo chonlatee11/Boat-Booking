@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Map as MapLibreMap, Marker } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Field, FieldLabel } from '@/components/ui/field';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
 // D-20: OpenFreeMap by default, swappable via env — no API key, no
@@ -15,19 +15,51 @@ const THAILAND_CENTER: [number, number] = [100.5, 13.7];
 
 export type LatLng = { lat: number; lng: number };
 
+/**
+ * Parses a coordinate draft string. Returns the number only when the
+ * trimmed text is non-empty, finite, and within `limit` degrees — a
+ * partial/empty/out-of-range draft (e.g. "", "13.", "137") returns null
+ * instead of ever reaching maplibre-gl, whose LngLat constructor throws
+ * synchronously outside that range (G-02-7).
+ */
+function parseCoord(text: string, limit: number): number | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  if (!Number.isFinite(n) || Math.abs(n) > limit) return null;
+  return n;
+}
+
 /** Click/drag marker picker with manual lat/lng fallback (D-20). */
 export function MapPicker({
   value,
   onChange,
 }: {
   value?: LatLng;
-  onChange: (value: LatLng) => void;
+  onChange: (value: LatLng | undefined) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markerRef = useRef<Marker | null>(null);
   const onChangeRef = useRef(onChange);
   const [tilesFailed, setTilesFailed] = useState(false);
+  const [latText, setLatText] = useState(value ? String(value.lat) : '');
+  const [lngText, setLngText] = useState(value ? String(value.lng) : '');
+  // "Adjust state during render" pattern (no effect+setState loop, no
+  // react-hooks/exhaustive-deps escape hatch needed): when `value` changes
+  // identity because the map moved the marker (click/drag) or a different
+  // pier's location loaded, re-sync the drafts unless they already read the
+  // same number — which is exactly the case when this render's `value`
+  // change originated from *this* input's own onChange, so typing never
+  // gets clobbered mid-keystroke.
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
+    if (value) {
+      if (Number(latText) !== value.lat) setLatText(String(value.lat));
+      if (Number(lngText) !== value.lng) setLngText(String(value.lng));
+    }
+  }
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -70,7 +102,22 @@ export function MapPicker({
       placeMarker(e.lngLat.lat, e.lngLat.lng);
       onChangeRef.current({ lat: e.lngLat.lat, lng: e.lngLat.lng });
     });
-    map.on('error', () => setTilesFailed(true));
+
+    // UI-SPEC E3: "โหลดแผนที่ไม่สำเร็จ" must show only when the map errors
+    // before any tile has loaded, and clear once a tile loads — a single
+    // transient tile failure (or maplibre's mislabeled worker-error event,
+    // see .planning/debug/pier-map-worker-crash.md) must never latch it
+    // permanently once tiles are actually rendering (G-02-7/G-02-8).
+    let tileLoaded = false;
+    map.on('sourcedata', (e) => {
+      if (e.tile) {
+        tileLoaded = true;
+        setTilesFailed(false);
+      }
+    });
+    map.on('error', () => {
+      if (!tileLoaded) setTilesFailed(true);
+    });
 
     return () => {
       markerRef.current = null;
@@ -104,17 +151,22 @@ export function MapPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value?.lat, value?.lng]);
 
-  function handleLatChange(raw: string) {
-    const lat = Number(raw);
-    if (!Number.isFinite(lat)) return;
-    onChange({ lat, lng: value?.lng ?? THAILAND_CENTER[0] });
+  function handleLatTextChange(raw: string) {
+    setLatText(raw);
+    const lat = parseCoord(raw, 90);
+    const lng = parseCoord(lngText, 180);
+    onChange(lat !== null && lng !== null ? { lat, lng } : undefined);
   }
 
-  function handleLngChange(raw: string) {
-    const lng = Number(raw);
-    if (!Number.isFinite(lng)) return;
-    onChange({ lat: value?.lat ?? THAILAND_CENTER[1], lng });
+  function handleLngTextChange(raw: string) {
+    setLngText(raw);
+    const lat = parseCoord(latText, 90);
+    const lng = parseCoord(raw, 180);
+    onChange(lat !== null && lng !== null ? { lat, lng } : undefined);
   }
+
+  const latInvalid = latText !== '' && parseCoord(latText, 90) === null;
+  const lngInvalid = lngText !== '' && parseCoord(lngText, 180) === null;
 
   return (
     <div className="flex flex-col gap-2">
@@ -135,21 +187,29 @@ export function MapPicker({
           <FieldLabel htmlFor="pier-lat">ละติจูด</FieldLabel>
           <Input
             id="pier-lat"
-            type="number"
-            step={0.000001}
-            value={value?.lat ?? ''}
-            onChange={(e) => handleLatChange(e.target.value)}
+            type="text"
+            inputMode="decimal"
+            aria-invalid={latInvalid}
+            value={latText}
+            onChange={(e) => handleLatTextChange(e.target.value)}
           />
+          {latInvalid && (
+            <FieldError>ละติจูดต้องอยู่ระหว่าง -90 ถึง 90</FieldError>
+          )}
         </Field>
         <Field>
           <FieldLabel htmlFor="pier-lng">ลองจิจูด</FieldLabel>
           <Input
             id="pier-lng"
-            type="number"
-            step={0.000001}
-            value={value?.lng ?? ''}
-            onChange={(e) => handleLngChange(e.target.value)}
+            type="text"
+            inputMode="decimal"
+            aria-invalid={lngInvalid}
+            value={lngText}
+            onChange={(e) => handleLngTextChange(e.target.value)}
           />
+          {lngInvalid && (
+            <FieldError>ลองจิจูดต้องอยู่ระหว่าง -180 ถึง 180</FieldError>
+          )}
         </Field>
       </div>
     </div>
