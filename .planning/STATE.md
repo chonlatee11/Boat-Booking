@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 02
 current_phase_name: Identity + Catalog
 status: executing
-stopped_at: Completed 02-15-PLAN.md
-last_updated: "2026-09-28T16:02:08.382Z"
+stopped_at: Completed 02-16-PLAN.md
+last_updated: "2026-09-28T16:09:13.039Z"
 last_activity: 2026-09-28
 last_activity_desc: Phase 02 execution started
-state_head: 8975b85a1cadd2b28d0a0e7a617553343bdc6f76
+state_head: c34fcaea3a1b7c4d14692d92ac2e866d873e3070
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 31
-  completed_plans: 29
+  completed_plans: 30
   percent: 20
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 02 (Identity + Catalog) — EXECUTING
-Plan: 3 of 17
+Plan: 4 of 17
 Status: Ready to execute
 Last activity: 2026-09-28 — Phase 02 execution started
 
@@ -87,6 +87,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 02-identity-catalog P13 | 18min | 2 tasks | 3 files |
 | Phase 02 P14 | 12min | 1 tasks | 2 files |
 | Phase 02 P15 | 18 min | 2 tasks | 3 files |
+| Phase 02 P16 | ~20min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -150,6 +151,8 @@ Recent decisions affecting current work:
 - [Phase 02]: [Phase 02] otpMessage extracted as the single RFC 5322 builder for SMTP-delivered OTP messages, adding MIME-Version/Content-Type/Content-Transfer-Encoding headers and an RFC 2047-encoded Subject — Closes gap G-02-3: Mailpit decoded the undeclared-charset UTF-8 Thai body as Latin-1; 8bit encoding chosen since this path only talks to Mailpit in dev, ResendSender (prod, JSON) is unaffected
 - [Phase 02]: [Phase 02] createPier's archived-operator rejection wraps domain.ErrFailedPrecondition with "operator is archived" (%w) -- toConnectErr's errors.Is switch is unaffected, wire code unchanged — Closes G-02-8 backend half: the bare sentinel gave no reason on the wire
 - [Phase 02]: [Phase 02] TestConcurrentUpsertBoatSameID reuses boats_photo_integration_test.go's existing helpers, no new helper file — Closes G-02-18: proves the existing FOR UPDATE lock (D-07) serializes 10 concurrent UpsertBoat writes with no torn write
+- [Phase 02]: type=number lat/lng inputs switched to text+inputMode=decimal to stop partial values silently becoming 0/out-of-range and crashing maplibre-gl — DOM reports a partial number input like '13.' as empty string, which Number() coerces to 0 (finite, passes old guard); a text draft parsed via parseCoord fixes both the crash and the marker jump
+- [Phase 02]: Archived-operator save error mapped by ApiError.code === failed_precondition, not message text — Keeps this plan independent of 02-15's backend copy per the plan's explicit non-dependency note
 
 ### Pending Todos
 
@@ -170,6 +173,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-28T16:02:08.298Z
-Stopped at: Completed 02-15-PLAN.md
+Last session: 2026-09-28T16:09:12.951Z
+Stopped at: Completed 02-16-PLAN.md
 Resume file: None
