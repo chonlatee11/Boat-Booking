@@ -4,6 +4,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -237,5 +239,85 @@ func TestPierPhotoUrlEmptyWithoutStorageConfig(t *testing.T) {
 	}
 	if pierResp.Msg.Pier.PhotoUrl != "" {
 		t.Errorf("photo_url = %q, want empty (no PHOTO_PUBLIC_BASE_URL configured)", pierResp.Msg.Pier.PhotoUrl)
+	}
+}
+
+// TestConcurrentUpsertBoatSameID proves G-02-18: 10 concurrent UpsertBoat
+// calls on the same boat_id are safely serialized by GetBoatForUpdateScoped's
+// FOR UPDATE row lock (D-07) -- none fail, the pier ends up with exactly one
+// boat, and its name/capacity come from a single request rather than a mix
+// of two. This documents and locks in existing behavior; it is not a defect
+// fix.
+func TestConcurrentUpsertBoatSameID(t *testing.T) {
+	addr, dsn := setCatalogEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+	ctx := context.Background()
+
+	superAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RoleSuperAdmin, ""))
+	opID := mustCreateOperator(t, ctx, superAdmin, "Concurrent Boat Operator")
+	pierID := mustCreatePier(t, ctx, superAdmin, opID, "ท่าแข่งเรือ", "Concurrent Boat Pier", 7.6, 98.2)
+
+	createResp, err := superAdmin.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
+		Name: "Initial Boat", DefaultCapacity: 10, Status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, HomePierId: pierID,
+	}))
+	if err != nil {
+		t.Fatalf("create boat: %v", err)
+	}
+	boatID := createResp.Msg.Boat.BoatId
+
+	const n = 10
+	errs := make([]error, n)
+	var wg sync.WaitGroup
+	wg.Add(n)
+	for i := 0; i < n; i++ {
+		go func(i int) {
+			defer wg.Done()
+			_, errs[i] = superAdmin.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
+				BoatId: boatID, Name: fmt.Sprintf("Concurrent Boat %d", i),
+				DefaultCapacity: int32(20 + i), Status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, HomePierId: pierID, //nolint:gosec // i is bounded [0,n) with n=10, test helper only
+			}))
+		}(i)
+	}
+	wg.Wait()
+
+	for i, err := range errs {
+		if err != nil {
+			t.Fatalf("concurrent UpsertBoat[%d] failed: %v", i, err)
+		}
+	}
+
+	if got := countOutboxEvents(t, dsn, app.EventBoatUpserted, boatID); got != n+1 {
+		t.Fatalf("BoatUpserted outbox rows for boat = %d, want %d (1 create + %d writes)", got, n+1, n)
+	}
+
+	listResp, err := superAdmin.ListBoats(ctx, connect.NewRequest(&catalogv1.ListBoatsRequest{}))
+	if err != nil {
+		t.Fatalf("ListBoats: %v", err)
+	}
+	var onPier []*catalogv1.Boat
+	for _, b := range listResp.Msg.Boats {
+		if b.HomePierId == pierID {
+			onPier = append(onPier, b)
+		}
+	}
+	if len(onPier) != 1 {
+		t.Fatalf("boats on pier %s = %d, want 1 (got %+v)", pierID, len(onPier), onPier)
+	}
+	final := onPier[0]
+	if final.BoatId != boatID {
+		t.Fatalf("final boat id = %q, want %q", final.BoatId, boatID)
+	}
+
+	wantName := false
+	for i := 0; i < n; i++ {
+		if final.Name == fmt.Sprintf("Concurrent Boat %d", i) && final.DefaultCapacity == int32(20+i) {
+			wantName = true
+			break
+		}
+	}
+	if !wantName {
+		t.Fatalf("final boat name/capacity = %q/%d does not match any single request's (name, capacity) pair -- a mixed/torn write", final.Name, final.DefaultCapacity)
 	}
 }
