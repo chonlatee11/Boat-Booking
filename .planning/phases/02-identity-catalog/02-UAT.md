@@ -512,7 +512,7 @@ blocked: 0
   reason: "User reported: กำลังพิม latitude แล้วหน้าพัง — Next.js dev overlay: Console Error 'Worker failed to load. Check that the worker URL is correct.' (2 issues, หน้าเบื้องหลังเป็น error page); และลองพิมพ์ lat/lng แล้ว marker ไม่ย้าย"
   severity: blocker
   test: 7
-  root_cause: "map-picker handleLatChange/handleLngChange only guard Number.isFinite: partial input ("" from "13." → 0) and out-of-range values (e.g. 137 while typing) reach Marker.setLngLat, which throws for |lat|>90; thrown in a React effect with no error boundary (no error.tsx) → Next dev overlay replaces page. "Worker failed to load" is maplibre generic mislabel. Also map.on(error) latches tilesFailed for any error with no reset (causes spurious โหลดแผนที่ไม่สำเร็จ in test 8)."
+  root_cause: "map-picker handleLatChange/handleLngChange only guard Number.isFinite: partial input ('' from '13.' → 0) and out-of-range values (e.g. 137 while typing) reach Marker.setLngLat, which throws for |lat|>90; thrown in a React effect with no error boundary (no error.tsx) → Next dev overlay replaces page. 'Worker failed to load' is maplibre generic mislabel. Also map.on(error) latches tilesFailed for any error with no reset (causes spurious โหลดแผนที่ไม่สำเร็จ in test 8)."
   artifacts:
     - path: "apps/admin/src/components/map-picker.tsx"
       issue: "unguarded lat/lng parse (L107-117) feeds setLngLat (L50-63, L87-105) without range check; map.on(error) L73 treats every error as fatal, never resets"
@@ -526,7 +526,7 @@ blocked: 0
   reason: "User reported: ลาก marker บนแผนที่ได้ แต่บันทึก pier ไม่ได้: POST /api/v1/admin/boatbooking.catalog.v1.CatalogService/UpsertPier (super_admin, pierId ว่าง, มี photoKey piers/<uuid>.jpg หลังอัปโหลด thumbnail ขึ้นแล้ว) ตอบ {code:failed_precondition, message:failed precondition} → UI แสดง บันทึกท่าเรือไม่สำเร็จ กรุณาลองใหม่. สังเกตเพิ่ม: UI เวลาเปิด/ปิด แสดง 10:11 PM / 11:11 PM แต่ payload ส่ง opensAt/closesAt เป็น string ว่าง; ขึ้น โหลดแผนที่ไม่สำเร็จ ทั้งที่ tile แสดงบางส่วน"
   severity: blocker
   test: 8
-  root_cause: "(1) Selected operator 01a0e84b… was archived earlier in UAT test 4; createPier correctly rejects (D-08) but pier-sheet operator select lists archived operators unmarked (ListOperatorsScoped has no archived filter), and catalog returns bare ErrFailedPrecondition with no detail. (2) Empty opensAt/closesAt: native <input type=time> in 12h browser locale keeps value "" until AM/PM segment is committed; hoursValid accepts both-empty so save is not blocked — not a state-binding bug."
+  root_cause: "(1) Selected operator 01a0e84b… was archived earlier in UAT test 4; createPier correctly rejects (D-08) but pier-sheet operator select lists archived operators unmarked (ListOperatorsScoped has no archived filter), and catalog returns bare ErrFailedPrecondition with no detail. (2) Empty opensAt/closesAt: native <input type=time> in 12h browser locale keeps value '' until AM/PM segment is committed; hoursValid accepts both-empty so save is not blocked — not a state-binding bug."
   artifacts:
     - path: "apps/admin/src/app/(admin)/piers/pier-sheet.tsx"
       issue: "operator select shows archived operators; hoursValid silently accepts incomplete native time entry"
@@ -546,14 +546,14 @@ blocked: 0
   severity: major
   test: 9
   diagnosis_hint: "ตรวจว่า 2 แถวเป็น pier_id คู่เดียวกันจริง หรือเป็นท่าชื่อ Proof Pier หลายท่าจาก make proof; และ pier_from == pier_to ถูกปฏิเสธหรือไม่"
-  root_cause: "Backend correct (routes_active_pair_uq partial unique + CHECK pier_from<>pier_to). The two rows are a route and its legitimate reverse between two distinct piers both named "Proof Pier" (deploy/proof.sh hardcodes pier name, no run suffix). Admin pierName() and route-sheet selects show only name_th, so same-named piers are indistinguishable."
+  root_cause: "Backend correct (routes_active_pair_uq partial unique + CHECK pier_from<>pier_to). The two rows are a route and its legitimate reverse between two distinct piers both named 'Proof Pier' (deploy/proof.sh hardcodes pier name, no run suffix). Admin pierName() and route-sheet selects show only name_th, so same-named piers are indistinguishable."
   artifacts:
     - path: "apps/admin/src/app/(admin)/routes/queries.ts"
       issue: "pierName() has no disambiguation on name collision"
     - path: "apps/admin/src/app/(admin)/routes/route-sheet.tsx"
       issue: "pier selects render only nameTh"
     - path: "deploy/proof.sh"
-      issue: "pier name "Proof Pier" has no unique suffix (operator name does)"
+      issue: "pier name 'Proof Pier' has no unique suffix (operator name does)"
   missing:
     - "Disambiguate pier labels when names collide (append operator name or short id) in list and selects"
     - "Add timestamp suffix to proof.sh pier name"
