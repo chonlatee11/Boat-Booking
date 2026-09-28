@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"mime"
 	"net/http"
 	"net/mail"
 	"net/smtp"
@@ -27,18 +28,41 @@ type Sender interface {
 // address (no display name) — from ("Boat Booking <no-reply@...>") is only
 // valid in the message's From header, not the envelope command.
 func sendSMTPMessage(addr, from, to, subject, code string) error {
-	body := fmt.Sprintf("รหัสของคุณ / Your code: %s\r\nหมดอายุใน 5 นาที / expires in 5 minutes.\r\n", code)
-	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", from, to, subject, body)
+	msg := otpMessage(from, to, subject, code)
 
 	envelopeFrom := from
 	if parsed, err := mail.ParseAddress(from); err == nil {
 		envelopeFrom = parsed.Address
 	}
 
-	if err := smtp.SendMail(addr, nil, envelopeFrom, []string{to}, []byte(msg)); err != nil {
+	if err := smtp.SendMail(addr, nil, envelopeFrom, []string{to}, msg); err != nil {
 		return fmt.Errorf("notify: send smtp message: %w", err)
 	}
 	return nil
+}
+
+// otpMessage builds the raw RFC 5322 message bytes for an OTP notification.
+// Gap G-02-3: the previous version declared no MIME headers at all, so an
+// undeclared body defaulted to us-ascii per RFC 2045 and Mailpit decoded the
+// UTF-8 Thai bytes as Latin-1 (mojibake). This declares MIME-Version,
+// Content-Type: text/plain; charset=UTF-8, and RFC 2047-encodes the Subject
+// so it stays pure ASCII on the wire. Content-Transfer-Encoding is 8bit, not
+// quoted-printable/base64, because this sender only ever talks to Mailpit
+// (dev, D-02) -- production email goes through ResendSender's JSON API,
+// which is unaffected by this bug.
+func otpMessage(from, to, subject, code string) []byte {
+	body := fmt.Sprintf("รหัสของคุณ / Your code: %s\r\nหมดอายุใน 5 นาที / expires in 5 minutes.\r\n", code)
+
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, "From: %s\r\n", from)
+	fmt.Fprintf(&buf, "To: %s\r\n", to)
+	fmt.Fprintf(&buf, "Subject: %s\r\n", mime.BEncoding.Encode("UTF-8", subject))
+	buf.WriteString("MIME-Version: 1.0\r\n")
+	buf.WriteString("Content-Type: text/plain; charset=UTF-8\r\n")
+	buf.WriteString("Content-Transfer-Encoding: 8bit\r\n")
+	buf.WriteString("\r\n")
+	buf.WriteString(body)
+	return buf.Bytes()
 }
 
 // SMTPSender sends OTP emails via net/smtp — the dev transport, pointed at
