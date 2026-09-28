@@ -51,7 +51,7 @@ pier_code=$(curl -s -o /tmp/proof-pier.json -w '%{http_code}' \
 	-X POST "$ADMIN/UpsertPier" \
 	--cookie "access_token=$TOKEN" \
 	-H 'Content-Type: application/json' \
-	-d "$(printf '{"operatorId":"%s","nameTh":"Proof Pier","nameEn":"Proof Pier","lat":7.88,"lng":98.39}' "$OPERATOR_ID")")
+	-d "$(printf '{"operatorId":"%s","nameTh":"Proof Pier %s","nameEn":"Proof Pier %s","lat":7.88,"lng":98.39}' "$OPERATOR_ID" "$SUFFIX" "$SUFFIX")")
 if [ "$pier_code" != "200" ]; then
 	echo "FAIL upsert-200 (pier, got $pier_code): $(cat /tmp/proof-pier.json)"
 	exit 1
