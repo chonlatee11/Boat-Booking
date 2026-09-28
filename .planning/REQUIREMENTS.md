@@ -32,7 +32,7 @@ Milestone 1 = seed Phase 0–4: platform foundation → identity + catalog → s
 
 - [ ] **CAT-01**: super_admin can create and edit operators
 - [x] **CAT-02**: pier_admin can create/edit/archive piers (name, coordinates via map picker, address, photo, open hours)
-- [ ] **CAT-03**: pier_admin can create/edit/archive routes (pier_from → pier_to, travel duration, tiered cancellation policy defaulting to >24h 100% / 2–24h 50% / <2h 0%)
+- [x] **CAT-03**: pier_admin can create/edit/archive routes (pier_from → pier_to, travel duration, tiered cancellation policy defaulting to >24h 100% / 2–24h 50% / <2h 0%)
 - [x] **CAT-04**: pier_admin can create/edit boats (name, default capacity, status active/maintenance)
 - [ ] **CAT-05**: pier_admin can set ticket prices per route per ticket type (adult, child) stored as integer satang
 - [ ] **CAT-06**: Public search can list piers and routes with coordinates for the map without authentication
@@ -161,7 +161,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-05 | Phase 2 | Gaps Found |
 | CAT-01 | Phase 2 | Gaps Found |
 | CAT-02 | Phase 2 | Complete |
-| CAT-03 | Phase 2 | Gaps Found |
+| CAT-03 | Phase 2 | Complete |
 | CAT-04 | Phase 2 | Complete |
 | CAT-05 | Phase 2 | Gaps Found |
 | CAT-06 | Phase 2 | Gaps Found |

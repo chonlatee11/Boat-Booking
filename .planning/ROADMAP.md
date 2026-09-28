@@ -95,7 +95,7 @@ Plans:
   4. super_admin creates/edits operators and creates piers; pier_admin edits/archives the piers assigned to them (with map picker) and creates/edits/archives routes (with tiered cancellation policy), boats, and per-route ticket prices (adult/child, integer satang) via the admin UI (wording corrected per 02-CONTEXT D-08)
   5. Public search lists piers and routes with coordinates for the map, without authentication
 
-**Plans**: 16/17 plans executed (4 gap-closure plans pending)
+**Plans**: 17/17 plans executed (4 gap-closure plans pending)
 **UI hint**: yes
 
 Plans:
@@ -132,7 +132,7 @@ Plans:
 - [x] 02-14-PLAN.md — G-02-3: OTP SMTP message UTF-8 MIME headers + RFC 2047 Subject (identity notify)
 - [x] 02-15-PLAN.md — G-02-8 (backend), G-02-18: archived-operator pier-create message + concurrent UpsertBoat integration test (catalog)
 - [x] 02-16-PLAN.md — G-02-7, G-02-8 (UI): map-picker validated lat/lng + tile-failure reset; pier Sheet non-archived operators, 24h HH:MM hours
-- [ ] 02-17-PLAN.md — G-02-12, G-02-9: policy editor 0-default + last-tier guard; same-named pier label disambiguation; proof.sh unique pier name
+- [x] 02-17-PLAN.md — G-02-12, G-02-9: policy editor 0-default + last-tier guard; same-named pier label disambiguation; proof.sh unique pier name
 
 ### Phase 3: Schedule
 
@@ -205,7 +205,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Platform Foundation | 14/14 | In Progress|  |
-| 2. Identity + Catalog | 16/17 | In Progress|  |
+| 2. Identity + Catalog | 17/17 | In Progress|  |
 | 3. Schedule | 0/? | Not started | - |
 | 4. Booking Core | 0/? | Not started | - |
 | 5. Payment + Ticket + Notification | 0/? | Not started | - |
