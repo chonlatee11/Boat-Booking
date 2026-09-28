@@ -95,7 +95,7 @@ Plans:
   4. super_admin creates/edits operators and creates piers; pier_admin edits/archives the piers assigned to them (with map picker) and creates/edits/archives routes (with tiered cancellation policy), boats, and per-route ticket prices (adult/child, integer satang) via the admin UI (wording corrected per 02-CONTEXT D-08)
   5. Public search lists piers and routes with coordinates for the map, without authentication
 
-**Plans**: 13/13 plans executed
+**Plans**: 13/17 plans executed (4 gap-closure plans pending)
 **UI hint**: yes
 
 Plans:
@@ -126,6 +126,13 @@ Plans:
 - [x] 02-11-PLAN.md — admin Piers page: MapLibre picker, direct-to-storage photo upload (storage container), archive with D-15 blocked state
 - [x] 02-12-PLAN.md — admin Routes (policy editor, return route, prices) and Boats pages
 - [x] 02-13-PLAN.md — admin Staff page: create/edit/disable staff users
+
+**Gap closure** *(UAT 02-UAT.md, all wave 1, parallel)*
+
+- [ ] 02-14-PLAN.md — G-02-3: OTP SMTP message UTF-8 MIME headers + RFC 2047 Subject (identity notify)
+- [ ] 02-15-PLAN.md — G-02-8 (backend), G-02-18: archived-operator pier-create message + concurrent UpsertBoat integration test (catalog)
+- [ ] 02-16-PLAN.md — G-02-7, G-02-8 (UI): map-picker validated lat/lng + tile-failure reset; pier Sheet non-archived operators, 24h HH:MM hours
+- [ ] 02-17-PLAN.md — G-02-12, G-02-9: policy editor 0-default + last-tier guard; same-named pier label disambiguation; proof.sh unique pier name
 
 ### Phase 3: Schedule
 
