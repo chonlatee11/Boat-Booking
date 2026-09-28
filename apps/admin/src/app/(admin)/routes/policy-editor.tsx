@@ -22,8 +22,8 @@ export function validatePolicy(tiers: CancellationTierJson[]): string | null {
   let sawZero = false;
   let prev = Number.POSITIVE_INFINITY;
   for (const tier of tiers) {
-    const hours = tier.minHoursBefore ?? -1;
-    const percent = tier.refundPercent ?? -1;
+    const hours = tier.minHoursBefore ?? 0;
+    const percent = tier.refundPercent ?? 0;
     if (hours < 0) return POLICY_VALIDATION_ERROR;
     if (hours >= prev) return POLICY_VALIDATION_ERROR;
     if (percent < 0 || percent > 100) return POLICY_VALIDATION_ERROR;
@@ -96,7 +96,7 @@ export function PolicyEditor({
               }
             />
           </Field>
-          {tiers.length > 1 && (
+          {index < tiers.length - 1 && (
             <Button
               type="button"
               variant="ghost"
