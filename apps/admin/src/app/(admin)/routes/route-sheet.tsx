@@ -5,7 +5,7 @@ import { RepeatIcon } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { rpc, type ApiError } from '@/lib/api';
-import { useOwnPiers, usePublicPiers } from './queries';
+import { useOwnPiers, usePublicPiers, pierName } from './queries';
 import { PolicyEditor, validatePolicy } from './policy-editor';
 import { PriceSection } from './price-section';
 import type {
@@ -159,7 +159,11 @@ export function RouteSheet({
                 <NativeSelectOption value="">เลือกท่าต้นทาง</NativeSelectOption>
                 {ownPiers.map((p) => (
                   <NativeSelectOption key={p.pierId} value={p.pierId ?? ''}>
-                    {p.nameTh}
+                    {pierName(
+                      p.pierId,
+                      ownPiersData?.piers,
+                      publicPiersData?.piers,
+                    )}
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
@@ -182,7 +186,11 @@ export function RouteSheet({
                 </NativeSelectOption>
                 {publicPiers.map((p) => (
                   <NativeSelectOption key={p.pierId} value={p.pierId ?? ''}>
-                    {p.nameTh}
+                    {pierName(
+                      p.pierId,
+                      ownPiersData?.piers,
+                      publicPiersData?.piers,
+                    )}
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
