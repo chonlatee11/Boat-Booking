@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 02-identity-catalog
 source: [02-01-SUMMARY.md, 02-02-SUMMARY.md, 02-03-SUMMARY.md, 02-04-SUMMARY.md, 02-05-SUMMARY.md, 02-06-SUMMARY.md, 02-07-SUMMARY.md, 02-08-SUMMARY.md, 02-09-SUMMARY.md, 02-10-SUMMARY.md, 02-11-SUMMARY.md, 02-12-SUMMARY.md, 02-13-SUMMARY.md]
 started: 2026-09-28T11:30:02Z
@@ -498,24 +498,47 @@ blocked: 0
   reason: "User reported: ผ่านหมด แต่ใน Mailpit มันแสดงผลภาษาที่อ่านไม่ออก — Subject แสดงไทยถูก แต่ body ภาษาไทยเป็น mojibake (เช่น 'à¸£à¸«à¸±à¸ª...'); ส่วนภาษาอังกฤษ/รหัสอ่านได้"
   severity: minor
   test: 3
-  artifacts: []
-  missing: []
+  root_cause: "sendSMTPMessage builds raw message with no MIME-Version/Content-Type/Content-Transfer-Encoding; UTF-8 Thai body defaults to us-ascii and Mailpit renders it as Latin-1 mojibake; Subject is raw UTF-8 (not RFC 2047), renders only via Mailpit leniency. Shared by SMTPSender and DevSMSSender."
+  artifacts:
+    - path: "services/identity/internal/adapters/notify/notify.go"
+      issue: "sendSMTPMessage emits no MIME/charset headers; Subject not RFC 2047 encoded"
+  missing:
+    - "Add MIME-Version: 1.0, Content-Type: text/plain; charset=UTF-8, Content-Transfer-Encoding: 8bit headers"
+    - "Encode Subject with mime.QEncoding/BEncoding (stdlib mime)"
+  debug_session: ".planning/debug/otp-email-thai-mojibake.md"
 - gap_id: G-02-7
   truth: "พิมพ์ lat/lng ใน pier Sheet แล้ว marker ย้ายตาม โดยหน้าไม่ crash (map worker โหลดได้)"
   status: failed
   reason: "User reported: กำลังพิม latitude แล้วหน้าพัง — Next.js dev overlay: Console Error 'Worker failed to load. Check that the worker URL is correct.' (2 issues, หน้าเบื้องหลังเป็น error page); และลองพิมพ์ lat/lng แล้ว marker ไม่ย้าย"
   severity: blocker
   test: 7
-  artifacts: []
-  missing: []
+  root_cause: "map-picker handleLatChange/handleLngChange only guard Number.isFinite: partial input ("" from "13." → 0) and out-of-range values (e.g. 137 while typing) reach Marker.setLngLat, which throws for |lat|>90; thrown in a React effect with no error boundary (no error.tsx) → Next dev overlay replaces page. "Worker failed to load" is maplibre generic mislabel. Also map.on(error) latches tilesFailed for any error with no reset (causes spurious โหลดแผนที่ไม่สำเร็จ in test 8)."
+  artifacts:
+    - path: "apps/admin/src/components/map-picker.tsx"
+      issue: "unguarded lat/lng parse (L107-117) feeds setLngLat (L50-63, L87-105) without range check; map.on(error) L73 treats every error as fatal, never resets"
+  missing:
+    - "Ignore empty/partial input and reject |lat|>90 / |lng|>180 before onChange/setLngLat"
+    - "Only latch tilesFailed for tile/source errors and reset on successful load"
+  debug_session: ".planning/debug/pier-map-worker-crash.md"
 - gap_id: G-02-8
   truth: "สร้าง pier พร้อมรูป (photoKey) และเวลาทำการใน admin Sheet แล้วบันทึกสำเร็จ; opensAt/closesAt ที่เลือกถูกส่งไปใน payload"
   status: failed
   reason: "User reported: ลาก marker บนแผนที่ได้ แต่บันทึก pier ไม่ได้: POST /api/v1/admin/boatbooking.catalog.v1.CatalogService/UpsertPier (super_admin, pierId ว่าง, มี photoKey piers/<uuid>.jpg หลังอัปโหลด thumbnail ขึ้นแล้ว) ตอบ {code:failed_precondition, message:failed precondition} → UI แสดง บันทึกท่าเรือไม่สำเร็จ กรุณาลองใหม่. สังเกตเพิ่ม: UI เวลาเปิด/ปิด แสดง 10:11 PM / 11:11 PM แต่ payload ส่ง opensAt/closesAt เป็น string ว่าง; ขึ้น โหลดแผนที่ไม่สำเร็จ ทั้งที่ tile แสดงบางส่วน"
   severity: blocker
   test: 8
-  artifacts: []
-  missing: []
+  root_cause: "(1) Selected operator 01a0e84b… was archived earlier in UAT test 4; createPier correctly rejects (D-08) but pier-sheet operator select lists archived operators unmarked (ListOperatorsScoped has no archived filter), and catalog returns bare ErrFailedPrecondition with no detail. (2) Empty opensAt/closesAt: native <input type=time> in 12h browser locale keeps value "" until AM/PM segment is committed; hoursValid accepts both-empty so save is not blocked — not a state-binding bug."
+  artifacts:
+    - path: "apps/admin/src/app/(admin)/piers/pier-sheet.tsx"
+      issue: "operator select shows archived operators; hoursValid silently accepts incomplete native time entry"
+    - path: "services/catalog/internal/app/pier.go"
+      issue: "archived-operator rejection returns undetailed failed precondition"
+    - path: "services/catalog/internal/adapters/postgres/queries/operators.sql"
+      issue: "ListOperatorsScoped has no archived filter"
+  missing:
+    - "Exclude/disable archived operators in pier-sheet operator select (reuse operators page isMuted/archived pattern)"
+    - "Wrap archived-operator FailedPrecondition with a specific message"
+    - "Make time entry unambiguous (e.g. 24h HH:MM input or detect incomplete entry) so hours are not silently dropped"
+  debug_session: ".planning/debug/upsert-pier-failed-precondition.md"
 - gap_id: G-02-9
   truth: "สร้าง route คู่ (pier_from, pier_to) ที่ active อยู่แล้วซ้ำไม่ได้ — ขึ้น มีเส้นทางนี้อยู่แล้ว; รายการแยกท่าที่ชื่อเหมือนกันได้"
   status: failed
@@ -523,21 +546,42 @@ blocked: 0
   severity: major
   test: 9
   diagnosis_hint: "ตรวจว่า 2 แถวเป็น pier_id คู่เดียวกันจริง หรือเป็นท่าชื่อ Proof Pier หลายท่าจาก make proof; และ pier_from == pier_to ถูกปฏิเสธหรือไม่"
-  artifacts: []
-  missing: []
+  root_cause: "Backend correct (routes_active_pair_uq partial unique + CHECK pier_from<>pier_to). The two rows are a route and its legitimate reverse between two distinct piers both named "Proof Pier" (deploy/proof.sh hardcodes pier name, no run suffix). Admin pierName() and route-sheet selects show only name_th, so same-named piers are indistinguishable."
+  artifacts:
+    - path: "apps/admin/src/app/(admin)/routes/queries.ts"
+      issue: "pierName() has no disambiguation on name collision"
+    - path: "apps/admin/src/app/(admin)/routes/route-sheet.tsx"
+      issue: "pier selects render only nameTh"
+    - path: "deploy/proof.sh"
+      issue: "pier name "Proof Pier" has no unique suffix (operator name does)"
+  missing:
+    - "Disambiguate pier labels when names collide (append operator name or short id) in list and selects"
+    - "Add timestamp suffix to proof.sh pier name"
+  debug_session: ".planning/debug/duplicate-route-created.md"
 - gap_id: G-02-12
   truth: "policy ที่ถูกต้องซึ่งโหลดมา/คัดลอกมา (แก้ไข route, สร้างเส้นทางย้อนกลับ) ผ่าน validation และบันทึกได้ทันที; tier สุดท้าย (0 ชม.) ไม่มีปุ่มลบ"
   status: failed
   reason: "User reported: ข้อก่อนหน้ากดบันทึกไม่ได้ ขึ้นแบบนี้ตลอด และต้องกดลบเพิ่มระดับก่อน แล้วกดเพิ่มใหม่ถึงจะบันทึกได้ — Sheet แก้ไขเส้นทาง: policy 24/100, 2/50, 0/0 (ถูกต้อง) แต่ขึ้น นโยบายยกเลิกไม่ถูกต้อง: ต้องเรียงชั่วโมงจากมากไปน้อยและมีระดับ 0 ชั่วโมงเสมอ และปุ่มบันทึก disabled; tier สุดท้ายมีปุ่มลบด้วย"
   severity: major
   test: 12
-  artifacts: []
-  missing: []
+  root_cause: "protojson omits int32 zero fields, so the 0h tier arrives from the API (edit/return-route) with minHoursBefore/refundPercent undefined; validatePolicy defaults absent fields to -1 while inputs render ?? 0 → false invalid until tier re-added via addTier(). Separately, delete button renders for every tier when >1 (no last-tier guard) — test 10 pass was incorrect on that point."
+  artifacts:
+    - path: "apps/admin/src/app/(admin)/routes/policy-editor.tsx"
+      issue: "validatePolicy uses ?? -1 (L25-26) vs render ?? 0 (L72/90); delete button has no last-tier guard (L99-111)"
+  missing:
+    - "Default absent tier fields to 0 in validatePolicy (or normalize policy on load)"
+    - "Hide delete button on the last (0h) tier"
+  debug_session: ".planning/debug/route-policy-false-invalid.md"
 - gap_id: G-02-18
   truth: "มี integration test (testcontainers) พิสูจน์ว่า concurrent UpsertBoat บนเรือลำเดียวกันได้ 1 แถว boats และ 1 outbox row ต่อ write ที่สำเร็จ"
   status: failed
   reason: "User reported: เขียน test — ผู้ใช้ต้องการ integration test จริงสำหรับ concurrent UpsertBoat แทนการอ้างอิง pattern ของ routes"
   severity: minor
   test: 18
-  artifacts: []
-  missing: []
+  root_cause: "Not a defect — concurrency test for UpsertBoat was never written; user requested one instead of relying on the routes pattern."
+  artifacts:
+    - path: "services/catalog"
+      issue: "missing concurrent UpsertBoat integration test"
+  missing:
+    - "Add testcontainers integration test: N concurrent UpsertBoat on same boat_id → 1 boats row, 1 outbox row per successful write"
+  debug_session: ""
