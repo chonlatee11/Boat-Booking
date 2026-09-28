@@ -2,17 +2,17 @@
 gsd_state_version: "1.0"
 current_phase: 02
 current_phase_name: Identity + Catalog
-status: verifying
-stopped_at: Completed 02-13-PLAN.md
-last_updated: "2026-09-26T21:26:42.088Z"
-last_activity: 2026-09-26
+status: executing
+stopped_at: Completed 02-14-PLAN.md
+last_updated: "2026-09-28T15:54:23.527Z"
+last_activity: 2026-09-28
 last_activity_desc: Phase 02 execution started
-state_head: a4185bcca88dbd44b55949c9aef595b8c1a9a0ad
+state_head: 037ad5ae255bd6e564177ccaaea48f9498d6006d
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 27
-  completed_plans: 27
+  total_plans: 31
+  completed_plans: 28
   percent: 20
 ---
 
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-09-25)
 ## Current Position
 
 Phase: 02 (Identity + Catalog) — EXECUTING
-Plan: 13 of 13
-Status: Phase complete — ready for verification
-Last activity: 2026-09-26 — Phase 02 execution started
+Plan: 2 of 17
+Status: Ready to execute
+Last activity: 2026-09-28 — Phase 02 execution started
 
 Progress: [██░░░░░░░░] 20%
 
@@ -85,6 +85,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 02 P11 | 33min | 3 tasks | 13 files |
 | Phase 02 P12 | 17min | 3 tasks | 9 files |
 | Phase 02-identity-catalog P13 | 18min | 2 tasks | 3 files |
+| Phase 02 P14 | 12min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -145,6 +146,7 @@ Recent decisions affecting current work:
 - [Phase 02]: money.ts uses only regex+BigInt string arithmetic (no parseFloat/Number on the amount, zero imports) — Mirrors pkg/money's Go convention and the 10,000,000 satang server bound; compiles/tests standalone
 - [Phase 02]: Boat status badges use explicit green/orange Tailwind classes instead of the Badge default/secondary variants — UI-SPEC reserves the brand accent color for CTAs, never status badges
 - [Phase 02]: Hid edit action for super_admin rows in staff page, not just disable, since UserService rejects any update to a super_admin row — Prevents a guaranteed-fail edit action; server-side guard already existed in 02-07
+- [Phase 02]: [Phase 02] otpMessage extracted as the single RFC 5322 builder for SMTP-delivered OTP messages, adding MIME-Version/Content-Type/Content-Transfer-Encoding headers and an RFC 2047-encoded Subject — Closes gap G-02-3: Mailpit decoded the undeclared-charset UTF-8 Thai body as Latin-1; 8bit encoding chosen since this path only talks to Mailpit in dev, ResendSender (prod, JSON) is unaffected
 
 ### Pending Todos
 
@@ -165,6 +167,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-09-26T21:26:42.002Z
-Stopped at: Completed 02-13-PLAN.md
+Last session: 2026-09-28T15:54:23.438Z
+Stopped at: Completed 02-14-PLAN.md
 Resume file: None
