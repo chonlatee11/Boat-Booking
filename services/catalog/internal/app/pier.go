@@ -62,7 +62,7 @@ func createPier(ctx context.Context, tx pgx.Tx, q *postgres.Queries, scope Scope
 		return domain.Pier{}, fmt.Errorf("app: get operator: %w", err)
 	}
 	if op.ArchivedAt.Valid {
-		return domain.Pier{}, domain.ErrFailedPrecondition
+		return domain.Pier{}, fmt.Errorf("%w: operator is archived", domain.ErrFailedPrecondition)
 	}
 
 	p = trimPier(p)

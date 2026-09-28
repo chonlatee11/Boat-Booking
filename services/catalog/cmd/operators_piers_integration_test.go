@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"testing"
 
@@ -392,6 +393,9 @@ func TestArchiveOperatorBlockedByPiers(t *testing.T) {
 		OperatorId: opEmpty, NameTh: "x", NameEn: "x", Lat: 7.9, Lng: 98.3,
 	}))
 	assertConnectCode(t, err, connect.CodeFailedPrecondition, "create pier for archived operator")
+	if !strings.Contains(err.Error(), "operator is archived") {
+		t.Fatalf("create pier for archived operator: err = %q, want it to contain %q", err.Error(), "operator is archived")
+	}
 }
 
 // TestArchiveOperatorRaceWithPierCreate proves the WR-06 fix: a concurrent
