@@ -143,3 +143,7 @@ None - no external service configuration required.
 ---
 *Phase: 02-identity-catalog*
 *Completed: 2026-09-28*
+
+## Self-Check: PASSED
+
+All key files verified present on disk (policy-editor.tsx, queries.ts, route-sheet.tsx, proof.sh, this SUMMARY.md). All task commits (`d27e0c6`, `0259f57`, `2a26bae`) and the metadata commit (`45c6290`) verified present in git log.
