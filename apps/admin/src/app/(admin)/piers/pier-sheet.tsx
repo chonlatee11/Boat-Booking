@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { rpc } from '@/lib/api';
+import { rpc, type ApiError } from '@/lib/api';
 import { useWhoami } from '@/lib/queries';
 import { useOperatorOptions } from './queries';
 import type {
@@ -30,6 +30,11 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { MapPicker, type LatLng } from '@/components/map-picker';
 import { PhotoUpload } from '@/components/photo-upload';
+
+// Zero-padded 24h "HH:MM" — locale-independent, so a native time picker
+// rendered in a 12h AM/PM locale can no longer silently leave the value
+// empty until the meridiem is committed (G-02-8).
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export function PierSheet({
   pier,
@@ -86,11 +91,17 @@ export function PierSheet({
   // (input 100 sends it unconditionally), so this only gates the
   // super_admin-create case.
   const operatorValid = isEdit || !isSuperAdmin || Boolean(operatorId);
-  // "HH:MM" 24h strings compare correctly with </>=.
   const hoursPartial = Boolean(opensAt) !== Boolean(closesAt);
+  const hoursMalformed =
+    (Boolean(opensAt) && !HHMM.test(opensAt)) ||
+    (Boolean(closesAt) && !HHMM.test(closesAt));
+  // Zero-padded "HH:MM" strings compare correctly with </>=.
   const hoursOutOfOrder =
-    Boolean(opensAt) && Boolean(closesAt) && opensAt >= closesAt;
-  const hoursValid = !hoursPartial && !hoursOutOfOrder;
+    !hoursMalformed &&
+    Boolean(opensAt) &&
+    Boolean(closesAt) &&
+    opensAt >= closesAt;
+  const hoursValid = !hoursPartial && !hoursMalformed && !hoursOutOfOrder;
   const isValid =
     namesValid && Boolean(location) && hoursValid && operatorValid;
   // Edit mode has no dedicated GetPier fetch — the row is already in memory
@@ -120,8 +131,17 @@ export function PierSheet({
       toast.success('บันทึกท่าเรือสำเร็จ');
       await queryClient.invalidateQueries({ queryKey: ['piers'] });
       setOpen(false);
-    } catch {
-      setError('บันทึกท่าเรือไม่สำเร็จ กรุณาลองใหม่');
+    } catch (err) {
+      const apiErr = err as ApiError;
+      // D-08: on create, failed_precondition can only mean the chosen
+      // operator was archived (createPier's other error codes are
+      // permission/not-found/invalid-argument) — map by code, not by
+      // message text, so this doesn't depend on 02-15's backend wording.
+      if (!isEdit && apiErr.code === 'failed_precondition') {
+        setError('ผู้ประกอบการนี้ถูกเก็บถาวรแล้ว กรุณาเลือกผู้ประกอบการอื่น');
+      } else {
+        setError('บันทึกท่าเรือไม่สำเร็จ กรุณาลองใหม่');
+      }
     } finally {
       setPending(false);
     }
@@ -159,14 +179,16 @@ export function PierSheet({
                     <NativeSelectOption value="">
                       เลือกผู้ประกอบการ
                     </NativeSelectOption>
-                    {operators.map((op) => (
-                      <NativeSelectOption
-                        key={op.operatorId}
-                        value={op.operatorId ?? ''}
-                      >
-                        {op.name}
-                      </NativeSelectOption>
-                    ))}
+                    {operators
+                      .filter((op) => !op.archived)
+                      .map((op) => (
+                        <NativeSelectOption
+                          key={op.operatorId}
+                          value={op.operatorId ?? ''}
+                        >
+                          {op.name}
+                        </NativeSelectOption>
+                      ))}
                   </NativeSelect>
                   {!operatorValid && (
                     <FieldError>กรุณาเลือกผู้ประกอบการ</FieldError>
@@ -218,25 +240,34 @@ export function PierSheet({
                   <FieldLabel htmlFor="pier-opens">เวลาเปิด</FieldLabel>
                   <Input
                     id="pier-opens"
-                    type="time"
+                    type="text"
+                    placeholder="08:00"
+                    maxLength={5}
                     value={opensAt}
                     disabled={pending}
-                    onChange={(e) => setOpensAt(e.target.value)}
+                    onChange={(e) => setOpensAt(e.target.value.trim())}
                   />
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="pier-closes">เวลาปิด</FieldLabel>
                   <Input
                     id="pier-closes"
-                    type="time"
+                    type="text"
+                    placeholder="17:00"
+                    maxLength={5}
                     value={closesAt}
                     disabled={pending}
-                    onChange={(e) => setClosesAt(e.target.value)}
+                    onChange={(e) => setClosesAt(e.target.value.trim())}
                   />
                 </Field>
               </div>
               {hoursPartial && (
                 <FieldError>กรุณากรอกเวลาเปิดและเวลาปิดทั้งสองช่อง</FieldError>
+              )}
+              {hoursMalformed && (
+                <FieldError>
+                  กรุณากรอกเวลาแบบ 24 ชั่วโมง (HH:MM) เช่น 08:00
+                </FieldError>
               )}
               {hoursOutOfOrder && (
                 <FieldError>เวลาเปิดต้องอยู่ก่อนเวลาปิด</FieldError>
