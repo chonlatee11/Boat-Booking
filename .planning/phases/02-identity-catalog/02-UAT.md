@@ -1,12 +1,13 @@
 ---
-status: diagnosed
+status: complete
 phase: 02-identity-catalog
 source: [02-01-SUMMARY.md, 02-02-SUMMARY.md, 02-03-SUMMARY.md, 02-04-SUMMARY.md, 02-05-SUMMARY.md, 02-06-SUMMARY.md, 02-07-SUMMARY.md, 02-08-SUMMARY.md, 02-09-SUMMARY.md, 02-10-SUMMARY.md, 02-11-SUMMARY.md, 02-12-SUMMARY.md, 02-13-SUMMARY.md]
 started: 2026-09-28T11:30:02Z
-updated: 2026-09-28T14:32:38Z
+updated: 2026-10-03T06:57:30Z
 ---
 
 ## Current Test
+<!-- OVERWRITE each test - shows where we are -->
 
 [testing complete]
 
@@ -21,10 +22,10 @@ expected: ยืนยันอีกครั้งว่ายังโอเ�
 result: pass
 
 ### 3. Admin login super_admin (02-09 D2, D3)
-expected: เปิด http://localhost:3002 → เด้งไป /login, กรอก SUPER_ADMIN_EMAIL → รหัสมาถึง Mailpit (http://localhost:8025), ใส่รหัสผิด 1 ครั้งเห็นข้อความผิด+จำนวนครั้งที่เหลือ, ใส่รหัสถูกแล้วเข้า admin ได้ เมนูมีครบ 5 รายการ (operators/piers/routes/boats/staff), UI ภาษาไทยฟอนต์ IBM Plex Sans Thai, อีเมลยาวในบรรทัด "ส่งรหัสไปที่" ตัดบรรทัดไม่ล้น
-result: issue
-reported: "ผ่านหมด แต่ใน Mailpit มันแสดงผลภาษาที่อ่านไม่ออก — Subject แสดงไทยถูก แต่ body ภาษาไทยเป็น mojibake (เช่น 'à¸£à¸«à¸±à¸ª...'); ส่วนภาษาอังกฤษ/รหัสอ่านได้"
-severity: minor
+expected: เปิด http://localhost:3002/login ขอ OTP ด้วย SUPER_ADMIN_EMAIL แล้วเปิดเมลใน Mailpit (http://localhost:8025) → body อ่านเป็น "รหัสของคุณ / Your code: ......" ภาษาไทยถูกต้อง (ไม่ใช่ mojibake) และ Subject ภาษาไทยยังถูกต้อง
+result: pass
+retest_of: ""ผ่านหมด แต่ใน Mailpit มันแสดงผลภาษาที่อ่านไม่ออก — Subject แสดงไทยถูก แต่ body ภาษาไทยเป็น mojibake (เช่น 'à¸£à¸«à¸±à¸ª...'); ส่วนภาษาอังกฤษ/รหัสอ่านได้""
+retest_after: 02-14
 
 ### 4. Operators CRUD (02-09 D4)
 expected: หน้า operators: สร้าง operator 2 ราย, แก้ชื่อ 1 ราย, archive รายที่ว่าง (มี confirm dialog + toast), เห็น skeleton ตอนโหลด/empty state ตอนว่าง; ย่อจอ 768px และ 360px ตาราง scroll ภายในกรอบ ไม่ทำให้ทั้งหน้าเลื่อนแนวนอน
@@ -39,23 +40,22 @@ expected: ที่หน้า login ของ web ใส่เบอร์ไ�
 result: pass
 
 ### 7. Piers: สร้าง/แก้ไขพร้อม map picker (02-11 D1)
-expected: admin หน้า piers ในฐานะ super_admin: สร้าง pier (เลือก operator, ชื่อ, ที่อยู่, เวลาทำการ) คลิกบนแผนที่แล้ว marker ย้ายตาม, ลาก marker แล้วช่อง lat/lng อัปเดตตาม (และพิมพ์ lat/lng แล้ว marker ย้าย), บันทึกแล้วรายการอัปเดต; Sheet scroll ได้โดย footer ปุ่มค้างอยู่ด้านล่าง
-result: issue
-reported: "กำลังพิม latitude แล้วหน้าพัง — Next.js dev overlay: Console Error 'Worker failed to load. Check that the worker URL is correct.' (2 issues, หน้าเบื้องหลังเป็น error page); และลองพิมพ์ lat/lng แล้ว marker ไม่ย้าย"
-severity: blocker
-note: "ภายหลังผู้ใช้ยืนยันว่า ลาก marker บนแผนที่ได้ — ที่พังคือพิมพ์ lat/lng"
+expected: super_admin หน้า /piers → "เพิ่มท่าเรือใหม่": พิมพ์ lat/lng ทีละตัว (รวมค่าค้าง เช่น "13." และค่าเกินช่วง เช่น "137"), ลาก marker → ไม่มี crash/dev overlay เลย; marker ย้ายตามคู่ lat/lng ที่ valid และตามการลาก; ค่าเกินช่วงขึ้น error inline + ปุ่มบันทึก disabled โดย marker ไม่ขยับ
+result: pass
+retest_of: ""กำลังพิม latitude แล้วหน้าพัง — Next.js dev overlay: Console Error 'Worker failed to load. Check that the worker URL is correct.' (2 issues, หน้าเบื้องหลังเป็น error page); และลองพิมพ์ lat/lng แล้ว marker ไม่ย้าย""
+retest_after: 02-16
 
 ### 8. Pier photo upload + map ล้มเหลว
-expected: ใน Sheet ของ pier: อัปโหลด PNG ~4MB เห็น thumbnail และรูปปรากฏใน GET /api/v1/public/piers; ไฟล์ 6MB และไฟล์ GIF ขึ้นข้อความ validation; block tile requests ใน devtools แล้วเปิด Sheet ใหม่ → ขึ้น "โหลดแผนที่ไม่สำเร็จ" แต่ยังกรอก lat/lng เองได้
-result: issue
-reported: "ลาก marker บนแผนที่ได้ แต่บันทึก pier ไม่ได้: POST /api/v1/admin/boatbooking.catalog.v1.CatalogService/UpsertPier (super_admin, pierId ว่าง, มี photoKey piers/<uuid>.jpg หลังอัปโหลด thumbnail ขึ้นแล้ว) ตอบ {code:failed_precondition, message:failed precondition} → UI แสดง บันทึกท่าเรือไม่สำเร็จ กรุณาลองใหม่. สังเกตเพิ่ม: UI เวลาเปิด/ปิด แสดง 10:11 PM / 11:11 PM แต่ payload ส่ง opensAt/closesAt เป็น string ว่าง; ขึ้น โหลดแผนที่ไม่สำเร็จ ทั้งที่ tile แสดงบางส่วน"
-severity: blocker
+expected: archive operator ที่ไม่มีท่า แล้วเปิด Sheet สร้าง pier; สร้าง pier พร้อมรูป + เวลา "08:00"/"17:30" (ดู payload ใน devtools Network); ลองพิมพ์ "8:0" ในเวลาเปิด; block tiles.openfreemap.org ใน devtools แล้วเปิด Sheet ใหม่ → operator ที่ archive แล้วไม่อยู่ใน select; บันทึกสำเร็จและ payload UpsertPier มี opensAt/closesAt ตรงตามที่พิมพ์ (ไม่ว่าง); "8:0" ขึ้น error inline + บันทึก disabled; "โหลดแผนที่ไม่สำเร็จ" ขึ้นเฉพาะตอน block tiles และยังพิมพ์ lat/lng เองได้
+result: pass
+retest_of: ""ลาก marker บนแผนที่ได้ แต่บันทึก pier ไม่ได้: POST /api/v1/admin/boatbooking.catalog.v1.CatalogService/UpsertPier (super_admin, pierId ว่าง, มี photoKey piers/<uuid>.jpg หลังอัปโหลด thumbnail ขึ้นแล้ว) ตอบ {code:failed_precondition, message:failed precondition} → UI แสดง บันทึกท่าเรือไม่สำเร็จ กรุณาลองใหม่. สังเกตเพิ่ม: UI เวลาเปิด/ปิด แสดง 10:11 PM / 11:11 PM แต่ payload ส่ง opensAt/closesAt เป็น string ว่าง; ขึ้น โหลดแผนที่ไม่สำเร็จ ทั้งที่ tile แสดงบางส่วน""
+retest_after: 02-15, 02-16
 
 ### 9. Routes: สร้าง/แก้ไข + ชื่อ derive (02-12 D1)
-expected: ในฐานะ pier_admin หน้า routes: สร้างเส้นทางจากท่าของตัวเองไปท่าของ operator อื่นได้ (dropdown ท่าปลายทางมีท่าของทุก operator), รายการแสดงชื่อ "ท่า A → ท่า B", สร้างคู่เดิมซ้ำขึ้น "มีเส้นทางนี้อยู่แล้ว"
-result: issue
-reported: "ไม่ผ่าน มันสร้างซ้ำได้ — รายการ routes มี 2 แถว Proof Pier → Proof Pier (60 นาที, ใช้งาน) ไม่ขึ้น มีเส้นทางนี้อยู่แล้ว"
-severity: major
+expected: หน้า /routes ที่มีท่าชื่อ "Proof Pier" ซ้ำกันหลายท่า: ดูรายการ routes, archive dialog, และ select ท่าต้นทาง/ปลายทางใน route Sheet; แล้วลองสร้างคู่ (pier_from, pier_to) เดิมซ้ำ → ท่าชื่อซ้ำแสดง label มี suffix id (เช่น "Proof Pier (xxxx)") ทุกที่ แยกออกได้; ท่าชื่อไม่ซ้ำไม่มี suffix; สร้างคู่ซ้ำขึ้น "มีเส้นทางนี้อยู่แล้ว"
+result: pass
+retest_of: ""ไม่ผ่าน มันสร้างซ้ำได้ — รายการ routes มี 2 แถว Proof Pier → Proof Pier (60 นาที, ใช้งาน) ไม่ขึ้น มีเส้นทางนี้อยู่แล้ว""
+retest_after: 02-17
 
 ### 10. Cancellation policy editor (02-12 D2)
 expected: ตอนสร้าง route นโยบายเริ่มต้นเป็น >24ชม. 100% / 2-24ชม. 50% / <2ชม. 0%; เพิ่ม/ลบ tier ได้ (tier สุดท้ายไม่มีปุ่มลบ); ทำให้ชั่วโมงไม่เรียงลดลง หรือไม่มี tier 0 ชม. → ปุ่มบันทึกถูกบล็อกพร้อมข้อความตาม UI-SPEC, แก้กลับแล้วบันทึกได้
@@ -66,10 +66,10 @@ expected: เพิ่มราคา adult 150.50 / child 80 มีผลวั
 result: pass
 
 ### 12. Return route (02-12 D4)
-expected: กด "สร้างเส้นทางย้อนกลับ" → Sheet ใหม่เติมท่าต้นทาง/ปลายทางสลับกัน พร้อม duration และ policy เดิม (ราคาไม่ถูกคัดลอก); ถ้าท่าต้นทางใหม่ไม่ใช่ท่าของเรา ขึ้น hint ใต้ select และบันทึกไม่ได้
-result: issue
-reported: "ข้อก่อนหน้ากดบันทึกไม่ได้ ขึ้นแบบนี้ตลอด และต้องกดลบเพิ่มระดับก่อน แล้วกดเพิ่มใหม่ถึงจะบันทึกได้ — Sheet แก้ไขเส้นทาง: policy 24/100, 2/50, 0/0 (ถูกต้อง) แต่ขึ้น นโยบายยกเลิกไม่ถูกต้อง: ต้องเรียงชั่วโมงจากมากไปน้อยและมีระดับ 0 ชั่วโมงเสมอ และปุ่มบันทึก disabled; tier สุดท้ายมีปุ่มลบด้วย"
-severity: major
+expected: เปิด "แก้ไขเส้นทาง" ของ route ที่มี policy 24/100, 2/50, 0/0 และแยกกันกด "สร้างเส้นทางย้อนกลับ" → ทั้งสอง Sheet ไม่ขึ้น error policy และปุ่มบันทึก enabled ทันที (ไม่ต้องลบ-เพิ่ม tier); tier สุดท้าย (0 ชม.) ไม่มีปุ่มลบ แม้ลบ tier จนเหลืออันเดียว; เส้นทางย้อนกลับเติมท่าสลับกัน + duration/policy เดิม
+result: pass
+retest_of: ""ข้อก่อนหน้ากดบันทึกไม่ได้ ขึ้นแบบนี้ตลอด และต้องกดลบเพิ่มระดับก่อน แล้วกดเพิ่มใหม่ถึงจะบันทึกได้ — Sheet แก้ไขเส้นทาง: policy 24/100, 2/50, 0/0 (ถูกต้อง) แต่ขึ้น นโยบายยกเลิกไม่ถูกต้อง: ต้องเรียงชั่วโมงจากมากไปน้อยและมีระดับ 0 ชั่วโมงเสมอ และปุ่มบันทึก disabled; tier สุดท้ายมีปุ่มลบด้วย""
+retest_after: 02-17
 
 ### 13. Pier archive ถูกบล็อกเมื่อมี route (02-11 D6)
 expected: archive pier ที่มี route active อยู่ → ขึ้น error inline แสดงรายการ route ที่ขวางอยู่ (ไม่ใช่ confirm dialog ที่สอง); ล็อกอินเป็น staff แล้วไม่เห็นปุ่มเขียน/แก้ไขใดๆ
@@ -93,9 +93,9 @@ result: pass
 
 ### 18. Concurrent UpsertBoat (02-08 D8, backend)
 expected: (backend — ไม่มี UI ให้ทดสอบตรงๆ) ยอมรับได้ไหมว่า UpsertBoat ใช้ pattern UPDATE ... WHERE id=$1 แถวเดียวเหมือน routes ที่พิสูจน์แล้วว่า race-safe → concurrent upsert เรือเดียวกันได้ 1 แถว + 1 outbox ต่อ write; ตอบ pass / skip หรือขอให้เขียน test
-result: issue
-reported: "เขียน test — ผู้ใช้ต้องการ integration test จริงสำหรับ concurrent UpsertBoat แทนการอ้างอิง pattern ของ routes"
-severity: minor
+result: pass
+source: automated
+note: "TestConcurrentUpsertBoatSameID (services/catalog/cmd/boats_photo_integration_test.go, plan 02-15) — PASS"
 
 ### 19. pier_ids is a signed JWT claim that round-trips Issue -> Verify; nil PierIDs verifies to a (02-01 D3)
 expected: pier_ids is a signed JWT claim that round-trips Issue -> Verify; nil PierIDs verifies to an empty (non-nil) slice; role constants defined once in pkg/auth
@@ -484,8 +484,8 @@ coverage_id: D8
 ## Summary
 
 total: 82
-passed: 76
-issues: 6
+passed: 82
+issues: 0
 pending: 0
 skipped: 0
 blocked: 0
@@ -494,7 +494,9 @@ blocked: 0
 
 - gap_id: G-02-3
   truth: "OTP email body แสดงภาษาไทยถูกต้องใน Mailpit (UTF-8), ไม่ใช่ mojibake"
-  status: failed
+  status: resolved
+  resolved_by: 02-14-PLAN.md
+  resolved_at: 2026-09-29
   reason: "User reported: ผ่านหมด แต่ใน Mailpit มันแสดงผลภาษาที่อ่านไม่ออก — Subject แสดงไทยถูก แต่ body ภาษาไทยเป็น mojibake (เช่น 'à¸£à¸«à¸±à¸ª...'); ส่วนภาษาอังกฤษ/รหัสอ่านได้"
   severity: minor
   test: 3
@@ -508,7 +510,9 @@ blocked: 0
   debug_session: ".planning/debug/otp-email-thai-mojibake.md"
 - gap_id: G-02-7
   truth: "พิมพ์ lat/lng ใน pier Sheet แล้ว marker ย้ายตาม โดยหน้าไม่ crash (map worker โหลดได้)"
-  status: failed
+  status: resolved
+  resolved_by: 02-16-PLAN.md
+  resolved_at: 2026-09-29
   reason: "User reported: กำลังพิม latitude แล้วหน้าพัง — Next.js dev overlay: Console Error 'Worker failed to load. Check that the worker URL is correct.' (2 issues, หน้าเบื้องหลังเป็น error page); และลองพิมพ์ lat/lng แล้ว marker ไม่ย้าย"
   severity: blocker
   test: 7
@@ -522,7 +526,9 @@ blocked: 0
   debug_session: ".planning/debug/pier-map-worker-crash.md"
 - gap_id: G-02-8
   truth: "สร้าง pier พร้อมรูป (photoKey) และเวลาทำการใน admin Sheet แล้วบันทึกสำเร็จ; opensAt/closesAt ที่เลือกถูกส่งไปใน payload"
-  status: failed
+  status: resolved
+  resolved_by: 02-15-PLAN.md, 02-16-PLAN.md
+  resolved_at: 2026-09-29
   reason: "User reported: ลาก marker บนแผนที่ได้ แต่บันทึก pier ไม่ได้: POST /api/v1/admin/boatbooking.catalog.v1.CatalogService/UpsertPier (super_admin, pierId ว่าง, มี photoKey piers/<uuid>.jpg หลังอัปโหลด thumbnail ขึ้นแล้ว) ตอบ {code:failed_precondition, message:failed precondition} → UI แสดง บันทึกท่าเรือไม่สำเร็จ กรุณาลองใหม่. สังเกตเพิ่ม: UI เวลาเปิด/ปิด แสดง 10:11 PM / 11:11 PM แต่ payload ส่ง opensAt/closesAt เป็น string ว่าง; ขึ้น โหลดแผนที่ไม่สำเร็จ ทั้งที่ tile แสดงบางส่วน"
   severity: blocker
   test: 8
@@ -541,7 +547,9 @@ blocked: 0
   debug_session: ".planning/debug/upsert-pier-failed-precondition.md"
 - gap_id: G-02-9
   truth: "สร้าง route คู่ (pier_from, pier_to) ที่ active อยู่แล้วซ้ำไม่ได้ — ขึ้น มีเส้นทางนี้อยู่แล้ว; รายการแยกท่าที่ชื่อเหมือนกันได้"
-  status: failed
+  status: resolved
+  resolved_by: 02-17-PLAN.md
+  resolved_at: 2026-09-29
   reason: "User reported: ไม่ผ่าน มันสร้างซ้ำได้ — รายการ routes มี 2 แถว Proof Pier → Proof Pier (60 นาที, ใช้งาน) ไม่ขึ้น มีเส้นทางนี้อยู่แล้ว"
   severity: major
   test: 9
@@ -560,7 +568,9 @@ blocked: 0
   debug_session: ".planning/debug/duplicate-route-created.md"
 - gap_id: G-02-12
   truth: "policy ที่ถูกต้องซึ่งโหลดมา/คัดลอกมา (แก้ไข route, สร้างเส้นทางย้อนกลับ) ผ่าน validation และบันทึกได้ทันที; tier สุดท้าย (0 ชม.) ไม่มีปุ่มลบ"
-  status: failed
+  status: resolved
+  resolved_by: 02-17-PLAN.md
+  resolved_at: 2026-09-29
   reason: "User reported: ข้อก่อนหน้ากดบันทึกไม่ได้ ขึ้นแบบนี้ตลอด และต้องกดลบเพิ่มระดับก่อน แล้วกดเพิ่มใหม่ถึงจะบันทึกได้ — Sheet แก้ไขเส้นทาง: policy 24/100, 2/50, 0/0 (ถูกต้อง) แต่ขึ้น นโยบายยกเลิกไม่ถูกต้อง: ต้องเรียงชั่วโมงจากมากไปน้อยและมีระดับ 0 ชั่วโมงเสมอ และปุ่มบันทึก disabled; tier สุดท้ายมีปุ่มลบด้วย"
   severity: major
   test: 12
@@ -574,7 +584,9 @@ blocked: 0
   debug_session: ".planning/debug/route-policy-false-invalid.md"
 - gap_id: G-02-18
   truth: "มี integration test (testcontainers) พิสูจน์ว่า concurrent UpsertBoat บนเรือลำเดียวกันได้ 1 แถว boats และ 1 outbox row ต่อ write ที่สำเร็จ"
-  status: failed
+  status: resolved
+  resolved_by: 02-15-PLAN.md
+  resolved_at: 2026-09-29
   reason: "User reported: เขียน test — ผู้ใช้ต้องการ integration test จริงสำหรับ concurrent UpsertBoat แทนการอ้างอิง pattern ของ routes"
   severity: minor
   test: 18
