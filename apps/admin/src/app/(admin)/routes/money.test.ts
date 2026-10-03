@@ -8,8 +8,9 @@ import assert from 'node:assert/strict';
 // project's tsconfig does not enable. A dynamic import keeps both tools
 // happy: node resolves it at runtime, tsc only checks the awaited shape.
 const moneyPath = './money.ts';
-const { bahtToSatang, formatSatang }: typeof import('./money') =
-  await import(moneyPath);
+const { bahtToSatang, formatSatang }: typeof import('./money') = await import(
+  moneyPath
+);
 
 test('bahtToSatang converts plain baht to satang', () => {
   assert.equal(bahtToSatang('150.50'), '15050');

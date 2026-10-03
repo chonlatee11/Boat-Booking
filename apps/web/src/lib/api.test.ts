@@ -63,7 +63,11 @@ test('apiFetch does not retry when refresh itself fails, and surfaces the origin
         return true;
       },
     );
-    assert.equal(calls.length, 2, 'should call the API once and refresh once, but not retry the API call');
+    assert.equal(
+      calls.length,
+      2,
+      'should call the API once and refresh once, but not retry the API call',
+    );
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -79,7 +83,11 @@ test('apiFetch does not attempt refresh for 401s on auth paths themselves', asyn
 
   try {
     await assert.rejects(() => apiFetch('/api/v1/auth/login'));
-    assert.equal(calls.length, 1, 'auth paths must not trigger a refresh-and-retry loop');
+    assert.equal(
+      calls.length,
+      1,
+      'auth paths must not trigger a refresh-and-retry loop',
+    );
   } finally {
     globalThis.fetch = originalFetch;
   }
