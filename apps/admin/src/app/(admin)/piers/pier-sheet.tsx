@@ -62,6 +62,7 @@ export function PierSheet({
   const [photoKey, setPhotoKey] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
@@ -79,6 +80,7 @@ export function PierSheet({
       );
       setPhotoKey(pier?.photoKey ?? '');
       setError(null);
+      setTouched({});
     }
   }
 
@@ -174,7 +176,10 @@ export function PierSheet({
                     id="pier-operator"
                     value={operatorId}
                     disabled={pending}
-                    onChange={(e) => setOperatorId(e.target.value)}
+                    onChange={(e) => {
+                      setOperatorId(e.target.value);
+                      setTouched((t) => ({ ...t, operator: true }));
+                    }}
                   >
                     <NativeSelectOption value="">
                       เลือกผู้ประกอบการ
@@ -190,7 +195,7 @@ export function PierSheet({
                         </NativeSelectOption>
                       ))}
                   </NativeSelect>
-                  {!operatorValid && (
+                  {touched.operator && !operatorValid && (
                     <FieldError>กรุณาเลือกผู้ประกอบการ</FieldError>
                   )}
                 </Field>
@@ -204,9 +209,12 @@ export function PierSheet({
                   className="break-words"
                   value={nameTh}
                   disabled={pending}
-                  onChange={(e) => setNameTh(e.target.value)}
+                  onChange={(e) => {
+                    setNameTh(e.target.value);
+                    setTouched((t) => ({ ...t, nameTh: true }));
+                  }}
                 />
-                {!trimmedNameTh && (
+                {touched.nameTh && !trimmedNameTh && (
                   <FieldError>กรุณากรอกชื่อท่าเรือ (ไทย)</FieldError>
                 )}
               </Field>
@@ -219,9 +227,12 @@ export function PierSheet({
                   className="break-words"
                   value={nameEn}
                   disabled={pending}
-                  onChange={(e) => setNameEn(e.target.value)}
+                  onChange={(e) => {
+                    setNameEn(e.target.value);
+                    setTouched((t) => ({ ...t, nameEn: true }));
+                  }}
                 />
-                {!trimmedNameEn && (
+                {touched.nameEn && !trimmedNameEn && (
                   <FieldError>กรุณากรอกชื่อท่าเรือ (อังกฤษ)</FieldError>
                 )}
               </Field>

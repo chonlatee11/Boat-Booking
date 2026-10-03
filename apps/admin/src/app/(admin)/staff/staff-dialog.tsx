@@ -53,6 +53,7 @@ export function StaffDialog({
   const [pierIds, setPierIds] = useState<string[]>([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nameTouched, setNameTouched] = useState(false);
 
   const { data: piersData } = usePiersForOperator(operatorId);
 
@@ -65,6 +66,7 @@ export function StaffDialog({
       setOperatorId(user?.operatorId ?? '');
       setPierIds(user?.pierIds ?? []);
       setError(null);
+      setNameTouched(false);
     }
   }
 
@@ -178,9 +180,14 @@ export function StaffDialog({
                 value={name}
                 maxLength={MAX_NAME_LENGTH}
                 disabled={pending}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setNameTouched(true);
+                }}
               />
-              {!trimmedName && <FieldError>กรุณากรอกชื่อ</FieldError>}
+              {nameTouched && !trimmedName && (
+                <FieldError>กรุณากรอกชื่อ</FieldError>
+              )}
             </Field>
             <Field>
               <FieldLabel htmlFor="staff-role">บทบาท</FieldLabel>

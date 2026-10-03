@@ -50,6 +50,7 @@ export function BoatDialog({
   const [homePierId, setHomePierId] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nameTouched, setNameTouched] = useState(false);
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
@@ -61,6 +62,7 @@ export function BoatDialog({
       setStatus(boat?.status ?? 'BOAT_STATUS_ACTIVE');
       setHomePierId(boat?.homePierId ?? '');
       setError(null);
+      setNameTouched(false);
     }
   }
 
@@ -124,9 +126,14 @@ export function BoatDialog({
                 maxLength={MAX_NAME_LENGTH}
                 disabled={pending}
                 autoFocus
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setNameTouched(true);
+                }}
               />
-              {!trimmedName && <FieldError>กรุณากรอกชื่อเรือ</FieldError>}
+              {nameTouched && !trimmedName && (
+                <FieldError>กรุณากรอกชื่อเรือ</FieldError>
+              )}
             </Field>
             <Field>
               <FieldLabel htmlFor="boat-capacity">ความจุเริ่มต้น</FieldLabel>
