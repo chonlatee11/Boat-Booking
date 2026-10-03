@@ -57,7 +57,7 @@ covered_files:
   - "services/identity/internal/adapters/notify/notify_test.go"
   - "services/identity/internal/app/otp.go"
 
-covered_digest: "v1:sha256:5517a715ceb6d9e649df0cd27e2a730937aa9eea8b9f13481169543505a85bf0"
+covered_digest: "v1:sha256:54c8e1c515a5dddea42a30d03164b8a1fd3a843d8aeab4c30ac4139d5f8c5470"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:
