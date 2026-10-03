@@ -57,7 +57,7 @@ covered_files:
   - "services/identity/internal/adapters/notify/notify_test.go"
   - "services/identity/internal/app/otp.go"
 
-covered_digest: "v1:sha256:bb7483560e34b6f580e46ae40b263313956fae96fe5331d005d5987331bdf146"
+covered_digest: "v1:sha256:5517a715ceb6d9e649df0cd27e2a730937aa9eea8b9f13481169543505a85bf0"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:
@@ -219,3 +219,7 @@ Automated checks (existing tests re-run, new regression tests, static grep/read 
 
 _Verified: 2026-09-28T23:40:00Z_
 _Verifier: Claude (gsd-verifier)_
+
+## Post-UAT Re-check (2026-10-03)
+
+Quick task 261003-k4f (UI-REVIEW fixes) touched two covered files after this report: `apps/admin/src/app/(admin)/piers/pier-sheet.tsx` (required-field `FieldError` now gated on a per-field `touched` flag) and `apps/admin/src/app/(admin)/routes/queries.ts` (`pierName` not-found fallback is now `ไม่พบท่าเรือ` instead of `id.slice(0, 8)`). Re-checked the G-02-8 / G-02-9 must-haves by grep: `.filter((op) => !op.archived)`, the `HHMM` regex + Save gate, `failed_precondition` handling, and the `id.slice(-4)` duplicate-name suffix are all unchanged. `typecheck`/`lint`/`prettier` clean; the admin UI was confirmed visually by the user. Status remains `passed`; `covered_digest` recomputed via `verification.fingerprint`.
