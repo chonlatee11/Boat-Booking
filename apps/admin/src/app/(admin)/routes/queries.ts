@@ -50,8 +50,8 @@ export function useRoutePrices(routeId: string | undefined) {
 /**
  * Derived route display name helper (D-17): looks up a pier's Thai name
  * across the given pier lists (flattened, since ownPiers and publicPiers
- * overlap), falling back to the id's first 8 characters if not found in
- * any of them. When another pier in the lists shares the same Thai name
+ * overlap), falling back to a Thai not-found label if not found in any of
+ * them. When another pier in the lists shares the same Thai name
  * (G-02-9 — e.g. a route and its reverse between two same-named piers),
  * appends the last 4 characters of this pier's id in parentheses so the
  * two are distinguishable. Uses the id's tail, not its head: UUIDv7 ids
@@ -65,7 +65,7 @@ export function pierName(
   if (!id) return '';
   const piers = pierLists.flatMap((list) => list ?? []);
   const found = piers.find((p) => p.pierId === id);
-  if (!found || !found.nameTh) return id.slice(0, 8);
+  if (!found || !found.nameTh) return 'ไม่พบท่าเรือ';
   const hasDuplicate = piers.some(
     (p) => p.pierId !== id && p.nameTh === found.nameTh,
   );

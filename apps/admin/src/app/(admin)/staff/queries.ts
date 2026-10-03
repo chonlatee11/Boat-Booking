@@ -56,18 +56,18 @@ export function usePiersForOperator(operatorId: string) {
   });
 }
 
-/** Looks up an operator's name by id, falling back to the id's first 8 characters. */
+/** Looks up an operator's name by id, falling back to a Thai not-found label. */
 export function operatorName(
   id: string | undefined,
   operators: OperatorJson[],
 ): string {
   if (!id) return '—';
   const found = operators.find((o) => o.operatorId === id);
-  return found?.name ?? id.slice(0, 8);
+  return found?.name ?? 'ไม่พบผู้ประกอบการ';
 }
 
-/** Looks up a pier's Thai name by id, falling back to the id's first 8 characters. */
+/** Looks up a pier's Thai name by id, falling back to a Thai not-found label. */
 export function pierName(id: string, piers: PierJson[]): string {
   const found = piers.find((p) => p.pierId === id);
-  return found?.nameTh ?? id.slice(0, 8);
+  return found?.nameTh ?? 'ไม่พบท่าเรือ';
 }

@@ -25,9 +25,9 @@ export function useOwnPiers() {
   });
 }
 
-/** Looks up a pier's Thai name by id, falling back to the id's first 8 characters. */
+/** Looks up a pier's Thai name by id, falling back to a Thai not-found label. */
 export function pierName(id: string | undefined, piers: PierJson[]): string {
   if (!id) return '—';
   const found = piers.find((p) => p.pierId === id);
-  return found?.nameTh ?? id.slice(0, 8);
+  return found?.nameTh ?? 'ไม่พบท่าเรือ';
 }
