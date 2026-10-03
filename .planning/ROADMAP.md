@@ -11,8 +11,8 @@ Five phases deliver Milestone 1 end-to-end: จอง → จ่าย → ต�
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Platform Foundation** - Service template, shared pkg/*, dev stack, and one proven event flow with cross-service tracing
-- [ ] **Phase 2: Identity + Catalog** - OTP login with roles/scoping, and admin-managed piers/routes/boats/prices customers can browse
+- [x] **Phase 1: Platform Foundation** - Service template, shared pkg/*, dev stack, and one proven event flow with cross-service tracing (completed 2026-10-03)
+- [x] **Phase 2: Identity + Catalog** - OTP login with roles/scoping, and admin-managed piers/routes/boats/prices customers can browse (completed 2026-10-03)
 - [ ] **Phase 3: Schedule** - Schedule templates generate real departures that admins manage and downstream services consume as events
 - [ ] **Phase 4: Booking Core** - Search → hold seats → mock checkout, with no-overbook guaranteed under concurrency (CI-proven)
 - [ ] **Phase 5: Payment + Ticket + Notification** - Real payment, QR ticket issuance, email notification, full booking saga, and production deploy
@@ -92,15 +92,47 @@ Plans:
   1. Customer requests an OTP via email or phone and receives a session (JWT in httpOnly cookie) without creating a password account
   2. staff / pier_admin / super_admin log in and receive `role` + `operator_id` claims; Kong verifies the JWT and the BFF forwards claims as trusted headers; requests missing those headers are rejected by services
   3. super_admin creates pier_admin / staff users assigned to an operator and pier; every admin query is scoped by `operator_id` so a pier_admin never sees another operator's data
-  4. pier_admin creates/edits/archives operators, piers (with map picker), routes (with tiered cancellation policy), boats, and per-route ticket prices (adult/child, integer satang) via the admin UI
+  4. super_admin creates/edits operators and creates piers; pier_admin edits/archives the piers assigned to them (with map picker) and creates/edits/archives routes (with tiered cancellation policy), boats, and per-route ticket prices (adult/child, integer satang) via the admin UI (wording corrected per 02-CONTEXT D-08)
   5. Public search lists piers and routes with coordinates for the map, without authentication
 
-**Plans**: TBD
+**Plans**: 17/17 plans executed (4 gap-closure plans pending)
 **UI hint**: yes
 
 Plans:
+**Wave 1**
 
-- [ ] 02-01: TBD
+- [x] 02-01-PLAN.md — Storage + package decisions (checkpoints) and pier_ids claim end-to-end through Kong/BFF/RequireInternal (D-06)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 02-02-PLAN.md — identity service: email/phone OTP (Valkey, Mailpit/Resend), auto-created customers, UserCreated, JWT + refresh token
+- [x] 02-03-PLAN.md — catalog operators + piers with the shared Scope rule (super_admin / pier_admin / staff) and public pier list
+- [x] 02-04-PLAN.md — gateway generic admin RPC proxy + claim-less public proxy (replaces per-endpoint BFF handlers)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [x] 02-05-PLAN.md — edge sessions: /api/v1/auth/* cookie routes, Kong api-auth route, refresh rotation + reuse detection, super_admin bootstrap
+- [x] 02-06-PLAN.md — catalog routes, tiered cancellation policy, effective-dated prices, public routes with current prices, pier/route archive (D-15)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [x] 02-07-PLAN.md — identity UserService: super_admin manages staff/pier_admin users with catalog-validated piers, disable/re-enable
+- [x] 02-08-PLAN.md — catalog boats under home-pier scope + archive, pier photo presign (D-19), proof/roundtrip updated
+- [x] 02-09-PLAN.md — apps/admin scaffold (Thai, :3002): OTP login, role-aware shell, shared DataTable, operators CRUD, CI/Compose wiring
+- [x] 02-10-PLAN.md — apps/web customer OTP login (TH/EN), signed-in header, silent refresh
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [x] 02-11-PLAN.md — admin Piers page: MapLibre picker, direct-to-storage photo upload (storage container), archive with D-15 blocked state
+- [x] 02-12-PLAN.md — admin Routes (policy editor, return route, prices) and Boats pages
+- [x] 02-13-PLAN.md — admin Staff page: create/edit/disable staff users
+
+**Gap closure** *(UAT 02-UAT.md, all wave 1, parallel)*
+
+- [x] 02-14-PLAN.md — G-02-3: OTP SMTP message UTF-8 MIME headers + RFC 2047 Subject (identity notify)
+- [x] 02-15-PLAN.md — G-02-8 (backend), G-02-18: archived-operator pier-create message + concurrent UpsertBoat integration test (catalog)
+- [x] 02-16-PLAN.md — G-02-7, G-02-8 (UI): map-picker validated lat/lng + tile-failure reset; pier Sheet non-archived operators, 24h HH:MM hours
+- [x] 02-17-PLAN.md — G-02-12, G-02-9: policy editor 0-default + last-tier guard; same-named pier label disambiguation; proof.sh unique pier name
 
 ### Phase 3: Schedule
 
@@ -172,8 +204,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Platform Foundation | 14/14 | In Progress|  |
-| 2. Identity + Catalog | 0/? | Not started | - |
+| 1. Platform Foundation | 14/14 | Complete    | 2026-10-03 |
+| 2. Identity + Catalog | 17/17 | Complete    | 2026-10-03 |
 | 3. Schedule | 0/? | Not started | - |
 | 4. Booking Core | 0/? | Not started | - |
 | 5. Payment + Ticket + Notification | 0/? | Not started | - |

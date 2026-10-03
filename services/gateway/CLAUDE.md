@@ -20,13 +20,40 @@ Kafka consumer are disabled by env (D-04, D-29).
 
 ## Sync API
 
+- `POST /api/v1/auth/otp/request`, `POST /api/v1/auth/otp/verify` — public,
+  unauthenticated OTP login (AUTH-01), reachable through Kong's dedicated
+  `api-auth` route (no JWT plugin, 20/min rate limit). Proxies to identity's
+  `AuthService` with only `X-Internal-Token` set — never a claim header, the
+  caller isn't authenticated yet. On success, `otp/verify` sets `access_token`
+  and `refresh_token` as httpOnly/Secure/SameSite=Lax cookies and returns
+  `{userId, role, operatorId, pierIds}` — a token never appears in the JSON
+  body. A wrong code returns 400 `{code, message, attemptsLeft}` (from the
+  connect error's `Attempts-Left` metadata); every other identity error goes
+  through `httpx.WriteError`.
+- `POST /api/v1/auth/refresh` — reads the `refresh_token` cookie, calls
+  `AuthService.Refresh`, and re-sets both cookies from the fresh pair. A
+  missing cookie or any identity error (expired/reused/disabled) clears both
+  cookies and fails — the browser never holds a half-valid session.
+- `POST /api/v1/auth/logout` — calls `AuthService.Logout` with the cookie
+  value if present (ignoring its error) and always clears both cookies with
+  204 — from the browser's point of view the session is gone either way.
 - `GET /api/v1/whoami` — verified claims only (reads the `access_token`
   cookie itself; not a proxy call).
-- `GET /api/v1/public/boats` — proxies `CatalogService.ListBoats` with only
-  the internal token, no claims (a public catalog-wide read).
-- `POST /api/v1/boats` — verifies the `access_token` cookie, then proxies
-  `CatalogService.UpsertBoat` over connect-go with verified claims + the
-  internal token forwarded (D-29, D-30).
+- `POST /api/v1/admin/{service}/{method}` — generic allow-listed reverse
+  proxy (D-18) for every catalog/identity admin RPC: `service` must be
+  `boatbooking.catalog.v1.CatalogService` (-> `CATALOG_URL`) or
+  `boatbooking.identity.v1.UserService` (-> `IDENTITY_URL`), `method` must
+  match `^[A-Z][A-Za-z0-9]{0,63}$`, everything else is 404. Requires a valid
+  access token with role `staff`, `pier_admin` or `super_admin` (customer ->
+  403), `Content-Type: application/json`, and a body up to 64 KiB. Every
+  client-supplied `X-User-Id`/`X-Operator-Id`/`X-Role`/`X-Pier-Ids`/
+  `X-Internal-Token`, `Cookie` and `Authorization` is deleted before
+  `httpx.ForwardClaims` sets verified values (Anti-Pattern 2).
+- `GET /api/v1/public/{resource}` — claim-less reverse proxy (D-21, CAT-06)
+  for `boats` -> `ListBoats`, `piers` -> `ListPiers`, `routes` -> `ListRoutes`
+  (anything else 404). Builds a brand-new outbound request carrying only
+  `X-Internal-Token` — never any inbound header or cookie — so a public list
+  can never leak claims.
 
 ## Trust Rules (D-27, D-29, D-30)
 
@@ -37,11 +64,13 @@ Kafka consumer are disabled by env (D-04, D-29).
   `httpx.RequireInternal` — because the gateway is where the internal-token
   trust boundary *originates*, not a consumer of it. Every other service's
   routes ARE behind `httpx.RequireInternal`.
-- Before any outbound connect-go call, `ForwardClaims` deletes whatever
-  `X-User-Id`/`X-Operator-Id`/`X-Role`/`X-Internal-Token` the client sent and
-  sets them fresh from verified claims plus the gateway's own configured
-  `INTERNAL_TOKEN` — a client can never spoof its way past a downstream
-  service's trust boundary (Anti-Pattern 2).
+- Before any outbound connect-go call, `httpx.ForwardClaims` (moved from this
+  package to `pkg/httpx`, D-06) deletes whatever
+  `X-User-Id`/`X-Operator-Id`/`X-Role`/`X-Pier-Ids`/`X-Internal-Token` the
+  client sent and sets them fresh from verified claims plus the gateway's own
+  configured `INTERNAL_TOKEN` — a client can never spoof its way past a
+  downstream service's trust boundary (Anti-Pattern 2). `X-Pier-Ids` is the
+  comma-joined uuid list from `Claims.PierIDs`, set only when non-empty.
 
 ## Rules
 
@@ -54,8 +83,11 @@ Kafka consumer are disabled by env (D-04, D-29).
 - `cmd/main.go` — the one binary: HTTP (chi), the outbox relay and Kafka
   consumer goroutines (both always disabled here — no `DATABASE_URL`), and
   ordered shutdown, identical in shape to every other service.
-- `internal/adapters/http/bff.go` — `Routes`, the claim-verifying handlers,
-  and `ForwardClaims`.
+- `internal/adapters/http/bff.go` — `Routes` and `whoamiHandler`.
+- `internal/adapters/http/proxy.go` — `adminProxy` and `publicHandler` (calls
+  `httpx.ForwardClaims`, which lives in `pkg/httpx`).
+- `internal/adapters/http/auth.go` — `AuthRoutes`: the OTP request/verify/
+  refresh/logout cookie routes (AUTH-01).
 - `internal/adapters/kafka/handlers.go` — empty `Register` (template
   parity; gateway consumes nothing).
 

@@ -19,16 +19,20 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib" // registers the "pgx" database/sql driver, used by goose
 	"github.com/pressly/goose/v3"
+	testcontainers "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/modules/redpanda"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-// PostgresImage and RedpandaImage are pinned to the same tags as
-// deploy/docker-compose.yml (D-23) so dev, CI, and prod see identical
-// behavior.
+// PostgresImage, RedpandaImage, ValkeyImage and MailpitImage are pinned to
+// the same tags as deploy/docker-compose.yml (D-23) so dev, CI, and prod see
+// identical behavior.
 const (
 	PostgresImage = "postgres:17.9-alpine"
 	RedpandaImage = "redpandadata/redpanda:v26.2.3"
+	ValkeyImage   = "valkey/valkey:9.0.6-alpine"
+	MailpitImage  = "axllent/mailpit:v1.31.2"
 )
 
 // RepoRoot returns the absolute path to the repository root, derived from
@@ -160,4 +164,52 @@ func StartRedpanda(ctx context.Context, services ...string) (brokers []string, s
 	}
 
 	return []string{seedBroker}, func() { _ = container.Terminate(ctx) }, nil
+}
+
+// StartValkey starts a Valkey testcontainer and returns its host:port
+// address plus a stop function.
+func StartValkey(ctx context.Context) (addr string, stop func(), err error) {
+	const port = "6379/tcp"
+	container, err := testcontainers.Run(ctx, ValkeyImage,
+		testcontainers.WithExposedPorts(port),
+		testcontainers.WithWaitStrategy(wait.ForListeningPort(port)),
+	)
+	if err != nil {
+		return "", nil, fmt.Errorf("testenv: start valkey: %w", err)
+	}
+
+	addr, err = container.PortEndpoint(ctx, port, "")
+	if err != nil {
+		_ = container.Terminate(ctx)
+		return "", nil, fmt.Errorf("testenv: valkey port endpoint: %w", err)
+	}
+
+	return addr, func() { _ = container.Terminate(ctx) }, nil
+}
+
+// StartMailpit starts a Mailpit testcontainer and returns its SMTP address
+// (host:port) and API base URL (http://host:port) plus a stop function.
+func StartMailpit(ctx context.Context) (smtpAddr, apiURL string, stop func(), err error) {
+	const smtpPort = "1025/tcp"
+	const apiPort = "8025/tcp"
+	container, err := testcontainers.Run(ctx, MailpitImage,
+		testcontainers.WithExposedPorts(smtpPort, apiPort),
+		testcontainers.WithWaitStrategy(wait.ForListeningPort(apiPort)),
+	)
+	if err != nil {
+		return "", "", nil, fmt.Errorf("testenv: start mailpit: %w", err)
+	}
+
+	smtpAddr, err = container.PortEndpoint(ctx, smtpPort, "")
+	if err != nil {
+		_ = container.Terminate(ctx)
+		return "", "", nil, fmt.Errorf("testenv: mailpit smtp endpoint: %w", err)
+	}
+	apiURL, err = container.PortEndpoint(ctx, apiPort, "http")
+	if err != nil {
+		_ = container.Terminate(ctx)
+		return "", "", nil, fmt.Errorf("testenv: mailpit api endpoint: %w", err)
+	}
+
+	return smtpAddr, apiURL, func() { _ = container.Terminate(ctx) }, nil
 }

@@ -50,9 +50,47 @@ func TestWriteErrorShowsMessageForMappedCode(t *testing.T) {
 	}
 }
 
+// TestWriteErrorMapsResourceExhaustedTo429 confirms rate-limit style errors
+// (D-44) surface as 429 with the message preserved.
+func TestWriteErrorMapsResourceExhaustedTo429(t *testing.T) {
+	rec := httptest.NewRecorder()
+	WriteError(rec, connect.NewError(connect.CodeResourceExhausted, errResourceExhausted))
+
+	if rec.Code != http.StatusTooManyRequests {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusTooManyRequests)
+	}
+	var body errorBody
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if body.Message != "resend requested too soon" {
+		t.Errorf("message = %q, want %q", body.Message, "resend requested too soon")
+	}
+}
+
+// TestWriteErrorMapsFailedPreconditionTo400 confirms an expired/locked OTP
+// code (D-44) surfaces as 400 with the message preserved.
+func TestWriteErrorMapsFailedPreconditionTo400(t *testing.T) {
+	rec := httptest.NewRecorder()
+	WriteError(rec, connect.NewError(connect.CodeFailedPrecondition, errFailedPrecondition))
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+	var body errorBody
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if body.Message != "code expired, locked, or already used" {
+		t.Errorf("message = %q, want %q", body.Message, "code expired, locked, or already used")
+	}
+}
+
 var (
-	errAborted  = errString("mid-transaction detail that must not leak")
-	errNotFound = errString("boat not found")
+	errAborted            = errString("mid-transaction detail that must not leak")
+	errNotFound           = errString("boat not found")
+	errResourceExhausted  = errString("resend requested too soon")
+	errFailedPrecondition = errString("code expired, locked, or already used")
 )
 
 type errString string

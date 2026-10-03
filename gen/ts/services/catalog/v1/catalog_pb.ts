@@ -6,15 +6,20 @@ import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegen
 import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { BoatStatus, BoatStatusJson } from "../../../events/catalog/v1/boat_pb";
 import { file_events_catalog_v1_boat } from "../../../events/catalog/v1/boat_pb";
+import type { TicketType, TicketTypeJson } from "../../../events/catalog/v1/price_pb";
+import { file_events_catalog_v1_price } from "../../../events/catalog/v1/price_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file services/catalog/v1/catalog.proto.
  */
 export const file_services_catalog_v1_catalog: GenFile = /*@__PURE__*/
-  fileDesc("CiFzZXJ2aWNlcy9jYXRhbG9nL3YxL2NhdGFsb2cucHJvdG8SFmJvYXRib29raW5nLmNhdGFsb2cudjEijwEKBEJvYXQSDwoHYm9hdF9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYBCABKAUSOQoGc3RhdHVzGAUgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyKHAQoRVXBzZXJ0Qm9hdFJlcXVlc3QSDwoHYm9hdF9pZBgBIAEoCRIMCgRuYW1lGAIgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYAyABKAUSOQoGc3RhdHVzGAQgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cyJAChJVcHNlcnRCb2F0UmVzcG9uc2USKgoEYm9hdBgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuQm9hdCISChBMaXN0Qm9hdHNSZXF1ZXN0IkAKEUxpc3RCb2F0c1Jlc3BvbnNlEisKBWJvYXRzGAEgAygLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0MtcBCg5DYXRhbG9nU2VydmljZRJjCgpVcHNlcnRCb2F0EikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5VcHNlcnRCb2F0UmVxdWVzdBoqLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0Qm9hdFJlc3BvbnNlEmAKCUxpc3RCb2F0cxIoLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdEJvYXRzUmVxdWVzdBopLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdEJvYXRzUmVzcG9uc2VCQVo/Z2l0aHViLmNvbS9jaG9ubGF0ZWUxMS9ib2F0LWJvb2tpbmcvZ2VuL2dvL2NhdGFsb2cvdjE7Y2F0YWxvZ3YxYgZwcm90bzM", [file_events_catalog_v1_boat]);
+  fileDesc("CiFzZXJ2aWNlcy9jYXRhbG9nL3YxL2NhdGFsb2cucHJvdG8SFmJvYXRib29raW5nLmNhdGFsb2cudjEitwEKBEJvYXQSDwoHYm9hdF9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhgKEGRlZmF1bHRfY2FwYWNpdHkYBCABKAUSOQoGc3RhdHVzGAUgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuQm9hdFN0YXR1cxIUCgxob21lX3BpZXJfaWQYBiABKAkSEAoIYXJjaGl2ZWQYByABKAginQEKEVVwc2VydEJvYXRSZXF1ZXN0Eg8KB2JvYXRfaWQYASABKAkSDAoEbmFtZRgCIAEoCRIYChBkZWZhdWx0X2NhcGFjaXR5GAMgASgFEjkKBnN0YXR1cxgEIAEoDjIpLmJvYXRib29raW5nLmNhdGFsb2cuZXZlbnRzLnYxLkJvYXRTdGF0dXMSFAoMaG9tZV9waWVyX2lkGAUgASgJIkAKElVwc2VydEJvYXRSZXNwb25zZRIqCgRib2F0GAEgASgLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0IhIKEExpc3RCb2F0c1JlcXVlc3QiQAoRTGlzdEJvYXRzUmVzcG9uc2USKwoFYm9hdHMYASADKAsyHC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkJvYXQiJQoSQXJjaGl2ZUJvYXRSZXF1ZXN0Eg8KB2JvYXRfaWQYASABKAkiQQoTQXJjaGl2ZUJvYXRSZXNwb25zZRIqCgRib2F0GAEgASgLMhwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Cb2F0Ij8KCE9wZXJhdG9yEhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkSEAoIYXJjaGl2ZWQYAyABKAgiOgoVVXBzZXJ0T3BlcmF0b3JSZXF1ZXN0EhMKC29wZXJhdG9yX2lkGAEgASgJEgwKBG5hbWUYAiABKAkiTAoWVXBzZXJ0T3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiFgoUTGlzdE9wZXJhdG9yc1JlcXVlc3QiTAoVTGlzdE9wZXJhdG9yc1Jlc3BvbnNlEjMKCW9wZXJhdG9ycxgBIAMoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3IiLQoWQXJjaGl2ZU9wZXJhdG9yUmVxdWVzdBITCgtvcGVyYXRvcl9pZBgBIAEoCSJNChdBcmNoaXZlT3BlcmF0b3JSZXNwb25zZRIyCghvcGVyYXRvchgBIAEoCzIgLmJvYXRib29raW5nLmNhdGFsb2cudjEuT3BlcmF0b3Ii1gEKBFBpZXISDwoHcGllcl9pZBgBIAEoCRITCgtvcGVyYXRvcl9pZBgCIAEoCRIPCgduYW1lX3RoGAMgASgJEg8KB25hbWVfZW4YBCABKAkSCwoDbGF0GAUgASgBEgsKA2xuZxgGIAEoARIPCgdhZGRyZXNzGAcgASgJEhAKCG9wZW5zX2F0GAggASgJEhEKCWNsb3Nlc19hdBgJIAEoCRIQCghhcmNoaXZlZBgKIAEoCBIRCglwaG90b19rZXkYCyABKAkSEQoJcGhvdG9fdXJsGAwgASgJIr4BChFVcHNlcnRQaWVyUmVxdWVzdBIPCgdwaWVyX2lkGAEgASgJEhMKC29wZXJhdG9yX2lkGAIgASgJEg8KB25hbWVfdGgYAyABKAkSDwoHbmFtZV9lbhgEIAEoCRILCgNsYXQYBSABKAESCwoDbG5nGAYgASgBEg8KB2FkZHJlc3MYByABKAkSEAoIb3BlbnNfYXQYCCABKAkSEQoJY2xvc2VzX2F0GAkgASgJEhEKCXBob3RvX2tleRgKIAEoCSJAChJVcHNlcnRQaWVyUmVzcG9uc2USKgoEcGllchgBIAEoCzIcLmJvYXRib29raW5nLmNhdGFsb2cudjEuUGllciJDChdQcmVzaWduUGllclBob3RvUmVxdWVzdBIUCgxjb250ZW50X3R5cGUYASABKAkSEgoKc2l6ZV9ieXRlcxgCIAEoAyJXChhQcmVzaWduUGllclBob3RvUmVzcG9uc2USEgoKdXBsb2FkX3VybBgBIAEoCRIRCglwaG90b19rZXkYAiABKAkSFAoMY29udGVudF90eXBlGAMgASgJIicKEExpc3RQaWVyc1JlcXVlc3QSEwoLb3BlcmF0b3JfaWQYASABKAkiQAoRTGlzdFBpZXJzUmVzcG9uc2USKwoFcGllcnMYASADKAsyHC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlBpZXIiRAoQQ2FuY2VsbGF0aW9uVGllchIYChBtaW5faG91cnNfYmVmb3JlGAEgASgFEhYKDnJlZnVuZF9wZXJjZW50GAIgASgFInsKClJvdXRlUHJpY2USPgoLdGlja2V0X3R5cGUYASABKA4yKS5ib2F0Ym9va2luZy5jYXRhbG9nLmV2ZW50cy52MS5UaWNrZXRUeXBlEhUKDWFtb3VudF9zYXRhbmcYAiABKAMSFgoOZWZmZWN0aXZlX2Zyb20YAyABKAkihwIKBVJvdXRlEhAKCHJvdXRlX2lkGAEgASgJEhMKC29wZXJhdG9yX2lkGAIgASgJEhQKDHBpZXJfZnJvbV9pZBgDIAEoCRISCgpwaWVyX3RvX2lkGAQgASgJEhgKEGR1cmF0aW9uX21pbnV0ZXMYBSABKAUSRQoTY2FuY2VsbGF0aW9uX3BvbGljeRgGIAMoCzIoLmJvYXRib29raW5nLmNhdGFsb2cudjEuQ2FuY2VsbGF0aW9uVGllchIQCghhcmNoaXZlZBgHIAEoCBI6Cg5jdXJyZW50X3ByaWNlcxgIIAMoCzIiLmJvYXRib29raW5nLmNhdGFsb2cudjEuUm91dGVQcmljZSKxAQoSVXBzZXJ0Um91dGVSZXF1ZXN0EhAKCHJvdXRlX2lkGAEgASgJEhQKDHBpZXJfZnJvbV9pZBgCIAEoCRISCgpwaWVyX3RvX2lkGAMgASgJEhgKEGR1cmF0aW9uX21pbnV0ZXMYBCABKAUSRQoTY2FuY2VsbGF0aW9uX3BvbGljeRgFIAMoCzIoLmJvYXRib29raW5nLmNhdGFsb2cudjEuQ2FuY2VsbGF0aW9uVGllciJDChNVcHNlcnRSb3V0ZVJlc3BvbnNlEiwKBXJvdXRlGAEgASgLMh0uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Sb3V0ZSIoChFMaXN0Um91dGVzUmVxdWVzdBITCgtvcGVyYXRvcl9pZBgBIAEoCSJDChJMaXN0Um91dGVzUmVzcG9uc2USLQoGcm91dGVzGAEgAygLMh0uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Sb3V0ZSInChNBcmNoaXZlUm91dGVSZXF1ZXN0EhAKCHJvdXRlX2lkGAEgASgJIkQKFEFyY2hpdmVSb3V0ZVJlc3BvbnNlEiwKBXJvdXRlGAEgASgLMh0uYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5Sb3V0ZSIlChJBcmNoaXZlUGllclJlcXVlc3QSDwoHcGllcl9pZBgBIAEoCSJBChNBcmNoaXZlUGllclJlc3BvbnNlEioKBHBpZXIYASABKAsyHC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlBpZXIilwEKFEFkZFJvdXRlUHJpY2VSZXF1ZXN0EhAKCHJvdXRlX2lkGAEgASgJEj4KC3RpY2tldF90eXBlGAIgASgOMikuYm9hdGJvb2tpbmcuY2F0YWxvZy5ldmVudHMudjEuVGlja2V0VHlwZRIVCg1hbW91bnRfc2F0YW5nGAMgASgDEhYKDmVmZmVjdGl2ZV9mcm9tGAQgASgJIkoKFUFkZFJvdXRlUHJpY2VSZXNwb25zZRIxCgVwcmljZRgBIAEoCzIiLmJvYXRib29raW5nLmNhdGFsb2cudjEuUm91dGVQcmljZSIqChZMaXN0Um91dGVQcmljZXNSZXF1ZXN0EhAKCHJvdXRlX2lkGAEgASgJIk0KF0xpc3RSb3V0ZVByaWNlc1Jlc3BvbnNlEjIKBnByaWNlcxgBIAMoCzIiLmJvYXRib29raW5nLmNhdGFsb2cudjEuUm91dGVQcmljZTLSDAoOQ2F0YWxvZ1NlcnZpY2USYwoKVXBzZXJ0Qm9hdBIpLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0Qm9hdFJlcXVlc3QaKi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydEJvYXRSZXNwb25zZRJgCglMaXN0Qm9hdHMSKC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RCb2F0c1JlcXVlc3QaKS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RCb2F0c1Jlc3BvbnNlEmYKC0FyY2hpdmVCb2F0EiouYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BcmNoaXZlQm9hdFJlcXVlc3QaKy5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkFyY2hpdmVCb2F0UmVzcG9uc2USbwoOVXBzZXJ0T3BlcmF0b3ISLS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydE9wZXJhdG9yUmVxdWVzdBouLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0T3BlcmF0b3JSZXNwb25zZRJsCg1MaXN0T3BlcmF0b3JzEiwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0T3BlcmF0b3JzUmVxdWVzdBotLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdE9wZXJhdG9yc1Jlc3BvbnNlEnIKD0FyY2hpdmVPcGVyYXRvchIuLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZU9wZXJhdG9yUmVxdWVzdBovLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZU9wZXJhdG9yUmVzcG9uc2USYwoKVXBzZXJ0UGllchIpLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0UGllclJlcXVlc3QaKi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydFBpZXJSZXNwb25zZRJgCglMaXN0UGllcnMSKC5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RQaWVyc1JlcXVlc3QaKS5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkxpc3RQaWVyc1Jlc3BvbnNlEnUKEFByZXNpZ25QaWVyUGhvdG8SLy5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlByZXNpZ25QaWVyUGhvdG9SZXF1ZXN0GjAuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5QcmVzaWduUGllclBob3RvUmVzcG9uc2USZgoLVXBzZXJ0Um91dGUSKi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLlVwc2VydFJvdXRlUmVxdWVzdBorLmJvYXRib29raW5nLmNhdGFsb2cudjEuVXBzZXJ0Um91dGVSZXNwb25zZRJjCgpMaXN0Um91dGVzEikuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5MaXN0Um91dGVzUmVxdWVzdBoqLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdFJvdXRlc1Jlc3BvbnNlEmkKDEFyY2hpdmVSb3V0ZRIrLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZVJvdXRlUmVxdWVzdBosLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZVJvdXRlUmVzcG9uc2USZgoLQXJjaGl2ZVBpZXISKi5ib2F0Ym9va2luZy5jYXRhbG9nLnYxLkFyY2hpdmVQaWVyUmVxdWVzdBorLmJvYXRib29raW5nLmNhdGFsb2cudjEuQXJjaGl2ZVBpZXJSZXNwb25zZRJsCg1BZGRSb3V0ZVByaWNlEiwuYm9hdGJvb2tpbmcuY2F0YWxvZy52MS5BZGRSb3V0ZVByaWNlUmVxdWVzdBotLmJvYXRib29raW5nLmNhdGFsb2cudjEuQWRkUm91dGVQcmljZVJlc3BvbnNlEnIKD0xpc3RSb3V0ZVByaWNlcxIuLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdFJvdXRlUHJpY2VzUmVxdWVzdBovLmJvYXRib29raW5nLmNhdGFsb2cudjEuTGlzdFJvdXRlUHJpY2VzUmVzcG9uc2VCQVo/Z2l0aHViLmNvbS9jaG9ubGF0ZWUxMS9ib2F0LWJvb2tpbmcvZ2VuL2dvL2NhdGFsb2cvdjE7Y2F0YWxvZ3YxYgZwcm90bzM", [file_events_catalog_v1_boat, file_events_catalog_v1_price]);
 
 /**
+ * home_pier_id and archived are additive fields (D-07): the boat's operator
+ * is always its home pier's operator.
+ *
  * @generated from message boatbooking.catalog.v1.Boat
  */
 export type Boat = Message<"boatbooking.catalog.v1.Boat"> & {
@@ -42,9 +47,22 @@ export type Boat = Message<"boatbooking.catalog.v1.Boat"> & {
    * @generated from field: boatbooking.catalog.events.v1.BoatStatus status = 5;
    */
   status: BoatStatus;
+
+  /**
+   * @generated from field: string home_pier_id = 6;
+   */
+  homePierId: string;
+
+  /**
+   * @generated from field: bool archived = 7;
+   */
+  archived: boolean;
 };
 
 /**
+ * home_pier_id and archived are additive fields (D-07): the boat's operator
+ * is always its home pier's operator.
+ *
  * @generated from message boatbooking.catalog.v1.Boat
  */
 export type BoatJson = {
@@ -72,6 +90,16 @@ export type BoatJson = {
    * @generated from field: boatbooking.catalog.events.v1.BoatStatus status = 5;
    */
   status?: BoatStatusJson;
+
+  /**
+   * @generated from field: string home_pier_id = 6;
+   */
+  homePierId?: string;
+
+  /**
+   * @generated from field: bool archived = 7;
+   */
+  archived?: boolean;
 };
 
 /**
@@ -84,7 +112,8 @@ export const BoatSchema: GenMessage<Boat, {jsonType: BoatJson}> = /*@__PURE__*/
 /**
  * An empty boat_id means create; a non-empty boat_id means update.
  * operator_id always comes from the trusted gateway claims, never from the
- * request body (D-30).
+ * request body (D-30) — it is always derived from home_pier_id's stored
+ * operator.
  *
  * @generated from message boatbooking.catalog.v1.UpsertBoatRequest
  */
@@ -108,12 +137,18 @@ export type UpsertBoatRequest = Message<"boatbooking.catalog.v1.UpsertBoatReques
    * @generated from field: boatbooking.catalog.events.v1.BoatStatus status = 4;
    */
   status: BoatStatus;
+
+  /**
+   * @generated from field: string home_pier_id = 5;
+   */
+  homePierId: string;
 };
 
 /**
  * An empty boat_id means create; a non-empty boat_id means update.
  * operator_id always comes from the trusted gateway claims, never from the
- * request body (D-30).
+ * request body (D-30) — it is always derived from home_pier_id's stored
+ * operator.
  *
  * @generated from message boatbooking.catalog.v1.UpsertBoatRequest
  */
@@ -137,6 +172,11 @@ export type UpsertBoatRequestJson = {
    * @generated from field: boatbooking.catalog.events.v1.BoatStatus status = 4;
    */
   status?: BoatStatusJson;
+
+  /**
+   * @generated from field: string home_pier_id = 5;
+   */
+  homePierId?: string;
 };
 
 /**
@@ -220,6 +260,1373 @@ export const ListBoatsResponseSchema: GenMessage<ListBoatsResponse, {jsonType: L
   messageDesc(file_services_catalog_v1_catalog, 4);
 
 /**
+ * @generated from message boatbooking.catalog.v1.ArchiveBoatRequest
+ */
+export type ArchiveBoatRequest = Message<"boatbooking.catalog.v1.ArchiveBoatRequest"> & {
+  /**
+   * @generated from field: string boat_id = 1;
+   */
+  boatId: string;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveBoatRequest
+ */
+export type ArchiveBoatRequestJson = {
+  /**
+   * @generated from field: string boat_id = 1;
+   */
+  boatId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchiveBoatRequest.
+ * Use `create(ArchiveBoatRequestSchema)` to create a new message.
+ */
+export const ArchiveBoatRequestSchema: GenMessage<ArchiveBoatRequest, {jsonType: ArchiveBoatRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 5);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveBoatResponse
+ */
+export type ArchiveBoatResponse = Message<"boatbooking.catalog.v1.ArchiveBoatResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Boat boat = 1;
+   */
+  boat?: Boat | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveBoatResponse
+ */
+export type ArchiveBoatResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Boat boat = 1;
+   */
+  boat?: BoatJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchiveBoatResponse.
+ * Use `create(ArchiveBoatResponseSchema)` to create a new message.
+ */
+export const ArchiveBoatResponseSchema: GenMessage<ArchiveBoatResponse, {jsonType: ArchiveBoatResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 6);
+
+/**
+ * @generated from message boatbooking.catalog.v1.Operator
+ */
+export type Operator = Message<"boatbooking.catalog.v1.Operator"> & {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: bool archived = 3;
+   */
+  archived: boolean;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.Operator
+ */
+export type OperatorJson = {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId?: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name?: string;
+
+  /**
+   * @generated from field: bool archived = 3;
+   */
+  archived?: boolean;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.Operator.
+ * Use `create(OperatorSchema)` to create a new message.
+ */
+export const OperatorSchema: GenMessage<Operator, {jsonType: OperatorJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 7);
+
+/**
+ * An empty operator_id means create; a non-empty operator_id means update.
+ * Only super_admin may call this (D-08).
+ *
+ * @generated from message boatbooking.catalog.v1.UpsertOperatorRequest
+ */
+export type UpsertOperatorRequest = Message<"boatbooking.catalog.v1.UpsertOperatorRequest"> & {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+};
+
+/**
+ * An empty operator_id means create; a non-empty operator_id means update.
+ * Only super_admin may call this (D-08).
+ *
+ * @generated from message boatbooking.catalog.v1.UpsertOperatorRequest
+ */
+export type UpsertOperatorRequestJson = {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId?: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.UpsertOperatorRequest.
+ * Use `create(UpsertOperatorRequestSchema)` to create a new message.
+ */
+export const UpsertOperatorRequestSchema: GenMessage<UpsertOperatorRequest, {jsonType: UpsertOperatorRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 8);
+
+/**
+ * @generated from message boatbooking.catalog.v1.UpsertOperatorResponse
+ */
+export type UpsertOperatorResponse = Message<"boatbooking.catalog.v1.UpsertOperatorResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Operator operator = 1;
+   */
+  operator?: Operator | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.UpsertOperatorResponse
+ */
+export type UpsertOperatorResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Operator operator = 1;
+   */
+  operator?: OperatorJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.UpsertOperatorResponse.
+ * Use `create(UpsertOperatorResponseSchema)` to create a new message.
+ */
+export const UpsertOperatorResponseSchema: GenMessage<UpsertOperatorResponse, {jsonType: UpsertOperatorResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 9);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListOperatorsRequest
+ */
+export type ListOperatorsRequest = Message<"boatbooking.catalog.v1.ListOperatorsRequest"> & {
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListOperatorsRequest
+ */
+export type ListOperatorsRequestJson = {
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListOperatorsRequest.
+ * Use `create(ListOperatorsRequestSchema)` to create a new message.
+ */
+export const ListOperatorsRequestSchema: GenMessage<ListOperatorsRequest, {jsonType: ListOperatorsRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 10);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListOperatorsResponse
+ */
+export type ListOperatorsResponse = Message<"boatbooking.catalog.v1.ListOperatorsResponse"> & {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.Operator operators = 1;
+   */
+  operators: Operator[];
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListOperatorsResponse
+ */
+export type ListOperatorsResponseJson = {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.Operator operators = 1;
+   */
+  operators?: OperatorJson[];
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListOperatorsResponse.
+ * Use `create(ListOperatorsResponseSchema)` to create a new message.
+ */
+export const ListOperatorsResponseSchema: GenMessage<ListOperatorsResponse, {jsonType: ListOperatorsResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 11);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveOperatorRequest
+ */
+export type ArchiveOperatorRequest = Message<"boatbooking.catalog.v1.ArchiveOperatorRequest"> & {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId: string;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveOperatorRequest
+ */
+export type ArchiveOperatorRequestJson = {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchiveOperatorRequest.
+ * Use `create(ArchiveOperatorRequestSchema)` to create a new message.
+ */
+export const ArchiveOperatorRequestSchema: GenMessage<ArchiveOperatorRequest, {jsonType: ArchiveOperatorRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 12);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveOperatorResponse
+ */
+export type ArchiveOperatorResponse = Message<"boatbooking.catalog.v1.ArchiveOperatorResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Operator operator = 1;
+   */
+  operator?: Operator | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveOperatorResponse
+ */
+export type ArchiveOperatorResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Operator operator = 1;
+   */
+  operator?: OperatorJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchiveOperatorResponse.
+ * Use `create(ArchiveOperatorResponseSchema)` to create a new message.
+ */
+export const ArchiveOperatorResponseSchema: GenMessage<ArchiveOperatorResponse, {jsonType: ArchiveOperatorResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 13);
+
+/**
+ * photo_key/photo_url are additive fields (D-19): photo_key is the
+ * server-generated object key ("piers/<uuidv7>.<ext>"), photo_url is the
+ * public browser-usable URL (PHOTO_PUBLIC_BASE_URL + "/" + photo_key),
+ * empty when no photo has been uploaded or no storage is configured.
+ *
+ * @generated from message boatbooking.catalog.v1.Pier
+ */
+export type Pier = Message<"boatbooking.catalog.v1.Pier"> & {
+  /**
+   * @generated from field: string pier_id = 1;
+   */
+  pierId: string;
+
+  /**
+   * @generated from field: string operator_id = 2;
+   */
+  operatorId: string;
+
+  /**
+   * @generated from field: string name_th = 3;
+   */
+  nameTh: string;
+
+  /**
+   * @generated from field: string name_en = 4;
+   */
+  nameEn: string;
+
+  /**
+   * @generated from field: double lat = 5;
+   */
+  lat: number;
+
+  /**
+   * @generated from field: double lng = 6;
+   */
+  lng: number;
+
+  /**
+   * @generated from field: string address = 7;
+   */
+  address: string;
+
+  /**
+   * @generated from field: string opens_at = 8;
+   */
+  opensAt: string;
+
+  /**
+   * @generated from field: string closes_at = 9;
+   */
+  closesAt: string;
+
+  /**
+   * @generated from field: bool archived = 10;
+   */
+  archived: boolean;
+
+  /**
+   * @generated from field: string photo_key = 11;
+   */
+  photoKey: string;
+
+  /**
+   * @generated from field: string photo_url = 12;
+   */
+  photoUrl: string;
+};
+
+/**
+ * photo_key/photo_url are additive fields (D-19): photo_key is the
+ * server-generated object key ("piers/<uuidv7>.<ext>"), photo_url is the
+ * public browser-usable URL (PHOTO_PUBLIC_BASE_URL + "/" + photo_key),
+ * empty when no photo has been uploaded or no storage is configured.
+ *
+ * @generated from message boatbooking.catalog.v1.Pier
+ */
+export type PierJson = {
+  /**
+   * @generated from field: string pier_id = 1;
+   */
+  pierId?: string;
+
+  /**
+   * @generated from field: string operator_id = 2;
+   */
+  operatorId?: string;
+
+  /**
+   * @generated from field: string name_th = 3;
+   */
+  nameTh?: string;
+
+  /**
+   * @generated from field: string name_en = 4;
+   */
+  nameEn?: string;
+
+  /**
+   * @generated from field: double lat = 5;
+   */
+  lat?: number | "NaN" | "Infinity" | "-Infinity";
+
+  /**
+   * @generated from field: double lng = 6;
+   */
+  lng?: number | "NaN" | "Infinity" | "-Infinity";
+
+  /**
+   * @generated from field: string address = 7;
+   */
+  address?: string;
+
+  /**
+   * @generated from field: string opens_at = 8;
+   */
+  opensAt?: string;
+
+  /**
+   * @generated from field: string closes_at = 9;
+   */
+  closesAt?: string;
+
+  /**
+   * @generated from field: bool archived = 10;
+   */
+  archived?: boolean;
+
+  /**
+   * @generated from field: string photo_key = 11;
+   */
+  photoKey?: string;
+
+  /**
+   * @generated from field: string photo_url = 12;
+   */
+  photoUrl?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.Pier.
+ * Use `create(PierSchema)` to create a new message.
+ */
+export const PierSchema: GenMessage<Pier, {jsonType: PierJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 14);
+
+/**
+ * An empty pier_id means create (super_admin only, operator_id taken from
+ * the request); a non-empty pier_id means update (pier_admin/staff scoped
+ * to their own operator/pier_ids) and the stored operator_id is kept
+ * unchanged regardless of what the request sends (D-30).
+ * photo_key must be either empty (no photo) or an exact key previously
+ * returned by PresignPierPhoto ("piers/<uuidv7>.jpg|png|webp") — never a
+ * browser-chosen value (D-19).
+ *
+ * @generated from message boatbooking.catalog.v1.UpsertPierRequest
+ */
+export type UpsertPierRequest = Message<"boatbooking.catalog.v1.UpsertPierRequest"> & {
+  /**
+   * @generated from field: string pier_id = 1;
+   */
+  pierId: string;
+
+  /**
+   * @generated from field: string operator_id = 2;
+   */
+  operatorId: string;
+
+  /**
+   * @generated from field: string name_th = 3;
+   */
+  nameTh: string;
+
+  /**
+   * @generated from field: string name_en = 4;
+   */
+  nameEn: string;
+
+  /**
+   * @generated from field: double lat = 5;
+   */
+  lat: number;
+
+  /**
+   * @generated from field: double lng = 6;
+   */
+  lng: number;
+
+  /**
+   * @generated from field: string address = 7;
+   */
+  address: string;
+
+  /**
+   * @generated from field: string opens_at = 8;
+   */
+  opensAt: string;
+
+  /**
+   * @generated from field: string closes_at = 9;
+   */
+  closesAt: string;
+
+  /**
+   * @generated from field: string photo_key = 10;
+   */
+  photoKey: string;
+};
+
+/**
+ * An empty pier_id means create (super_admin only, operator_id taken from
+ * the request); a non-empty pier_id means update (pier_admin/staff scoped
+ * to their own operator/pier_ids) and the stored operator_id is kept
+ * unchanged regardless of what the request sends (D-30).
+ * photo_key must be either empty (no photo) or an exact key previously
+ * returned by PresignPierPhoto ("piers/<uuidv7>.jpg|png|webp") — never a
+ * browser-chosen value (D-19).
+ *
+ * @generated from message boatbooking.catalog.v1.UpsertPierRequest
+ */
+export type UpsertPierRequestJson = {
+  /**
+   * @generated from field: string pier_id = 1;
+   */
+  pierId?: string;
+
+  /**
+   * @generated from field: string operator_id = 2;
+   */
+  operatorId?: string;
+
+  /**
+   * @generated from field: string name_th = 3;
+   */
+  nameTh?: string;
+
+  /**
+   * @generated from field: string name_en = 4;
+   */
+  nameEn?: string;
+
+  /**
+   * @generated from field: double lat = 5;
+   */
+  lat?: number | "NaN" | "Infinity" | "-Infinity";
+
+  /**
+   * @generated from field: double lng = 6;
+   */
+  lng?: number | "NaN" | "Infinity" | "-Infinity";
+
+  /**
+   * @generated from field: string address = 7;
+   */
+  address?: string;
+
+  /**
+   * @generated from field: string opens_at = 8;
+   */
+  opensAt?: string;
+
+  /**
+   * @generated from field: string closes_at = 9;
+   */
+  closesAt?: string;
+
+  /**
+   * @generated from field: string photo_key = 10;
+   */
+  photoKey?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.UpsertPierRequest.
+ * Use `create(UpsertPierRequestSchema)` to create a new message.
+ */
+export const UpsertPierRequestSchema: GenMessage<UpsertPierRequest, {jsonType: UpsertPierRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 15);
+
+/**
+ * @generated from message boatbooking.catalog.v1.UpsertPierResponse
+ */
+export type UpsertPierResponse = Message<"boatbooking.catalog.v1.UpsertPierResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Pier pier = 1;
+   */
+  pier?: Pier | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.UpsertPierResponse
+ */
+export type UpsertPierResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Pier pier = 1;
+   */
+  pier?: PierJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.UpsertPierResponse.
+ * Use `create(UpsertPierResponseSchema)` to create a new message.
+ */
+export const UpsertPierResponseSchema: GenMessage<UpsertPierResponse, {jsonType: UpsertPierResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 16);
+
+/**
+ * content_type must be image/jpeg, image/png, or image/webp; size_bytes
+ * must be 1..5,242,880 (5 MB, D-19). Requires pier_admin or super_admin
+ * claims.
+ *
+ * @generated from message boatbooking.catalog.v1.PresignPierPhotoRequest
+ */
+export type PresignPierPhotoRequest = Message<"boatbooking.catalog.v1.PresignPierPhotoRequest"> & {
+  /**
+   * @generated from field: string content_type = 1;
+   */
+  contentType: string;
+
+  /**
+   * @generated from field: int64 size_bytes = 2;
+   */
+  sizeBytes: bigint;
+};
+
+/**
+ * content_type must be image/jpeg, image/png, or image/webp; size_bytes
+ * must be 1..5,242,880 (5 MB, D-19). Requires pier_admin or super_admin
+ * claims.
+ *
+ * @generated from message boatbooking.catalog.v1.PresignPierPhotoRequest
+ */
+export type PresignPierPhotoRequestJson = {
+  /**
+   * @generated from field: string content_type = 1;
+   */
+  contentType?: string;
+
+  /**
+   * @generated from field: int64 size_bytes = 2;
+   */
+  sizeBytes?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.PresignPierPhotoRequest.
+ * Use `create(PresignPierPhotoRequestSchema)` to create a new message.
+ */
+export const PresignPierPhotoRequestSchema: GenMessage<PresignPierPhotoRequest, {jsonType: PresignPierPhotoRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 17);
+
+/**
+ * upload_url is a PUT URL valid for 10 minutes whose signature covers
+ * Content-Type and Content-Length; the caller must send both headers
+ * exactly as declared in the request. photo_key is the server-generated
+ * object key to pass back to UpsertPier once the upload succeeds.
+ *
+ * @generated from message boatbooking.catalog.v1.PresignPierPhotoResponse
+ */
+export type PresignPierPhotoResponse = Message<"boatbooking.catalog.v1.PresignPierPhotoResponse"> & {
+  /**
+   * @generated from field: string upload_url = 1;
+   */
+  uploadUrl: string;
+
+  /**
+   * @generated from field: string photo_key = 2;
+   */
+  photoKey: string;
+
+  /**
+   * @generated from field: string content_type = 3;
+   */
+  contentType: string;
+};
+
+/**
+ * upload_url is a PUT URL valid for 10 minutes whose signature covers
+ * Content-Type and Content-Length; the caller must send both headers
+ * exactly as declared in the request. photo_key is the server-generated
+ * object key to pass back to UpsertPier once the upload succeeds.
+ *
+ * @generated from message boatbooking.catalog.v1.PresignPierPhotoResponse
+ */
+export type PresignPierPhotoResponseJson = {
+  /**
+   * @generated from field: string upload_url = 1;
+   */
+  uploadUrl?: string;
+
+  /**
+   * @generated from field: string photo_key = 2;
+   */
+  photoKey?: string;
+
+  /**
+   * @generated from field: string content_type = 3;
+   */
+  contentType?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.PresignPierPhotoResponse.
+ * Use `create(PresignPierPhotoResponseSchema)` to create a new message.
+ */
+export const PresignPierPhotoResponseSchema: GenMessage<PresignPierPhotoResponse, {jsonType: PresignPierPhotoResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 18);
+
+/**
+ * operator_id is honoured only for super_admin callers (CAT-06/AUTH-05); it
+ * is ignored for scoped roles and for the public (no-claims) call.
+ *
+ * @generated from message boatbooking.catalog.v1.ListPiersRequest
+ */
+export type ListPiersRequest = Message<"boatbooking.catalog.v1.ListPiersRequest"> & {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId: string;
+};
+
+/**
+ * operator_id is honoured only for super_admin callers (CAT-06/AUTH-05); it
+ * is ignored for scoped roles and for the public (no-claims) call.
+ *
+ * @generated from message boatbooking.catalog.v1.ListPiersRequest
+ */
+export type ListPiersRequestJson = {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListPiersRequest.
+ * Use `create(ListPiersRequestSchema)` to create a new message.
+ */
+export const ListPiersRequestSchema: GenMessage<ListPiersRequest, {jsonType: ListPiersRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 19);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListPiersResponse
+ */
+export type ListPiersResponse = Message<"boatbooking.catalog.v1.ListPiersResponse"> & {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.Pier piers = 1;
+   */
+  piers: Pier[];
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListPiersResponse
+ */
+export type ListPiersResponseJson = {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.Pier piers = 1;
+   */
+  piers?: PierJson[];
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListPiersResponse.
+ * Use `create(ListPiersResponseSchema)` to create a new message.
+ */
+export const ListPiersResponseSchema: GenMessage<ListPiersResponse, {jsonType: ListPiersResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 20);
+
+/**
+ * CancellationTier is one row of a route's refund schedule (D-13):
+ * cancelling >= min_hours_before departure refunds refund_percent.
+ *
+ * @generated from message boatbooking.catalog.v1.CancellationTier
+ */
+export type CancellationTier = Message<"boatbooking.catalog.v1.CancellationTier"> & {
+  /**
+   * @generated from field: int32 min_hours_before = 1;
+   */
+  minHoursBefore: number;
+
+  /**
+   * @generated from field: int32 refund_percent = 2;
+   */
+  refundPercent: number;
+};
+
+/**
+ * CancellationTier is one row of a route's refund schedule (D-13):
+ * cancelling >= min_hours_before departure refunds refund_percent.
+ *
+ * @generated from message boatbooking.catalog.v1.CancellationTier
+ */
+export type CancellationTierJson = {
+  /**
+   * @generated from field: int32 min_hours_before = 1;
+   */
+  minHoursBefore?: number;
+
+  /**
+   * @generated from field: int32 refund_percent = 2;
+   */
+  refundPercent?: number;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.CancellationTier.
+ * Use `create(CancellationTierSchema)` to create a new message.
+ */
+export const CancellationTierSchema: GenMessage<CancellationTier, {jsonType: CancellationTierJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 21);
+
+/**
+ * RoutePrice is one effective-dated fare row (D-14): the price in effect on
+ * date D is the row with the latest effective_from <= D.
+ *
+ * @generated from message boatbooking.catalog.v1.RoutePrice
+ */
+export type RoutePrice = Message<"boatbooking.catalog.v1.RoutePrice"> & {
+  /**
+   * @generated from field: boatbooking.catalog.events.v1.TicketType ticket_type = 1;
+   */
+  ticketType: TicketType;
+
+  /**
+   * @generated from field: int64 amount_satang = 2;
+   */
+  amountSatang: bigint;
+
+  /**
+   * YYYY-MM-DD, Asia/Bangkok local date
+   *
+   * @generated from field: string effective_from = 3;
+   */
+  effectiveFrom: string;
+};
+
+/**
+ * RoutePrice is one effective-dated fare row (D-14): the price in effect on
+ * date D is the row with the latest effective_from <= D.
+ *
+ * @generated from message boatbooking.catalog.v1.RoutePrice
+ */
+export type RoutePriceJson = {
+  /**
+   * @generated from field: boatbooking.catalog.events.v1.TicketType ticket_type = 1;
+   */
+  ticketType?: TicketTypeJson;
+
+  /**
+   * @generated from field: int64 amount_satang = 2;
+   */
+  amountSatang?: string;
+
+  /**
+   * YYYY-MM-DD, Asia/Bangkok local date
+   *
+   * @generated from field: string effective_from = 3;
+   */
+  effectiveFrom?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.RoutePrice.
+ * Use `create(RoutePriceSchema)` to create a new message.
+ */
+export const RoutePriceSchema: GenMessage<RoutePrice, {jsonType: RoutePriceJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 22);
+
+/**
+ * Route is one-way (D-11): pier_from -> pier_to. Route display name is
+ * derived from its piers, never stored (D-17). current_prices holds each
+ * ticket type's price in effect for today's Asia/Bangkok date (D-14) — a
+ * route with no prices set omits the entry entirely (never a zero amount).
+ *
+ * @generated from message boatbooking.catalog.v1.Route
+ */
+export type Route = Message<"boatbooking.catalog.v1.Route"> & {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId: string;
+
+  /**
+   * @generated from field: string operator_id = 2;
+   */
+  operatorId: string;
+
+  /**
+   * @generated from field: string pier_from_id = 3;
+   */
+  pierFromId: string;
+
+  /**
+   * @generated from field: string pier_to_id = 4;
+   */
+  pierToId: string;
+
+  /**
+   * @generated from field: int32 duration_minutes = 5;
+   */
+  durationMinutes: number;
+
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.CancellationTier cancellation_policy = 6;
+   */
+  cancellationPolicy: CancellationTier[];
+
+  /**
+   * @generated from field: bool archived = 7;
+   */
+  archived: boolean;
+
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.RoutePrice current_prices = 8;
+   */
+  currentPrices: RoutePrice[];
+};
+
+/**
+ * Route is one-way (D-11): pier_from -> pier_to. Route display name is
+ * derived from its piers, never stored (D-17). current_prices holds each
+ * ticket type's price in effect for today's Asia/Bangkok date (D-14) — a
+ * route with no prices set omits the entry entirely (never a zero amount).
+ *
+ * @generated from message boatbooking.catalog.v1.Route
+ */
+export type RouteJson = {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId?: string;
+
+  /**
+   * @generated from field: string operator_id = 2;
+   */
+  operatorId?: string;
+
+  /**
+   * @generated from field: string pier_from_id = 3;
+   */
+  pierFromId?: string;
+
+  /**
+   * @generated from field: string pier_to_id = 4;
+   */
+  pierToId?: string;
+
+  /**
+   * @generated from field: int32 duration_minutes = 5;
+   */
+  durationMinutes?: number;
+
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.CancellationTier cancellation_policy = 6;
+   */
+  cancellationPolicy?: CancellationTierJson[];
+
+  /**
+   * @generated from field: bool archived = 7;
+   */
+  archived?: boolean;
+
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.RoutePrice current_prices = 8;
+   */
+  currentPrices?: RoutePriceJson[];
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.Route.
+ * Use `create(RouteSchema)` to create a new message.
+ */
+export const RouteSchema: GenMessage<Route, {jsonType: RouteJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 23);
+
+/**
+ * An empty route_id means create; a non-empty route_id means update. An
+ * empty cancellation_policy on create uses the default schedule (D-13).
+ * operator_id is always derived from pier_from_id, never taken from the
+ * request (D-30).
+ *
+ * @generated from message boatbooking.catalog.v1.UpsertRouteRequest
+ */
+export type UpsertRouteRequest = Message<"boatbooking.catalog.v1.UpsertRouteRequest"> & {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId: string;
+
+  /**
+   * @generated from field: string pier_from_id = 2;
+   */
+  pierFromId: string;
+
+  /**
+   * @generated from field: string pier_to_id = 3;
+   */
+  pierToId: string;
+
+  /**
+   * @generated from field: int32 duration_minutes = 4;
+   */
+  durationMinutes: number;
+
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.CancellationTier cancellation_policy = 5;
+   */
+  cancellationPolicy: CancellationTier[];
+};
+
+/**
+ * An empty route_id means create; a non-empty route_id means update. An
+ * empty cancellation_policy on create uses the default schedule (D-13).
+ * operator_id is always derived from pier_from_id, never taken from the
+ * request (D-30).
+ *
+ * @generated from message boatbooking.catalog.v1.UpsertRouteRequest
+ */
+export type UpsertRouteRequestJson = {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId?: string;
+
+  /**
+   * @generated from field: string pier_from_id = 2;
+   */
+  pierFromId?: string;
+
+  /**
+   * @generated from field: string pier_to_id = 3;
+   */
+  pierToId?: string;
+
+  /**
+   * @generated from field: int32 duration_minutes = 4;
+   */
+  durationMinutes?: number;
+
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.CancellationTier cancellation_policy = 5;
+   */
+  cancellationPolicy?: CancellationTierJson[];
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.UpsertRouteRequest.
+ * Use `create(UpsertRouteRequestSchema)` to create a new message.
+ */
+export const UpsertRouteRequestSchema: GenMessage<UpsertRouteRequest, {jsonType: UpsertRouteRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 24);
+
+/**
+ * @generated from message boatbooking.catalog.v1.UpsertRouteResponse
+ */
+export type UpsertRouteResponse = Message<"boatbooking.catalog.v1.UpsertRouteResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Route route = 1;
+   */
+  route?: Route | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.UpsertRouteResponse
+ */
+export type UpsertRouteResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Route route = 1;
+   */
+  route?: RouteJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.UpsertRouteResponse.
+ * Use `create(UpsertRouteResponseSchema)` to create a new message.
+ */
+export const UpsertRouteResponseSchema: GenMessage<UpsertRouteResponse, {jsonType: UpsertRouteResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 25);
+
+/**
+ * operator_id is honoured only for super_admin callers; it is ignored for
+ * scoped roles and for the public (no-claims) call (CAT-06).
+ *
+ * @generated from message boatbooking.catalog.v1.ListRoutesRequest
+ */
+export type ListRoutesRequest = Message<"boatbooking.catalog.v1.ListRoutesRequest"> & {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId: string;
+};
+
+/**
+ * operator_id is honoured only for super_admin callers; it is ignored for
+ * scoped roles and for the public (no-claims) call (CAT-06).
+ *
+ * @generated from message boatbooking.catalog.v1.ListRoutesRequest
+ */
+export type ListRoutesRequestJson = {
+  /**
+   * @generated from field: string operator_id = 1;
+   */
+  operatorId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListRoutesRequest.
+ * Use `create(ListRoutesRequestSchema)` to create a new message.
+ */
+export const ListRoutesRequestSchema: GenMessage<ListRoutesRequest, {jsonType: ListRoutesRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 26);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListRoutesResponse
+ */
+export type ListRoutesResponse = Message<"boatbooking.catalog.v1.ListRoutesResponse"> & {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.Route routes = 1;
+   */
+  routes: Route[];
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListRoutesResponse
+ */
+export type ListRoutesResponseJson = {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.Route routes = 1;
+   */
+  routes?: RouteJson[];
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListRoutesResponse.
+ * Use `create(ListRoutesResponseSchema)` to create a new message.
+ */
+export const ListRoutesResponseSchema: GenMessage<ListRoutesResponse, {jsonType: ListRoutesResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 27);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveRouteRequest
+ */
+export type ArchiveRouteRequest = Message<"boatbooking.catalog.v1.ArchiveRouteRequest"> & {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId: string;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveRouteRequest
+ */
+export type ArchiveRouteRequestJson = {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchiveRouteRequest.
+ * Use `create(ArchiveRouteRequestSchema)` to create a new message.
+ */
+export const ArchiveRouteRequestSchema: GenMessage<ArchiveRouteRequest, {jsonType: ArchiveRouteRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 28);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveRouteResponse
+ */
+export type ArchiveRouteResponse = Message<"boatbooking.catalog.v1.ArchiveRouteResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Route route = 1;
+   */
+  route?: Route | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchiveRouteResponse
+ */
+export type ArchiveRouteResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Route route = 1;
+   */
+  route?: RouteJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchiveRouteResponse.
+ * Use `create(ArchiveRouteResponseSchema)` to create a new message.
+ */
+export const ArchiveRouteResponseSchema: GenMessage<ArchiveRouteResponse, {jsonType: ArchiveRouteResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 29);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchivePierRequest
+ */
+export type ArchivePierRequest = Message<"boatbooking.catalog.v1.ArchivePierRequest"> & {
+  /**
+   * @generated from field: string pier_id = 1;
+   */
+  pierId: string;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchivePierRequest
+ */
+export type ArchivePierRequestJson = {
+  /**
+   * @generated from field: string pier_id = 1;
+   */
+  pierId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchivePierRequest.
+ * Use `create(ArchivePierRequestSchema)` to create a new message.
+ */
+export const ArchivePierRequestSchema: GenMessage<ArchivePierRequest, {jsonType: ArchivePierRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 30);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchivePierResponse
+ */
+export type ArchivePierResponse = Message<"boatbooking.catalog.v1.ArchivePierResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Pier pier = 1;
+   */
+  pier?: Pier | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ArchivePierResponse
+ */
+export type ArchivePierResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.Pier pier = 1;
+   */
+  pier?: PierJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ArchivePierResponse.
+ * Use `create(ArchivePierResponseSchema)` to create a new message.
+ */
+export const ArchivePierResponseSchema: GenMessage<ArchivePierResponse, {jsonType: ArchivePierResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 31);
+
+/**
+ * Re-adding the same (route, ticket_type, effective_from) replaces the
+ * amount in place (one row, D-14).
+ *
+ * @generated from message boatbooking.catalog.v1.AddRoutePriceRequest
+ */
+export type AddRoutePriceRequest = Message<"boatbooking.catalog.v1.AddRoutePriceRequest"> & {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId: string;
+
+  /**
+   * @generated from field: boatbooking.catalog.events.v1.TicketType ticket_type = 2;
+   */
+  ticketType: TicketType;
+
+  /**
+   * @generated from field: int64 amount_satang = 3;
+   */
+  amountSatang: bigint;
+
+  /**
+   * YYYY-MM-DD, Asia/Bangkok local date
+   *
+   * @generated from field: string effective_from = 4;
+   */
+  effectiveFrom: string;
+};
+
+/**
+ * Re-adding the same (route, ticket_type, effective_from) replaces the
+ * amount in place (one row, D-14).
+ *
+ * @generated from message boatbooking.catalog.v1.AddRoutePriceRequest
+ */
+export type AddRoutePriceRequestJson = {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId?: string;
+
+  /**
+   * @generated from field: boatbooking.catalog.events.v1.TicketType ticket_type = 2;
+   */
+  ticketType?: TicketTypeJson;
+
+  /**
+   * @generated from field: int64 amount_satang = 3;
+   */
+  amountSatang?: string;
+
+  /**
+   * YYYY-MM-DD, Asia/Bangkok local date
+   *
+   * @generated from field: string effective_from = 4;
+   */
+  effectiveFrom?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.AddRoutePriceRequest.
+ * Use `create(AddRoutePriceRequestSchema)` to create a new message.
+ */
+export const AddRoutePriceRequestSchema: GenMessage<AddRoutePriceRequest, {jsonType: AddRoutePriceRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 32);
+
+/**
+ * @generated from message boatbooking.catalog.v1.AddRoutePriceResponse
+ */
+export type AddRoutePriceResponse = Message<"boatbooking.catalog.v1.AddRoutePriceResponse"> & {
+  /**
+   * @generated from field: boatbooking.catalog.v1.RoutePrice price = 1;
+   */
+  price?: RoutePrice | undefined;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.AddRoutePriceResponse
+ */
+export type AddRoutePriceResponseJson = {
+  /**
+   * @generated from field: boatbooking.catalog.v1.RoutePrice price = 1;
+   */
+  price?: RoutePriceJson;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.AddRoutePriceResponse.
+ * Use `create(AddRoutePriceResponseSchema)` to create a new message.
+ */
+export const AddRoutePriceResponseSchema: GenMessage<AddRoutePriceResponse, {jsonType: AddRoutePriceResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 33);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListRoutePricesRequest
+ */
+export type ListRoutePricesRequest = Message<"boatbooking.catalog.v1.ListRoutePricesRequest"> & {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId: string;
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListRoutePricesRequest
+ */
+export type ListRoutePricesRequestJson = {
+  /**
+   * @generated from field: string route_id = 1;
+   */
+  routeId?: string;
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListRoutePricesRequest.
+ * Use `create(ListRoutePricesRequestSchema)` to create a new message.
+ */
+export const ListRoutePricesRequestSchema: GenMessage<ListRoutePricesRequest, {jsonType: ListRoutePricesRequestJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 34);
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListRoutePricesResponse
+ */
+export type ListRoutePricesResponse = Message<"boatbooking.catalog.v1.ListRoutePricesResponse"> & {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.RoutePrice prices = 1;
+   */
+  prices: RoutePrice[];
+};
+
+/**
+ * @generated from message boatbooking.catalog.v1.ListRoutePricesResponse
+ */
+export type ListRoutePricesResponseJson = {
+  /**
+   * @generated from field: repeated boatbooking.catalog.v1.RoutePrice prices = 1;
+   */
+  prices?: RoutePriceJson[];
+};
+
+/**
+ * Describes the message boatbooking.catalog.v1.ListRoutePricesResponse.
+ * Use `create(ListRoutePricesResponseSchema)` to create a new message.
+ */
+export const ListRoutePricesResponseSchema: GenMessage<ListRoutePricesResponse, {jsonType: ListRoutePricesResponseJson}> = /*@__PURE__*/
+  messageDesc(file_services_catalog_v1_catalog, 35);
+
+/**
  * CatalogService is the sync API for catalog-owned boats. Reused by the
  * gateway BFF and by other services that need boat data without waiting on
  * the async BoatUpserted projection.
@@ -242,6 +1649,126 @@ export const CatalogService: GenService<{
     methodKind: "unary";
     input: typeof ListBoatsRequestSchema;
     output: typeof ListBoatsResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ArchiveBoat
+   */
+  archiveBoat: {
+    methodKind: "unary";
+    input: typeof ArchiveBoatRequestSchema;
+    output: typeof ArchiveBoatResponseSchema;
+  },
+  /**
+   * Operator management is super_admin only (D-08, AUTH-05).
+   *
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.UpsertOperator
+   */
+  upsertOperator: {
+    methodKind: "unary";
+    input: typeof UpsertOperatorRequestSchema;
+    output: typeof UpsertOperatorResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ListOperators
+   */
+  listOperators: {
+    methodKind: "unary";
+    input: typeof ListOperatorsRequestSchema;
+    output: typeof ListOperatorsResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ArchiveOperator
+   */
+  archiveOperator: {
+    methodKind: "unary";
+    input: typeof ArchiveOperatorRequestSchema;
+    output: typeof ArchiveOperatorResponseSchema;
+  },
+  /**
+   * Pier creation is super_admin only; pier_admin/staff are scoped to
+   * (operator_id, pier_ids) (D-07, D-08, AUTH-05). ListPiers with no claims
+   * returns the public projection (CAT-06).
+   *
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.UpsertPier
+   */
+  upsertPier: {
+    methodKind: "unary";
+    input: typeof UpsertPierRequestSchema;
+    output: typeof UpsertPierResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ListPiers
+   */
+  listPiers: {
+    methodKind: "unary";
+    input: typeof ListPiersRequestSchema;
+    output: typeof ListPiersResponseSchema;
+  },
+  /**
+   * PresignPierPhoto issues a short-lived, size- and type-bound presigned
+   * PUT URL for a pier photo upload (D-19); pier_admin or super_admin only.
+   *
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.PresignPierPhoto
+   */
+  presignPierPhoto: {
+    methodKind: "unary";
+    input: typeof PresignPierPhotoRequestSchema;
+    output: typeof PresignPierPhotoResponseSchema;
+  },
+  /**
+   * Routes are one-way (D-11); pier_from must be in the caller's scope,
+   * pier_to may be any non-archived pier of any operator (D-12). ListRoutes
+   * with no claims returns the public projection (CAT-06).
+   *
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.UpsertRoute
+   */
+  upsertRoute: {
+    methodKind: "unary";
+    input: typeof UpsertRouteRequestSchema;
+    output: typeof UpsertRouteResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ListRoutes
+   */
+  listRoutes: {
+    methodKind: "unary";
+    input: typeof ListRoutesRequestSchema;
+    output: typeof ListRoutesResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ArchiveRoute
+   */
+  archiveRoute: {
+    methodKind: "unary";
+    input: typeof ArchiveRouteRequestSchema;
+    output: typeof ArchiveRouteResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ArchivePier
+   */
+  archivePier: {
+    methodKind: "unary";
+    input: typeof ArchivePierRequestSchema;
+    output: typeof ArchivePierResponseSchema;
+  },
+  /**
+   * Prices are effective-dated (D-14); AddRoutePrice requires the route be
+   * in the caller's scope.
+   *
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.AddRoutePrice
+   */
+  addRoutePrice: {
+    methodKind: "unary";
+    input: typeof AddRoutePriceRequestSchema;
+    output: typeof AddRoutePriceResponseSchema;
+  },
+  /**
+   * @generated from rpc boatbooking.catalog.v1.CatalogService.ListRoutePrices
+   */
+  listRoutePrices: {
+    methodKind: "unary";
+    input: typeof ListRoutePricesRequestSchema;
+    output: typeof ListRoutePricesResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_services_catalog_v1_catalog, 0);

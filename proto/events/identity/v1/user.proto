@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package boatbooking.identity.events.v1;
+
+option go_package = "github.com/chonlatee11/boat-booking/gen/go/identity/v1;identityv1";
+
+// UserCreated is a past-tense fact: a new user was created (currently only
+// via first OTP verify, always role "customer", D-04). Ids and role only, no
+// personal data (D-45) — email/phone/name never appear in identity events.
+message UserCreated {
+  string user_id = 1;
+  string role = 2;
+  string operator_id = 3;
+  repeated string pier_ids = 4;
+}

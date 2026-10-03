@@ -22,6 +22,7 @@ import (
 	catalogv1 "github.com/chonlatee11/boat-booking/gen/go/catalog/v1"
 	"github.com/chonlatee11/boat-booking/gen/go/catalog/v1/catalogv1connect"
 	platformv1 "github.com/chonlatee11/boat-booking/gen/go/platform/v1"
+	"github.com/chonlatee11/boat-booking/pkg/auth"
 	"github.com/chonlatee11/boat-booking/pkg/httpx"
 	"github.com/chonlatee11/boat-booking/pkg/kafka"
 	bbpgx "github.com/chonlatee11/boat-booking/pkg/pgx"
@@ -212,13 +213,25 @@ func newAuthedCatalogClient(baseURL string, headers map[string]string) catalogv1
 		connect.WithInterceptors(claimsInterceptor{headers: headers}))
 }
 
-func newClaimHeaders(operatorID string) map[string]string {
-	return map[string]string{
+// claimHeaders builds the trust-boundary headers RequireInternal expects for
+// a request carrying a specific role/operator/pier scope — the general
+// helper used by the operators/piers scoping tests (plan 02-03). X-Pier-Ids
+// is set only when pierIDs is non-empty, matching httpx.ForwardClaims's
+// convention; operatorID is omitted from the headers when empty (the
+// super_admin case, which never reads it).
+func claimHeaders(role, operatorID string, pierIDs ...string) map[string]string {
+	h := map[string]string{
 		httpx.HeaderInternalToken: "test-token",
 		httpx.HeaderUserID:        uuid.NewString(),
-		httpx.HeaderOperatorID:    operatorID,
-		httpx.HeaderRole:          "pier_admin",
+		httpx.HeaderRole:          role,
 	}
+	if operatorID != "" {
+		h[httpx.HeaderOperatorID] = operatorID
+	}
+	if len(pierIDs) > 0 {
+		h[httpx.HeaderPierIDs] = strings.Join(pierIDs, ",")
+	}
+	return h
 }
 
 // waitForBoatUpserted spins up a throwaway pkg/kafka.Consumer (a fresh
@@ -270,9 +283,9 @@ func waitForBoatUpserted(t *testing.T, dsn string) *platformv1.Envelope {
 
 // TestUpsertBoatPublishesBoatUpserted proves the write side of the proof
 // event end to end: UpsertBoat (connect) writes a boats row and its
-// catalog.BoatUpserted outbox row in one tx, taking operator_id from trusted
-// claims; the relay publishes it to catalog.events keyed by boat_id (D-01,
-// PLAT-05).
+// catalog.BoatUpserted outbox row in one tx, deriving operator_id from the
+// home pier's stored operator; the relay publishes it to catalog.events
+// keyed by boat_id, carrying home_pier_id (D-01, D-07, PLAT-05).
 func TestUpsertBoatPublishesBoatUpserted(t *testing.T) {
 	addr, dsn := setCatalogEnv(t)
 	baseURL := "http://" + addr
@@ -280,13 +293,17 @@ func TestUpsertBoatPublishesBoatUpserted(t *testing.T) {
 	waitForFullyReady(t, baseURL)
 
 	ctx := context.Background()
-	operatorID := uuid.NewString()
-	client := newAuthedCatalogClient(baseURL, newClaimHeaders(operatorID))
+	superAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RoleSuperAdmin, ""))
+	operatorID := mustCreateOperator(t, ctx, superAdmin, "Proof Operator")
+	pierID := mustCreatePier(t, ctx, superAdmin, operatorID, "ท่าพิสูจน์", "Proof Pier", 7.88, 98.39)
+
+	client := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, operatorID, pierID))
 
 	resp, err := client.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
 		Name:            "Proof Boat",
 		DefaultCapacity: 42,
 		Status:          catalogv1.BoatStatus_BOAT_STATUS_ACTIVE,
+		HomePierId:      pierID,
 	}))
 	if err != nil {
 		t.Fatalf("UpsertBoat: %v", err)
@@ -294,6 +311,12 @@ func TestUpsertBoatPublishesBoatUpserted(t *testing.T) {
 	boatID := resp.Msg.Boat.BoatId
 	if _, err := uuid.Parse(boatID); err != nil {
 		t.Fatalf("boat_id %q is not a valid uuid: %v", boatID, err)
+	}
+	if resp.Msg.Boat.OperatorId != operatorID {
+		t.Errorf("boat.OperatorId = %q, want %q (derived from home pier)", resp.Msg.Boat.OperatorId, operatorID)
+	}
+	if resp.Msg.Boat.HomePierId != pierID {
+		t.Errorf("boat.HomePierId = %q, want %q", resp.Msg.Boat.HomePierId, pierID)
 	}
 
 	env := waitForBoatUpserted(t, dsn)
@@ -312,7 +335,13 @@ func TestUpsertBoatPublishesBoatUpserted(t *testing.T) {
 		t.Errorf("payload.BoatId = %q, want %q", payload.BoatId, boatID)
 	}
 	if payload.OperatorId != operatorID {
-		t.Errorf("payload.OperatorId = %q, want %q (claims operator id)", payload.OperatorId, operatorID)
+		t.Errorf("payload.OperatorId = %q, want %q (derived from home pier)", payload.OperatorId, operatorID)
+	}
+	if payload.HomePierId != pierID {
+		t.Errorf("payload.HomePierId = %q, want %q", payload.HomePierId, pierID)
+	}
+	if payload.Archived {
+		t.Errorf("payload.Archived = true, want false")
 	}
 	if payload.DefaultCapacity != 42 {
 		t.Errorf("payload.DefaultCapacity = %d, want 42", payload.DefaultCapacity)
@@ -333,7 +362,8 @@ func assertConnectCode(t *testing.T, err error, want connect.Code, context strin
 }
 
 // TestUpsertBoatValidationAndTenancy covers UpsertBoat's trust-boundary,
-// validation, and cross-operator tenancy behavior (plan 10 task 2).
+// validation, and cross-operator tenancy behavior (plan 10 task 2, extended
+// for D-07 home-pier scoping in plan 02-08).
 func TestUpsertBoatValidationAndTenancy(t *testing.T) {
 	addr, _ := setCatalogEnv(t)
 	baseURL := "http://" + addr
@@ -348,40 +378,48 @@ func TestUpsertBoatValidationAndTenancy(t *testing.T) {
 	}))
 	assertConnectCode(t, err, connect.CodeUnauthenticated, "no claim headers")
 
-	operatorA := uuid.NewString()
-	clientA := newAuthedCatalogClient(baseURL, newClaimHeaders(operatorA))
+	superAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RoleSuperAdmin, ""))
+	operatorA := mustCreateOperator(t, ctx, superAdmin, "Operator A Boats")
+	pierA1 := mustCreatePier(t, ctx, superAdmin, operatorA, "ท่า A1 เรือ", "Pier A1 Boats", 7.5, 98.1)
+	clientA := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, operatorA, pierA1))
 
 	cases := []struct {
 		name            string
 		defaultCapacity int32
 		status          catalogv1.BoatStatus
+		homePierID      string
 	}{
-		{name: "", defaultCapacity: 10, status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE},
-		{name: "x", defaultCapacity: 0, status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE},
-		{name: "x", defaultCapacity: 1001, status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE},
-		{name: "x", defaultCapacity: 10, status: catalogv1.BoatStatus_BOAT_STATUS_UNSPECIFIED},
+		{name: "", defaultCapacity: 10, status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, homePierID: pierA1},
+		{name: "x", defaultCapacity: 0, status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, homePierID: pierA1},
+		{name: "x", defaultCapacity: 1001, status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, homePierID: pierA1},
+		{name: "x", defaultCapacity: 10, status: catalogv1.BoatStatus_BOAT_STATUS_UNSPECIFIED, homePierID: pierA1},
+		{name: "x", defaultCapacity: 10, status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, homePierID: ""},
 	}
 	for _, c := range cases {
 		_, err := clientA.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
-			Name: c.name, DefaultCapacity: c.defaultCapacity, Status: c.status,
+			Name: c.name, DefaultCapacity: c.defaultCapacity, Status: c.status, HomePierId: c.homePierID,
 		}))
 		assertConnectCode(t, err, connect.CodeInvalidArgument,
-			fmt.Sprintf("name=%q capacity=%d status=%v", c.name, c.defaultCapacity, c.status))
+			fmt.Sprintf("name=%q capacity=%d status=%v home_pier_id=%q", c.name, c.defaultCapacity, c.status, c.homePierID))
 	}
 
-	// Create a real boat under operator A.
+	// Create a real boat under operator A / pier A1.
 	resp, err := clientA.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
-		Name: "Original", DefaultCapacity: 20, Status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE,
+		Name: "Original", DefaultCapacity: 20, Status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, HomePierId: pierA1,
 	}))
 	if err != nil {
 		t.Fatalf("create boat under operator A: %v", err)
 	}
 	boatID := resp.Msg.Boat.BoatId
 
-	// Operator B reuses the same boat_id -> NotFound, stored row unchanged.
-	clientB := newAuthedCatalogClient(baseURL, newClaimHeaders(uuid.NewString()))
+	// Operator B (a separate operator/pier entirely) reuses the same
+	// boat_id -> NotFound (the boat's home pier isn't in B's scope), stored
+	// row unchanged.
+	operatorB := mustCreateOperator(t, ctx, superAdmin, "Operator B Boats")
+	pierB1 := mustCreatePier(t, ctx, superAdmin, operatorB, "ท่า B1 เรือ", "Pier B1 Boats", 7.6, 98.2)
+	clientB := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, operatorB, pierB1))
 	_, err = clientB.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
-		BoatId: boatID, Name: "Hijacked", DefaultCapacity: 99, Status: catalogv1.BoatStatus_BOAT_STATUS_MAINTENANCE,
+		BoatId: boatID, Name: "Hijacked", DefaultCapacity: 99, Status: catalogv1.BoatStatus_BOAT_STATUS_MAINTENANCE, HomePierId: pierB1,
 	}))
 	assertConnectCode(t, err, connect.CodeNotFound, "cross-operator boat_id reuse")
 
@@ -403,8 +441,87 @@ func TestUpsertBoatValidationAndTenancy(t *testing.T) {
 	}
 }
 
+// TestUpdateBoatMovedToAnotherOperatorPierUpdatesOperatorID proves the
+// CR-02 fix: when a super_admin moves a boat's home_pier_id to a pier owned
+// by a different operator, the stored operator_id (and the operator_id on
+// the resulting BoatUpserted event) follow the new pier — the boat leaves
+// the old operator's scope and enters the new operator's scope, instead of
+// keeping the stale operator_id and becoming invisible to both.
+func TestUpdateBoatMovedToAnotherOperatorPierUpdatesOperatorID(t *testing.T) {
+	addr, _ := setCatalogEnv(t)
+	baseURL := "http://" + addr
+	runService(t)
+	waitForFullyReady(t, baseURL)
+	ctx := context.Background()
+
+	superAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RoleSuperAdmin, ""))
+	operatorA := mustCreateOperator(t, ctx, superAdmin, "Operator A Move")
+	pierA1 := mustCreatePier(t, ctx, superAdmin, operatorA, "ท่า A1 ย้าย", "Pier A1 Move", 7.5, 98.1)
+	operatorB := mustCreateOperator(t, ctx, superAdmin, "Operator B Move")
+	pierB1 := mustCreatePier(t, ctx, superAdmin, operatorB, "ท่า B1 ย้าย", "Pier B1 Move", 7.6, 98.2)
+
+	clientA := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, operatorA, pierA1))
+	resp, err := clientA.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
+		Name: "Movable", DefaultCapacity: 12, Status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, HomePierId: pierA1,
+	}))
+	if err != nil {
+		t.Fatalf("create boat under operator A: %v", err)
+	}
+	boatID := resp.Msg.Boat.BoatId
+	if resp.Msg.Boat.OperatorId != operatorA {
+		t.Fatalf("created boat operator_id = %q, want %q", resp.Msg.Boat.OperatorId, operatorA)
+	}
+
+	// super_admin moves the boat to operator B's pier.
+	moveResp, err := superAdmin.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
+		BoatId: boatID, Name: "Movable", DefaultCapacity: 12, Status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, HomePierId: pierB1,
+	}))
+	if err != nil {
+		t.Fatalf("move boat to operator B pier: %v", err)
+	}
+	if moveResp.Msg.Boat.OperatorId != operatorB {
+		t.Errorf("moved boat operator_id = %q, want %q (CR-02)", moveResp.Msg.Boat.OperatorId, operatorB)
+	}
+	if moveResp.Msg.Boat.HomePierId != pierB1 {
+		t.Errorf("moved boat home_pier_id = %q, want %q", moveResp.Msg.Boat.HomePierId, pierB1)
+	}
+
+	// Operator A's pier_admin can no longer see it.
+	listA, err := clientA.ListBoats(ctx, connect.NewRequest(&catalogv1.ListBoatsRequest{}))
+	if err != nil {
+		t.Fatalf("ListBoats as operator A: %v", err)
+	}
+	for _, b := range listA.Msg.Boats {
+		if b.BoatId == boatID {
+			t.Errorf("boat %s still visible to operator A after move", boatID)
+		}
+	}
+
+	// Operator B's pier_admin can now see and edit it.
+	clientB := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, operatorB, pierB1))
+	listB, err := clientB.ListBoats(ctx, connect.NewRequest(&catalogv1.ListBoatsRequest{}))
+	if err != nil {
+		t.Fatalf("ListBoats as operator B: %v", err)
+	}
+	var found bool
+	for _, b := range listB.Msg.Boats {
+		if b.BoatId == boatID {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("boat %s not visible to operator B after move", boatID)
+	}
+	if _, err := clientB.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
+		BoatId: boatID, Name: "Movable Renamed", DefaultCapacity: 12, Status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, HomePierId: pierB1,
+	})); err != nil {
+		t.Errorf("operator B editing the moved boat: %v", err)
+	}
+}
+
 // TestListBoatsOrdered proves ListBoats returns boats ordered by name then
-// id and needs only the internal token (no claim headers).
+// id; the public (no-claims, internal-token-only) call lists every
+// non-archived boat regardless of operator.
 func TestListBoatsOrdered(t *testing.T) {
 	addr, _ := setCatalogEnv(t)
 	baseURL := "http://" + addr
@@ -412,10 +529,13 @@ func TestListBoatsOrdered(t *testing.T) {
 	waitForFullyReady(t, baseURL)
 	ctx := context.Background()
 
-	writer := newAuthedCatalogClient(baseURL, newClaimHeaders(uuid.NewString()))
+	superAdmin := newAuthedCatalogClient(baseURL, claimHeaders(auth.RoleSuperAdmin, ""))
+	operatorID := mustCreateOperator(t, ctx, superAdmin, "Ordered Boats Operator")
+	pierID := mustCreatePier(t, ctx, superAdmin, operatorID, "ท่าเรียงลำดับ", "Ordered Pier", 7.4, 98.05)
+	writer := newAuthedCatalogClient(baseURL, claimHeaders(auth.RolePierAdmin, operatorID, pierID))
 	for _, name := range []string{"Zeta", "Alpha", "Mid"} {
 		if _, err := writer.UpsertBoat(ctx, connect.NewRequest(&catalogv1.UpsertBoatRequest{
-			Name: name, DefaultCapacity: 5, Status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE,
+			Name: name, DefaultCapacity: 5, Status: catalogv1.BoatStatus_BOAT_STATUS_ACTIVE, HomePierId: pierID,
 		})); err != nil {
 			t.Fatalf("create boat %q: %v", name, err)
 		}

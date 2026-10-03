@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package boatbooking.catalog.events.v1;
+
+option go_package = "github.com/chonlatee11/boat-booking/gen/go/catalog/v1;catalogv1";
+
+// RouteUpserted is a past-tense fact: a one-way route was created, edited,
+// or archived (D-11). Ids and business fields only, no personal data
+// (D-45).
+message RouteUpserted {
+  string route_id = 1;
+  string operator_id = 2;
+  string pier_from_id = 3;
+  string pier_to_id = 4;
+  int32 duration_minutes = 5;
+  bool archived = 6;
+}

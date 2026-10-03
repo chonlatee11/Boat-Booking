@@ -44,6 +44,7 @@ pipeline {
             steps {
                 sh 'make dev-tools'
                 sh 'npm --prefix apps/web ci'
+                sh 'npm --prefix apps/admin ci'
             }
         }
         stage('Lint') {

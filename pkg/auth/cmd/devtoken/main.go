@@ -88,6 +88,17 @@ func cmdKeys() error {
 		env.set("INTERNAL_TOKEN", internalToken)
 	}
 
+	// Independent of the RSA branch above: an existing .env from before
+	// identity's OTP_HASH_SECRET existed gains it on the next `make
+	// dev-keys` without rotating the JWT keys or INTERNAL_TOKEN.
+	if env.values["OTP_HASH_SECRET"] == "" {
+		otpHashSecret, err := generateHexToken(32)
+		if err != nil {
+			return fmt.Errorf("devtoken keys: generate otp hash secret: %w", err)
+		}
+		env.set("OTP_HASH_SECRET", otpHashSecret)
+	}
+
 	if err := env.writeFile(envPath, 0o600); err != nil {
 		return fmt.Errorf("devtoken keys: write .env: %w", err)
 	}
@@ -163,6 +174,7 @@ func cmdToken(args []string) error {
 	sub := fs.String("sub", "00000000-0000-0000-0000-000000000001", "user id")
 	operator := fs.String("operator", "00000000-0000-0000-0000-0000000000a1", "operator id")
 	role := fs.String("role", "pier_admin", "role")
+	pierIDs := fs.String("pier-ids", "", "comma-separated pier uuids (empty = no pier scoping)")
 	kind := fs.String("kind", "access", "token kind: access|refresh")
 	age := fs.Duration("age", 0, "shift issuance back by this duration (produces an expired token)")
 	foreignKey := fs.Bool("foreign-key", false, "sign with a freshly generated RSA key instead of the dev key (negative test)")
@@ -206,12 +218,18 @@ func cmdToken(args []string) error {
 		}
 	}
 
+	var pierIDList []string
+	if *pierIDs != "" {
+		pierIDList = strings.Split(*pierIDs, ",")
+	}
+
 	issuerObj := auth.NewIssuer(priv, issuer)
 	now := time.Now().Add(-*age)
 	tok, err := issuerObj.Issue(auth.Claims{
 		UserID:     *sub,
 		OperatorID: *operator,
 		Role:       *role,
+		PierIDs:    pierIDList,
 		Kind:       tokenKind,
 	}, now)
 	if err != nil {

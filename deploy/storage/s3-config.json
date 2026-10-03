@@ -1,0 +1,27 @@
+{
+  "_comment": "Non-secret dev object-storage settings for pier photos (D-19). No credentials here — the catalog identity's access/secret key comes from S3_ACCESS_KEY/S3_SECRET_KEY (.env), applied by the storage-init one-shot container via `weed shell s3.configure`, never committed. This file documents the same settings applied by storage/storage-init in deploy/docker-compose.yml and doubles as the portable AWS-style policy for a real S3-compatible bucket in prod (Flagged Assumptions).",
+  "bucket": "pier-photos",
+  "policy": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "PublicReadPierPhotos",
+        "Effect": "Allow",
+        "Principal": "*",
+        "Action": "s3:GetObject",
+        "Resource": "arn:aws:s3:::pier-photos/*"
+      }
+    ]
+  },
+  "cors": {
+    "CORSRules": [
+      {
+        "ID": "admin-app-upload",
+        "AllowedOrigins": ["http://localhost:3002"],
+        "AllowedMethods": ["GET", "PUT"],
+        "AllowedHeaders": ["Content-Type"],
+        "MaxAgeSeconds": 3600
+      }
+    ]
+  }
+}

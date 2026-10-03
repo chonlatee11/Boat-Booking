@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -19,6 +20,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/chonlatee11/boat-booking/pkg/httpx"
@@ -27,6 +30,7 @@ import (
 	bbpgx "github.com/chonlatee11/boat-booking/pkg/pgx"
 	httpadapter "github.com/chonlatee11/boat-booking/services/catalog/internal/adapters/http"
 	kafkaadapter "github.com/chonlatee11/boat-booking/services/catalog/internal/adapters/kafka"
+	"github.com/chonlatee11/boat-booking/services/catalog/internal/app"
 )
 
 const serviceName = "catalog"
@@ -76,6 +80,10 @@ func run(ctx context.Context) error {
 	}
 
 	log := httpx.NewLogger(serviceName)
+	// WR-09: toConnectErr's default branch logs the real error before
+	// redacting it on the wire — route that log through the same
+	// JSON+trace_id logger everything else uses.
+	slog.SetDefault(log)
 	shutdownOTel, err := httpx.SetupOTel(ctx, serviceName)
 	if err != nil {
 		return fmt.Errorf("%s: setup otel: %w", serviceName, err)
@@ -125,12 +133,17 @@ func run(ctx context.Context) error {
 	}
 	ready := httpx.NewReadiness(checks)
 
+	photos, err := newPhotos()
+	if err != nil {
+		return fmt.Errorf("%s: %w", serviceName, err)
+	}
+
 	r := chi.NewRouter()
 	r.Get("/healthz", httpx.Healthz)
 	r.Get("/readyz", ready.Handler)
 	r.Group(func(pr chi.Router) {
 		pr.Use(httpx.RequireInternal(token))
-		httpadapter.Routes(pr, pool, nudge)
+		httpadapter.Routes(pr, pool, nudge, photos)
 	})
 
 	srv := &http.Server{
@@ -197,6 +210,38 @@ func parseBoolEnv(key string, def bool) (bool, error) {
 	default:
 		return false, fmt.Errorf("invalid %s %q: must be true/false", key, v)
 	}
+}
+
+// newPhotos builds app.Photos from the S3_* env vars (D-19). Client stays
+// nil (Photos.PresignPierPhoto then returns FailedPrecondition) when
+// S3_PUBLIC_ENDPOINT is unset, so catalog still starts without object
+// storage configured. Region is always set — PresignHeader is then a local
+// computation, never a network call. Never log S3_ACCESS_KEY/S3_SECRET_KEY.
+func newPhotos() (app.Photos, error) {
+	endpoint := os.Getenv("S3_PUBLIC_ENDPOINT")
+	publicBaseURL := os.Getenv("PHOTO_PUBLIC_BASE_URL")
+	if endpoint == "" {
+		return app.Photos{PublicBaseURL: publicBaseURL}, nil
+	}
+
+	useSSL, err := parseBoolEnv("S3_USE_SSL", false)
+	if err != nil {
+		return app.Photos{}, err
+	}
+	client, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(os.Getenv("S3_ACCESS_KEY"), os.Getenv("S3_SECRET_KEY"), ""),
+		Secure: useSSL,
+		Region: httpx.EnvOr("S3_REGION", "us-east-1"),
+	})
+	if err != nil {
+		return app.Photos{}, fmt.Errorf("new minio client: %w", err)
+	}
+
+	return app.Photos{
+		Client:        client,
+		Bucket:        httpx.EnvOr("S3_BUCKET", "pier-photos"),
+		PublicBaseURL: publicBaseURL,
+	}, nil
 }
 
 func runHealthcheck(addr string) int {

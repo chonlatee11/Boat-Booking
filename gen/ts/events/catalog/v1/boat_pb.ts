@@ -10,12 +10,14 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file events/catalog/v1/boat.proto.
  */
 export const file_events_catalog_v1_boat: GenFile = /*@__PURE__*/
-  fileDesc("ChxldmVudHMvY2F0YWxvZy92MS9ib2F0LnByb3RvEh1ib2F0Ym9va2luZy5jYXRhbG9nLmV2ZW50cy52MSKXAQoMQm9hdFVwc2VydGVkEg8KB2JvYXRfaWQYASABKAkSEwoLb3BlcmF0b3JfaWQYAiABKAkSDAoEbmFtZRgDIAEoCRIYChBkZWZhdWx0X2NhcGFjaXR5GAQgASgFEjkKBnN0YXR1cxgFIAEoDjIpLmJvYXRib29raW5nLmNhdGFsb2cuZXZlbnRzLnYxLkJvYXRTdGF0dXMqXgoKQm9hdFN0YXR1cxIbChdCT0FUX1NUQVRVU19VTlNQRUNJRklFRBAAEhYKEkJPQVRfU1RBVFVTX0FDVElWRRABEhsKF0JPQVRfU1RBVFVTX01BSU5URU5BTkNFEAJCQVo/Z2l0aHViLmNvbS9jaG9ubGF0ZWUxMS9ib2F0LWJvb2tpbmcvZ2VuL2dvL2NhdGFsb2cvdjE7Y2F0YWxvZ3YxYgZwcm90bzM");
+  fileDesc("ChxldmVudHMvY2F0YWxvZy92MS9ib2F0LnByb3RvEh1ib2F0Ym9va2luZy5jYXRhbG9nLmV2ZW50cy52MSK/AQoMQm9hdFVwc2VydGVkEg8KB2JvYXRfaWQYASABKAkSEwoLb3BlcmF0b3JfaWQYAiABKAkSDAoEbmFtZRgDIAEoCRIYChBkZWZhdWx0X2NhcGFjaXR5GAQgASgFEjkKBnN0YXR1cxgFIAEoDjIpLmJvYXRib29raW5nLmNhdGFsb2cuZXZlbnRzLnYxLkJvYXRTdGF0dXMSFAoMaG9tZV9waWVyX2lkGAYgASgJEhAKCGFyY2hpdmVkGAcgASgIKl4KCkJvYXRTdGF0dXMSGwoXQk9BVF9TVEFUVVNfVU5TUEVDSUZJRUQQABIWChJCT0FUX1NUQVRVU19BQ1RJVkUQARIbChdCT0FUX1NUQVRVU19NQUlOVEVOQU5DRRACQkFaP2dpdGh1Yi5jb20vY2hvbmxhdGVlMTEvYm9hdC1ib29raW5nL2dlbi9nby9jYXRhbG9nL3YxO2NhdGFsb2d2MWIGcHJvdG8z");
 
 /**
  * BoatUpserted is a past-tense fact: a boat was created or updated in the
  * catalog. Ids only, no personal data (D-45) — the boat's own name is not
- * PII.
+ * PII. home_pier_id and archived are additive fields (D-07) — the
+ * schedule-service consumer ignores them and keeps applying the event
+ * unchanged.
  *
  * @generated from message boatbooking.catalog.events.v1.BoatUpserted
  */
@@ -44,12 +46,24 @@ export type BoatUpserted = Message<"boatbooking.catalog.events.v1.BoatUpserted">
    * @generated from field: boatbooking.catalog.events.v1.BoatStatus status = 5;
    */
   status: BoatStatus;
+
+  /**
+   * @generated from field: string home_pier_id = 6;
+   */
+  homePierId: string;
+
+  /**
+   * @generated from field: bool archived = 7;
+   */
+  archived: boolean;
 };
 
 /**
  * BoatUpserted is a past-tense fact: a boat was created or updated in the
  * catalog. Ids only, no personal data (D-45) — the boat's own name is not
- * PII.
+ * PII. home_pier_id and archived are additive fields (D-07) — the
+ * schedule-service consumer ignores them and keeps applying the event
+ * unchanged.
  *
  * @generated from message boatbooking.catalog.events.v1.BoatUpserted
  */
@@ -78,6 +92,16 @@ export type BoatUpsertedJson = {
    * @generated from field: boatbooking.catalog.events.v1.BoatStatus status = 5;
    */
   status?: BoatStatusJson;
+
+  /**
+   * @generated from field: string home_pier_id = 6;
+   */
+  homePierId?: string;
+
+  /**
+   * @generated from field: bool archived = 7;
+   */
+  archived?: boolean;
 };
 
 /**

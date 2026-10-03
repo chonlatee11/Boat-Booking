@@ -11,12 +11,120 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const listBoats = `-- name: ListBoats :many
-select id, operator_id, name, default_capacity, status, created_at, updated_at from boats order by name, id
+const archiveBoat = `-- name: ArchiveBoat :one
+update boats
+set archived_at = coalesce(archived_at, now()),
+    updated_at = now()
+where id = $1
+returning id, operator_id, name, default_capacity, status, created_at, updated_at, home_pier_id, archived_at
 `
 
-func (q *Queries) ListBoats(ctx context.Context) ([]Boat, error) {
-	rows, err := q.db.Query(ctx, listBoats)
+func (q *Queries) ArchiveBoat(ctx context.Context, id pgtype.UUID) (Boat, error) {
+	row := q.db.QueryRow(ctx, archiveBoat, id)
+	var i Boat
+	err := row.Scan(
+		&i.ID,
+		&i.OperatorID,
+		&i.Name,
+		&i.DefaultCapacity,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.HomePierID,
+		&i.ArchivedAt,
+	)
+	return i, err
+}
+
+const getBoatForUpdateScoped = `-- name: GetBoatForUpdateScoped :one
+select id, operator_id, name, default_capacity, status, created_at, updated_at, home_pier_id, archived_at from boats
+where id = $1
+  and ($2::bool or (operator_id = $3 and home_pier_id = any($4::uuid[])))
+for update
+`
+
+type GetBoatForUpdateScopedParams struct {
+	ID         pgtype.UUID
+	AllScope   bool
+	OperatorID pgtype.UUID
+	PierIds    []pgtype.UUID
+}
+
+func (q *Queries) GetBoatForUpdateScoped(ctx context.Context, arg GetBoatForUpdateScopedParams) (Boat, error) {
+	row := q.db.QueryRow(ctx, getBoatForUpdateScoped,
+		arg.ID,
+		arg.AllScope,
+		arg.OperatorID,
+		arg.PierIds,
+	)
+	var i Boat
+	err := row.Scan(
+		&i.ID,
+		&i.OperatorID,
+		&i.Name,
+		&i.DefaultCapacity,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.HomePierID,
+		&i.ArchivedAt,
+	)
+	return i, err
+}
+
+const insertBoat = `-- name: InsertBoat :one
+insert into boats (id, operator_id, home_pier_id, name, default_capacity, status)
+values ($1, $2, $3, $4, $5, $6)
+returning id, operator_id, name, default_capacity, status, created_at, updated_at, home_pier_id, archived_at
+`
+
+type InsertBoatParams struct {
+	ID              pgtype.UUID
+	OperatorID      pgtype.UUID
+	HomePierID      pgtype.UUID
+	Name            string
+	DefaultCapacity int32
+	Status          string
+}
+
+func (q *Queries) InsertBoat(ctx context.Context, arg InsertBoatParams) (Boat, error) {
+	row := q.db.QueryRow(ctx, insertBoat,
+		arg.ID,
+		arg.OperatorID,
+		arg.HomePierID,
+		arg.Name,
+		arg.DefaultCapacity,
+		arg.Status,
+	)
+	var i Boat
+	err := row.Scan(
+		&i.ID,
+		&i.OperatorID,
+		&i.Name,
+		&i.DefaultCapacity,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.HomePierID,
+		&i.ArchivedAt,
+	)
+	return i, err
+}
+
+const listBoatsAdmin = `-- name: ListBoatsAdmin :many
+select id, operator_id, name, default_capacity, status, created_at, updated_at, home_pier_id, archived_at from boats
+where $1::bool or (operator_id = $2 and home_pier_id = any($3::uuid[]))
+order by name, id
+`
+
+type ListBoatsAdminParams struct {
+	AllScope   bool
+	OperatorID pgtype.UUID
+	PierIds    []pgtype.UUID
+}
+
+func (q *Queries) ListBoatsAdmin(ctx context.Context, arg ListBoatsAdminParams) ([]Boat, error) {
+	rows, err := q.db.Query(ctx, listBoatsAdmin, arg.AllScope, arg.OperatorID, arg.PierIds)
 	if err != nil {
 		return nil, err
 	}
@@ -32,6 +140,8 @@ func (q *Queries) ListBoats(ctx context.Context) ([]Boat, error) {
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.HomePierID,
+			&i.ArchivedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -43,30 +153,68 @@ func (q *Queries) ListBoats(ctx context.Context) ([]Boat, error) {
 	return items, nil
 }
 
-const upsertBoat = `-- name: UpsertBoat :one
-insert into boats (id, operator_id, name, default_capacity, status)
-values ($1, $2, $3, $4, $5)
-on conflict (id) do update
-  set name = excluded.name,
-      default_capacity = excluded.default_capacity,
-      status = excluded.status,
-      updated_at = now()
-  where boats.operator_id = excluded.operator_id
-returning id, operator_id, name, default_capacity, status, created_at, updated_at
+const listBoatsPublic = `-- name: ListBoatsPublic :many
+select id, operator_id, name, default_capacity, status, created_at, updated_at, home_pier_id, archived_at from boats
+where archived_at is null
+order by name, id
 `
 
-type UpsertBoatParams struct {
+func (q *Queries) ListBoatsPublic(ctx context.Context) ([]Boat, error) {
+	rows, err := q.db.Query(ctx, listBoatsPublic)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Boat
+	for rows.Next() {
+		var i Boat
+		if err := rows.Scan(
+			&i.ID,
+			&i.OperatorID,
+			&i.Name,
+			&i.DefaultCapacity,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.HomePierID,
+			&i.ArchivedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateBoat = `-- name: UpdateBoat :one
+update boats
+set operator_id = $2,
+    home_pier_id = $3,
+    name = $4,
+    default_capacity = $5,
+    status = $6,
+    updated_at = now()
+where id = $1
+returning id, operator_id, name, default_capacity, status, created_at, updated_at, home_pier_id, archived_at
+`
+
+type UpdateBoatParams struct {
 	ID              pgtype.UUID
 	OperatorID      pgtype.UUID
+	HomePierID      pgtype.UUID
 	Name            string
 	DefaultCapacity int32
 	Status          string
 }
 
-func (q *Queries) UpsertBoat(ctx context.Context, arg UpsertBoatParams) (Boat, error) {
-	row := q.db.QueryRow(ctx, upsertBoat,
+func (q *Queries) UpdateBoat(ctx context.Context, arg UpdateBoatParams) (Boat, error) {
+	row := q.db.QueryRow(ctx, updateBoat,
 		arg.ID,
 		arg.OperatorID,
+		arg.HomePierID,
 		arg.Name,
 		arg.DefaultCapacity,
 		arg.Status,
@@ -80,6 +228,8 @@ func (q *Queries) UpsertBoat(ctx context.Context, arg UpsertBoatParams) (Boat, e
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.HomePierID,
+		&i.ArchivedAt,
 	)
 	return i, err
 }

@@ -19,7 +19,7 @@ PORT ?= 8080
 CATALOG_PORT ?= 8090
 topic ?= catalog.events
 
-.PHONY: dev-keys dev-token up up-infra obs-check down kong-roundtrip proof compose-gen test test-integration dev-tools lint hooks proto-gen proto-check sqlc-gen ci-keys ci-up ci-down images new-service template-smoke migrate-% migrate-validate web-check ci run-% dlq-list
+.PHONY: dev-keys dev-token up up-infra obs-check down kong-roundtrip proof auth-roundtrip photo-roundtrip compose-gen test test-integration dev-tools lint hooks proto-gen proto-check sqlc-gen ci-keys ci-up ci-down images new-service template-smoke migrate-% migrate-validate web-check ci run-% dlq-list
 
 dev-keys:
 	go run $(M)/pkg/auth/cmd/devtoken keys
@@ -91,6 +91,12 @@ kong-roundtrip:
 
 proof:
 	deploy/proof.sh
+
+auth-roundtrip:
+	deploy/auth-roundtrip.sh
+
+photo-roundtrip:
+	deploy/photo-roundtrip.sh
 
 # run-% runs a service from the host (go run) against the up-infra stack,
 # with hosts overridden to localhost (D-17, D-19). Services listed in
@@ -240,6 +246,9 @@ lint:
 	test -d apps/web/node_modules || npm --prefix apps/web ci
 	npm --prefix apps/web run lint
 	npm --prefix apps/web run typecheck
+	test -d apps/admin/node_modules || npm --prefix apps/admin ci
+	npm --prefix apps/admin run lint
+	npm --prefix apps/admin run typecheck
 
 hooks:
 	lefthook install
@@ -289,6 +298,8 @@ migrate-validate:
 web-check:
 	npm --prefix apps/web run format:check
 	npm --prefix apps/web run build
+	npm --prefix apps/admin run format:check
+	npm --prefix apps/admin run build
 
 # ci reproduces the Jenkins pipeline locally in the same order, stopping at
 # the first failure; no flag here ever skips test-integration (D-22).

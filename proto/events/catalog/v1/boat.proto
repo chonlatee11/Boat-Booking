@@ -15,11 +15,15 @@ enum BoatStatus {
 
 // BoatUpserted is a past-tense fact: a boat was created or updated in the
 // catalog. Ids only, no personal data (D-45) — the boat's own name is not
-// PII.
+// PII. home_pier_id and archived are additive fields (D-07) — the
+// schedule-service consumer ignores them and keeps applying the event
+// unchanged.
 message BoatUpserted {
   string boat_id = 1;
   string operator_id = 2;
   string name = 3;
   int32 default_capacity = 4;
   BoatStatus status = 5;
+  string home_pier_id = 6;
+  bool archived = 7;
 }

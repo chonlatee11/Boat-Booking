@@ -41,7 +41,7 @@ covered_files:
   - "deploy/observability/grafana/provisioning/datasources/datasources.yaml"
   - "pkg/outbox/outbox.go"
 
-covered_digest: "v1:sha256:995aa75a1a7a5be413909fb49b95dc7cad51a536f5bfc58274a87218eff5627f"
+covered_digest: "v1:sha256:747c66bb6b41fcce1eb7687b8467684b87851e3f886fdc2bb5c34291f6800fd9"
 behavior_unverified: 1
 overrides_applied: 0
 re_verification:
@@ -182,3 +182,7 @@ The only remaining open item is live, per-commit Jenkins image scoping, which ca
 
 _Verified: 2026-09-26T19:15:00Z_
 _Verifier: Claude (gsd-verifier)_
+
+## Retroactive Transition Note (2026-10-03)
+
+Phase 1 was never formally transitioned (ROADMAP still showed In Progress) although every artifact was complete: 14/14 plans + summaries, UAT complete, verification passed, SECURITY verified, VALIDATION validated. The only covered files changed since this report are `.planning/ROADMAP.md` and `.planning/REQUIREMENTS.md`, edited by Phase 2 progress tracking — no Phase 1 implementation file changed. Status stays `passed`; `covered_digest` recomputed via `verification.fingerprint` so `phase.complete 01` can run.

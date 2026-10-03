@@ -16,6 +16,16 @@ type Boat struct {
 	Status          string
 	CreatedAt       pgtype.Timestamptz
 	UpdatedAt       pgtype.Timestamptz
+	HomePierID      pgtype.UUID
+	ArchivedAt      pgtype.Timestamptz
+}
+
+type Operator struct {
+	ID         pgtype.UUID
+	Name       string
+	ArchivedAt pgtype.Timestamptz
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
 }
 
 type Outbox struct {
@@ -30,8 +40,45 @@ type Outbox struct {
 	PublishedAt pgtype.Timestamptz
 }
 
+type Pier struct {
+	ID         pgtype.UUID
+	OperatorID pgtype.UUID
+	NameTh     string
+	NameEn     string
+	Lat        float64
+	Lng        float64
+	Address    string
+	OpensAt    pgtype.Time
+	ClosesAt   pgtype.Time
+	ArchivedAt pgtype.Timestamptz
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+	PhotoKey   string
+}
+
 type ProcessedEvent struct {
 	EventID     pgtype.UUID
 	EventType   string
 	ProcessedAt pgtype.Timestamptz
+}
+
+type Route struct {
+	ID                 pgtype.UUID
+	OperatorID         pgtype.UUID
+	PierFromID         pgtype.UUID
+	PierToID           pgtype.UUID
+	DurationMinutes    int32
+	CancellationPolicy []byte
+	ArchivedAt         pgtype.Timestamptz
+	CreatedAt          pgtype.Timestamptz
+	UpdatedAt          pgtype.Timestamptz
+}
+
+type RoutePrice struct {
+	RouteID       pgtype.UUID
+	TicketType    string
+	AmountSatang  int64
+	EffectiveFrom pgtype.Date
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
 }
