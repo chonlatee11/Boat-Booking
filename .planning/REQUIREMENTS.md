@@ -24,18 +24,18 @@ Milestone 1 = seed Phase 0–4: platform foundation → identity + catalog → s
 
 - [x] **AUTH-01**: Customer can request an OTP via email or phone and receive a session (JWT in httpOnly cookie) without creating a password account
 - [x] **AUTH-02**: staff / pier_admin / super_admin can log in and receive `role` + `operator_id` claims
-- [ ] **AUTH-03**: Kong verifies the JWT; BFF forwards claims as trusted `X-*` headers; services reject requests lacking gateway headers (network-isolated from public)
-- [ ] **AUTH-04**: super_admin can create pier_admin / staff users and assign them to an operator and pier
-- [ ] **AUTH-05**: Every admin query is scoped by `operator_id` — a pier_admin never sees another operator's data
+- [x] **AUTH-03**: Kong verifies the JWT; BFF forwards claims as trusted `X-*` headers; services reject requests lacking gateway headers (network-isolated from public)
+- [x] **AUTH-04**: super_admin can create pier_admin / staff users and assign them to an operator and pier
+- [x] **AUTH-05**: Every admin query is scoped by `operator_id` — a pier_admin never sees another operator's data
 
 ### Catalog
 
-- [ ] **CAT-01**: super_admin can create and edit operators
+- [x] **CAT-01**: super_admin can create and edit operators
 - [x] **CAT-02**: pier_admin can create/edit/archive piers (name, coordinates via map picker, address, photo, open hours)
 - [x] **CAT-03**: pier_admin can create/edit/archive routes (pier_from → pier_to, travel duration, tiered cancellation policy defaulting to >24h 100% / 2–24h 50% / <2h 0%)
 - [x] **CAT-04**: pier_admin can create/edit boats (name, default capacity, status active/maintenance)
-- [ ] **CAT-05**: pier_admin can set ticket prices per route per ticket type (adult, child) stored as integer satang
-- [ ] **CAT-06**: Public search can list piers and routes with coordinates for the map without authentication
+- [x] **CAT-05**: pier_admin can set ticket prices per route per ticket type (adult, child) stored as integer satang
+- [x] **CAT-06**: Public search can list piers and routes with coordinates for the map without authentication
 
 ### Schedule
 
@@ -156,15 +156,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAT-10 | Phase 1 | Complete |
 | AUTH-01 | Phase 2 | Complete |
 | AUTH-02 | Phase 2 | Complete |
-| AUTH-03 | Phase 2 | Gaps Found |
-| AUTH-04 | Phase 2 | Gaps Found |
-| AUTH-05 | Phase 2 | Gaps Found |
-| CAT-01 | Phase 2 | Gaps Found |
+| AUTH-03 | Phase 2 | Complete |
+| AUTH-04 | Phase 2 | Complete |
+| AUTH-05 | Phase 2 | Complete |
+| CAT-01 | Phase 2 | Complete |
 | CAT-02 | Phase 2 | Complete |
 | CAT-03 | Phase 2 | Complete |
 | CAT-04 | Phase 2 | Complete |
-| CAT-05 | Phase 2 | Gaps Found |
-| CAT-06 | Phase 2 | Gaps Found |
+| CAT-05 | Phase 2 | Complete |
+| CAT-06 | Phase 2 | Complete |
 | SCHED-01 | Phase 3 | Pending |
 | SCHED-02 | Phase 3 | Pending |
 | SCHED-03 | Phase 3 | Pending |

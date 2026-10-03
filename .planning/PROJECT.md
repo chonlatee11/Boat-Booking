@@ -34,25 +34,22 @@ Guest checkout: ลูกค้าจองได้โดยไม่สมั�
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Go workspace monorepo + service template (`make new-service`) + shared `pkg/*` (events, kafka, outbox, httpx, auth, pgx) — Phase 1
+- ✓ Proto toolchain (buf) gen Go + TS จาก `proto/events/` และ `proto/services/` — Phase 1
+- ✓ Docker Compose dev stack: Redpanda + Postgres + Valkey + Kong + Grafana (Tempo/Loki/Prometheus) — Phase 1
+- ✓ health/ready endpoints ทุก service; trace ข้าม service (HTTP + Kafka) เห็นใน Tempo — Phase 1
+- ✓ Next.js skeleton (App Router, TS, Tailwind, shadcn/ui, i18n ไทย/อังกฤษ) — Phase 1 (ใช้ Next.js 16 ไม่ใช่ 15)
+- ✓ identity-service: OTP login (email/เบอร์), JWT ใน httpOnly cookie, roles, operator scoping — Phase 2
+- ✓ catalog-service: CRUD operators, piers, routes, boats, ticket prices (adult/child) — Phase 2
+- ✓ Admin UI: operators / piers / routes / boats / staff + map picker — Phase 2
+- ✓ Kong routing + JWT verify; Go BFF บางๆ forward claims เป็น trusted header — Phase 2
 
 ### Active
 
 **Milestone 1 (v1) = Phase 0–4 ของ seed roadmap: จอง → จ่าย → ตั๋ว ครบ end-to-end**
 
 Platform foundation
-- [ ] Go workspace monorepo + service template (`make new-service`) + shared `pkg/*` (events, kafka, outbox, httpx, auth, pgx)
-- [ ] Proto toolchain (buf) gen Go + TS จาก `proto/events/` และ `proto/services/`
-- [ ] Docker Compose dev stack: Redpanda + Postgres + Redis + Kong + Grafana (Tempo/Loki/Prometheus)
-- [ ] Jenkins pipeline build/push ทุก image → ECR → EC2 `docker compose pull && up -d`
-- [ ] health/ready endpoints ทุก service; trace ข้าม service (HTTP + Kafka) เห็นใน Tempo
-- [ ] Next.js 15 skeleton (App Router, TS, Tailwind, shadcn/ui, i18n ไทย/อังกฤษ)
-
-Identity + Catalog
-- [ ] identity-service: OTP login (email/เบอร์), JWT ใน httpOnly cookie, roles, operator scoping
-- [ ] catalog-service: CRUD operators, piers, routes, boats, ticket prices (adult/child)
-- [ ] Admin UI: piers / routes / boats + map picker
-- [ ] Kong routing + JWT verify; Go BFF บางๆ forward claims เป็น trusted header
+- [ ] Jenkins pipeline build/push ทุก image → ECR → EC2 `docker compose pull && up -d` (CI stages มีแล้วตั้งแต่ Phase 1; production deploy อยู่ใน Phase 5)
 
 Schedule
 - [ ] schedule-service: schedule templates → generate departures ล่วงหน้า N วัน
@@ -211,14 +208,14 @@ Boat-Booking/
 |----------|-----------|---------|
 | Milestone 1 = Phase 0–4 (foundation → identity/catalog → schedule → booking core → payment/ticket) | ได้ flow หลักครบ end-to-end ใช้จริงได้; เก็บ 5–7 ไว้ milestone ถัดไปเพราะอาจมี requirement เพิ่ม | — Pending |
 | Payment provider: ยังไม่เลือก — ทำ provider interface + mock ก่อน | Opn (Omise) vs 2C2P ตัดสินใจตอน plan Phase 4; interface ทำให้สลับได้ | — Pending |
-| Internal sync API: connect-go | gRPC + HTTP/JSON ในตัวเดียว, curl debug ได้, gen TS ให้ frontend | — Pending |
-| Gateway: Kong + Go BFF บางๆ | Kong ทำ routing/TLS/JWT plugin/rate limit; BFF ทำเฉพาะ aggregate search + SSE | — Pending |
-| Postgres v1: instance เดียว หลาย database, สลับด้วย DSN | ถูกและง่าย; database-per-service ยังคงอยู่ระดับ logical | — Pending |
+| Internal sync API: connect-go | gRPC + HTTP/JSON ในตัวเดียว, curl debug ได้, gen TS ให้ frontend | ✓ Good — ใช้ทุก service ใน Phase 1–2 |
+| Gateway: Kong + Go BFF บางๆ | Kong ทำ routing/TLS/JWT plugin/rate limit; BFF ทำเฉพาะ aggregate search + SSE | ✓ Good — Kong 3.9.1 DB-less ผ่าน spike รอบแรก ไม่ต้อง fallback Traefik |
+| Postgres v1: instance เดียว หลาย database, สลับด้วย DSN | ถูกและง่าย; database-per-service ยังคงอยู่ระดับ logical | ✓ Good — identity/catalog/schedule แยก database |
 | Search read model: query สดผ่าน BFF (catalog + availability batch) | ไม่ต้องมี projection service ใน v1; ทำเมื่อช้า | — Pending |
-| Event serialization: Protobuf | typed, gen Go + TS, schema evolution ชัด | — Pending |
-| Cancel/refund policy default: ขั้นบันได (>24 ชม. คืน 100%, 2–24 ชม. คืน 50%, <2 ชม. ไม่คืน) ตั้งได้ต่อ route | ยุติธรรมทั้งสองฝั่ง; override ต่อ route ได้ | — Pending |
-| Kafka dev/prod v1: Redpanda | Kafka-compatible, single binary, เบา; ย้าย MSK เมื่อโต | — Pending |
-| Outbox relay ใน Go (poll + publish + mark), ไม่ใช้ Debezium | ลด moving parts ใน v1 | — Pending |
+| Event serialization: Protobuf | typed, gen Go + TS, schema evolution ชัด | ✓ Good — additive field evolution ใช้จริงแล้ว (BoatUpserted fields 6–7) |
+| Cancel/refund policy default: ขั้นบันได (>24 ชม. คืน 100%, 2–24 ชม. คืน 50%, <2 ชม. ไม่คืน) ตั้งได้ต่อ route | ยุติธรรมทั้งสองฝั่ง; override ต่อ route ได้ | ✓ Good — tiered policy editor ต่อ route (Phase 2) |
+| Kafka dev/prod v1: Redpanda | Kafka-compatible, single binary, เบา; ย้าย MSK เมื่อโต | ✓ Good — Phase 1–2 |
+| Outbox relay ใน Go (poll + publish + mark), ไม่ใช้ Debezium | ลด moving parts ใน v1 | ✓ Good — Phase 1–2 |
 | Project structure: vertical slices ต่อ phase | แต่ละ phase จบด้วยของที่ใช้ได้จริง | — Pending |
 
 ## Evolution
@@ -239,4 +236,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-09-25 after initialization*
+*Last updated: 2026-10-03 after Phase 2 (Phase 1 closed retroactively)*

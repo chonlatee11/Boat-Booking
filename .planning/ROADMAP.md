@@ -11,8 +11,8 @@ Five phases deliver Milestone 1 end-to-end: จอง → จ่าย → ต�
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Platform Foundation** - Service template, shared pkg/*, dev stack, and one proven event flow with cross-service tracing
-- [ ] **Phase 2: Identity + Catalog** - OTP login with roles/scoping, and admin-managed piers/routes/boats/prices customers can browse
+- [x] **Phase 1: Platform Foundation** - Service template, shared pkg/*, dev stack, and one proven event flow with cross-service tracing (completed 2026-10-03)
+- [x] **Phase 2: Identity + Catalog** - OTP login with roles/scoping, and admin-managed piers/routes/boats/prices customers can browse (completed 2026-10-03)
 - [ ] **Phase 3: Schedule** - Schedule templates generate real departures that admins manage and downstream services consume as events
 - [ ] **Phase 4: Booking Core** - Search → hold seats → mock checkout, with no-overbook guaranteed under concurrency (CI-proven)
 - [ ] **Phase 5: Payment + Ticket + Notification** - Real payment, QR ticket issuance, email notification, full booking saga, and production deploy
@@ -204,8 +204,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Platform Foundation | 14/14 | In Progress|  |
-| 2. Identity + Catalog | 17/17 | In Progress|  |
+| 1. Platform Foundation | 14/14 | Complete    | 2026-10-03 |
+| 2. Identity + Catalog | 17/17 | Complete    | 2026-10-03 |
 | 3. Schedule | 0/? | Not started | - |
 | 4. Booking Core | 0/? | Not started | - |
 | 5. Payment + Ticket + Notification | 0/? | Not started | - |
