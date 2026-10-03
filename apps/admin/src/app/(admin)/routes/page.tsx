@@ -100,7 +100,9 @@ export default function RoutesPage() {
               route.archived ? (
                 <Badge variant="secondary">เก็บถาวร</Badge>
               ) : (
-                <Badge>ใช้งาน</Badge>
+                <Badge className="border-transparent bg-green-100 text-green-800">
+                  ใช้งาน
+                </Badge>
               ),
           },
           ...(canWrite

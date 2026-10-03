@@ -220,7 +220,9 @@ export default function StaffPage() {
               u.disabled ? (
                 <Badge variant="secondary">ปิดการใช้งาน</Badge>
               ) : (
-                <Badge>ใช้งาน</Badge>
+                <Badge className="border-transparent bg-green-100 text-green-800">
+                  ใช้งาน
+                </Badge>
               ),
           },
           {
