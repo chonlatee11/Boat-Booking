@@ -1,9 +1,10 @@
 ---
 phase: 02-identity-catalog
 verified: 2026-09-28T23:40:00Z
-status: human_needed
+status: passed
 score: 5/5 must-haves verified
 covered_files:
+
   - ".planning/REQUIREMENTS.md"
   - ".planning/phases/02-identity-catalog/02-01-PLAN.md"
   - ".planning/phases/02-identity-catalog/02-01-SUMMARY.md"
@@ -55,7 +56,8 @@ covered_files:
   - "services/identity/internal/adapters/notify/notify.go"
   - "services/identity/internal/adapters/notify/notify_test.go"
   - "services/identity/internal/app/otp.go"
-covered_digest: "v1:sha256:5bf3e896b761627fd7a68089c470ac5f2f77f8fe3c563a30a6afaeca277ffb58"
+
+covered_digest: "v1:sha256:bb7483560e34b6f580e46ae40b263313956fae96fe5331d005d5987331bdf146"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:
@@ -76,6 +78,7 @@ re_verification:
 deferred: []
 advisory: []
 human_verification:
+
   - test: "G-02-3 (02-14): with `make up` running, request an OTP at the admin/web login page and open the message in Mailpit (http://localhost:8025)"
     expected: "The body reads \"รหัสของคุณ / Your code: ......\" in correct Thai (not mojibake), and the subject still reads correctly"
     why_human: "Mailpit's rendering of the raw MIME message can only be confirmed visually in its UI; the unit/integration tests prove the message bytes are correctly formed but not how the mail client renders them"
